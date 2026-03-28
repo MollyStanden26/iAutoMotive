@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Primary — Vivid Teal */
+  --ac-color-teal-50: #E0FAF5;
+  --ac-color-teal-100: #A7F0E3;
+  --ac-color-teal-200: #4DD9C7;
+  --ac-color-teal-400: #00B8A5;
+  --ac-color-teal-600: #008C7C;
+  --ac-color-teal-800: #006058;
+  --ac-color-teal-900: #00332E;
+
+  /* Supporting — Warm Slate */
+  --ac-color-slate-50: #F7F8F9;
+  --ac-color-slate-100: #EAECEF;
+  --ac-color-slate-200: #C8CDD6;
+  --ac-color-slate-400: #8492A8;
+  --ac-color-slate-600: #4A556B;
+  --ac-color-slate-800: #222D3F;
+  --ac-color-slate-900: #0F1724;
+
+  /* Accent — Amber (money only) */
+  --ac-color-amber-50: #FFF8E6;
+  --ac-color-amber-100: #FFE9A0;
+  --ac-color-amber-200: #FFD147;
+  --ac-color-amber-400: #F5A623;
+  --ac-color-amber-600: #B87209;
+  --ac-color-amber-800: #7A4A00;
+  --ac-color-amber-900: #3D2400;
+
+  /* Semantic */
+  --ac-color-success: #10B981;
+  --ac-color-danger: #EF4444;
+  --ac-color-warning: #F59E0B;
+  --ac-color-admin: #6366F1;
+
+  /* Light mode tokens */
+  --ac-color-primary: #008C7C;
+  --ac-color-primary-hover: #006058;
+  --ac-color-primary-subtle: #E0FAF5;
+  --ac-color-primary-text-on: #FFFFFF;
+  --ac-color-accent: #F5A623;
+  --ac-color-accent-subtle: #FFF8E6;
+  --ac-color-bg-page: #F7F8F9;
+  --ac-color-bg-card: #FFFFFF;
+  --ac-color-bg-subtle: #F7F8F9;
+  --ac-color-border: #EAECEF;
+  --ac-color-border-focus: #008C7C;
+  --ac-color-text-primary: #0F1724;
+  --ac-color-text-secondary: #4A556B;
+  --ac-color-text-tertiary: #8492A8;
+  --ac-color-text-placeholder: #9CA3AF;
+  --ac-color-input-bg: #FFFFFF;
+
+  /* Typography */
+  --ac-font-heading: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ac-font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ac-font-mono: "Courier New", monospace;
+
+  /* Spacing */
+  --ac-space-1: 4px;
+  --ac-space-2: 8px;
+  --ac-space-3: 12px;
+  --ac-space-4: 16px;
+  --ac-space-5: 20px;
+  --ac-space-6: 24px;
+  --ac-space-8: 32px;
+  --ac-space-12: 48px;
+  --ac-space-16: 64px;
+
+  /* Border radius */
+  --ac-radius-input: 12px;
+  --ac-radius-search: 14px;
+  --ac-radius-card: 20px;
+  --ac-radius-stat: 16px;
+  --ac-radius-modal: 24px;
+  --ac-radius-icon: 12px;
+  --ac-radius-pill: 100px;
+}
+
+/* Dark mode tokens (admin dashboard) */
+[data-theme="dark"] {
+  --ac-color-primary: #4DD9C7;
+  --ac-color-primary-hover: #00B8A5;
+  --ac-color-primary-subtle: #00332E;
+  --ac-color-primary-text-on: #0F1724;
+  --ac-color-accent: #FFD147;
+  --ac-color-accent-subtle: #3D2400;
+  --ac-color-bg-page: #0F1724;
+  --ac-color-bg-card: #0A1426;
+  --ac-color-bg-subtle: #162238;
+  --ac-color-border: #1E3356;
+  --ac-color-border-focus: #4DD9C7;
+  --ac-color-text-primary: #E2E8F4;
+  --ac-color-text-secondary: #8492A8;
+  --ac-color-text-tertiary: #4A556B;
+  --ac-color-text-placeholder: #4A556B;
+  --ac-color-input-bg: #FFFFFF;
+  --ac-color-success: #34D399;
+  --ac-color-danger: #F87171;
+  --ac-color-warning: #FCD34D;
+}
+
+/* Input safety rule — mandatory */
+input,
+select,
+textarea {
+  background-color: #FFFFFF;
+  color: #374151;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9CA3AF;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  font-family: var(--ac-font-body);
+  color: var(--ac-color-text-primary);
+  background-color: var(--ac-color-bg-page);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--ac-font-heading);
+}
