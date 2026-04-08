@@ -1,3 +1,5 @@
+"use client";
+
 import { PortalNavbar } from "@/components/portal/navbar";
 
 export default function SellerPortalLayout({

@@ -32,7 +32,7 @@ export function CtaBand() {
                 margin: 0,
               }}
             >
-              Join thousands of sellers who earned more with AutoConsign.
+              Join thousands of sellers who earned more with iAutoSale.
             </p>
           </div>
 

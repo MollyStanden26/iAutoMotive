@@ -1,3 +1,5 @@
+"use client";
+
 import { DealerNavbar } from "@/components/dealer/navbar";
 
 export default function DealerLayout({

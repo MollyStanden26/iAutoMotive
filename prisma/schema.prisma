@@ -1,0 +1,1783 @@
+// ============================================================
+// iAutoSale — Prisma Schema
+// Database:  MongoDB
+// ORM:       Prisma 5.x
+// Storage:   Cloudflare R2 (images & documents)
+// Cache:     Redis (Docker, same server)
+// Domains:   11  |  Collections: 47  |  Enums: 40
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────
+
+// ── Identity ──────────────────────────────────────────────────
+enum UserRole {
+  super_admin
+  site_manager
+  finance
+  sales
+  recon_tech
+  compliance
+  read_only
+  seller
+  buyer
+  dealer
+}
+
+enum PreferredContact {
+  phone
+  sms
+  email
+}
+
+enum SellerSource {
+  autotrader
+  direct
+  referral
+  other
+}
+
+enum PayoutMethod {
+  faster_payments
+  bacs
+  chaps
+}
+
+enum BuyerPreQualStatus {
+  none
+  soft_pulled
+  pre_qualified
+  declined
+}
+
+// ── Lots ──────────────────────────────────────────────────────
+enum LotStatus {
+  active
+  inactive
+  at_capacity
+}
+
+// ── Vehicles ──────────────────────────────────────────────────
+enum FuelType {
+  petrol
+  diesel
+  hybrid
+  plugin_hybrid
+  electric
+  mild_hybrid
+}
+
+enum Transmission {
+  manual
+  automatic
+  semi_automatic
+  cvt
+}
+
+enum BodyType {
+  hatchback
+  saloon
+  estate
+  suv
+  coupe
+  convertible
+  mpv
+  pickup
+  van
+}
+
+enum ServiceHistoryType {
+  full
+  partial
+  none
+}
+
+enum ConditionGrade {
+  excellent
+  good
+  fair
+  below_average
+}
+
+enum VehicleStage {
+  offer_accepted
+  collected
+  inspecting
+  in_mechanical
+  in_body_paint
+  in_detail
+  in_photography
+  listing_ready
+  live
+  sale_agreed
+  sold
+  returned
+  withdrawn
+}
+
+enum FeatureCategory {
+  safety
+  comfort
+  technology
+  performance
+  exterior
+  interior
+}
+
+enum PriceChangeReason {
+  initial_listing
+  market_adjustment
+  ai_pricing
+  manual_override
+  return_relist
+}
+
+// ── Media ─────────────────────────────────────────────────────
+enum MediaEntityType {
+  vehicle
+  lot
+  user
+  damage_item
+}
+
+enum MediaCategory {
+  exterior_front_34
+  exterior_rear_34
+  exterior_driver_side
+  exterior_passenger_side
+  exterior_front_straight
+  exterior_rear_straight
+  wheel_fl
+  wheel_fr
+  wheel_rl
+  wheel_rr
+  interior_driver_seat
+  interior_passenger_seat
+  interior_rear_seats
+  dashboard
+  infotainment
+  boot
+  odometer
+  service_history_book
+  damage
+  frame_360
+  video_thumbnail
+  video_walkaround
+  lot_overview
+  lot_exterior
+  profile_photo
+}
+
+enum DocumentEntityType {
+  consignment
+  deal
+  vehicle
+  user
+}
+
+enum DocumentType {
+  consignment_agreement
+  hpi_certificate
+  condition_report
+  purchase_agreement
+  buyers_order
+  v5c_logbook
+  sale_confirmation
+  final_net_sheet
+  payout_confirmation
+  identity_document
+  proof_of_address
+  finance_agreement
+  warranty_certificate
+}
+
+// ── Leads ─────────────────────────────────────────────────────
+enum LeadStatus {
+  new
+  assigned
+  contacted
+  responded
+  negotiating
+  offer_made
+  accepted
+  rejected
+  unresponsive
+  converted
+  archived
+}
+
+enum ScoutTier {
+  hot
+  warm
+  cold
+}
+
+enum ContactMethod {
+  phone_call
+  sms
+  email
+  autotrader_form
+}
+
+enum ContactDirection {
+  outbound
+  inbound
+}
+
+enum OutreachOutcome {
+  connected
+  voicemail
+  no_answer
+  wrong_number
+  callback_requested
+  not_interested
+  interested
+}
+
+enum OfferType {
+  initial
+  counter_iauto
+  counter_seller
+  final
+}
+
+enum OfferStatus {
+  pending
+  accepted
+  rejected
+  countered
+  expired
+}
+
+// ── Consignment & Recon ───────────────────────────────────────
+enum ConsignmentStatus {
+  pending_collection
+  collected
+  in_recon
+  listed
+  under_offer
+  sold
+  returned
+  withdrawn
+}
+
+enum ReconStageName {
+  intake
+  inspection
+  mechanical
+  body_paint
+  detail_valet
+  photography
+  listing_ready
+}
+
+enum ReconStageStatus {
+  pending
+  in_progress
+  complete
+  skipped
+}
+
+enum ReconWorkCategory {
+  mechanical
+  bodywork
+  interior
+  electrical
+  cosmetic
+  cleaning
+}
+
+// ── Deals / Finance / Payouts ─────────────────────────────────
+enum DealStatus {
+  reserved
+  identity_verified
+  documents_sent
+  documents_signed
+  funded
+  delivered
+  in_return_window
+  closed
+  returned
+  cancelled
+}
+
+enum FinanceApplicationStatus {
+  draft
+  submitted
+  conditionally_approved
+  approved
+  declined
+  funded
+  cancelled
+}
+
+enum EscrowConditionType {
+  v5c_notified
+  return_window_expired
+  no_open_disputes
+  finance_confirmed
+  compliance_passed
+}
+
+enum PayoutStatus {
+  pending
+  calculating
+  approved
+  sent
+  confirmed
+  failed
+}
+
+// ── Messaging ─────────────────────────────────────────────────
+enum ConversationType {
+  seller_lot_manager
+  buyer_sales
+  buyer_support
+  internal_deal
+}
+
+enum ConversationEntityType {
+  consignment
+  deal
+  lead
+}
+
+enum MessageType {
+  text
+  system_event
+}
+
+// ── Audit ─────────────────────────────────────────────────────
+enum AuditOperation {
+  INSERT
+  UPDATE
+  DELETE
+}
+
+// ── Telnyx / Comms ────────────────────────────────────────────
+enum TelnyxNumberType {
+  rep_direct
+  shared_pool
+  inbound_only
+}
+
+enum CallDirection {
+  outbound
+  inbound
+}
+
+enum CallStatus {
+  initiated
+  ringing
+  answered
+  completed
+  failed
+  busy
+  no_answer
+  cancelled
+}
+
+enum CallOutcome {
+  connected_positive
+  connected_neutral
+  connected_not_interested
+  voicemail_left
+  voicemail_not_left
+  no_answer
+  busy
+  wrong_number
+  callback_requested
+  converted
+}
+
+enum RecordingAccessLevel {
+  admin_only
+  rep_own
+  all_staff
+}
+
+enum SmsDirection {
+  outbound
+  inbound
+}
+
+enum SmsStatus {
+  queued
+  sending
+  sent
+  delivered
+  failed
+  received
+  undelivered
+  blocked_opt_out
+}
+
+enum SmsTemplateCategory {
+  initial_outreach
+  follow_up
+  offer
+  callback_confirmation
+  seller_update
+  payout_notification
+  general
+}
+
+enum DiallerSessionStatus {
+  active
+  paused
+  completed
+  abandoned
+}
+
+enum DiallerQueueItemStatus {
+  pending
+  calling
+  completed
+  skipped
+}
+
+enum OptOutType {
+  all
+  sms_only
+  calls_only
+}
+
+enum OptOutVia {
+  sms_reply_stop
+  sms_reply_unsubscribe
+  verbal_on_call
+  manual_admin
+  portal_request
+  imported
+}
+
+enum OptInVia {
+  sms_start
+  verbal
+  portal
+  manual_admin
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 1 — IDENTITY
+// ─────────────────────────────────────────────────────────────
+
+/// Master identity record for every person in the system.
+/// Role is the single source of truth for access control.
+model User {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  email            String    @unique
+  phone            String?
+  passwordHash     String?   @map("password_hash")
+  role             UserRole
+  isActive         Boolean   @default(true) @map("is_active")
+  emailVerifiedAt  DateTime? @map("email_verified_at")
+  lastLoginAt      DateTime? @map("last_login_at")
+  mfaEnabled       Boolean   @default(false) @map("mfa_enabled")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  // Profile relations (one per user max)
+  sellerProfile    SellerProfile?
+  buyerProfile     BuyerProfile?
+  staffProfile     StaffProfile?
+
+  // Lot management
+  managedLots      Lot[]     @relation("LotManager")
+
+  // Lead & outreach
+  assignedLeads    Lead[]    @relation("LeadAssignedTo")
+  outreachLogs     LeadOutreachLog[] @relation("OutreachStaff")
+  leadOffers       LeadOffer[] @relation("OfferStaff")
+
+  // Vehicle history
+  priceChanges     VehiclePriceHistory[] @relation("PriceChangedBy")
+  statusChanges    VehicleStatusHistory[] @relation("StatusChangedBy")
+
+  // Media & docs
+  mediaUploads     MediaFile[] @relation("MediaUploadedBy")
+  documentUploads  Document[]  @relation("DocumentUploadedBy")
+
+  // Recon
+  reconPreAuthed   ReconStage[] @relation("ReconPreAuth")
+  reconUpdated     ReconStage[] @relation("ReconUpdatedBy")
+  workItemsApproved ReconWorkItem[] @relation("WorkItemApprovedBy")
+
+  // HPI
+  hpiPerformed     HpiCheck[] @relation("HpiPerformedBy")
+
+  // Deals & payouts
+  dealsAssigned    Deal[]     @relation("DealAssignedTo")
+  escrowConfirmed  EscrowCondition[] @relation("EscrowMetBy")
+  payoutsApproved  Payout[]   @relation("PayoutApprovedBy")
+
+  // Messaging
+  messagesSent     Message[]  @relation("MessageSender")
+  convParticipants ConversationParticipant[]
+  notifications    Notification[]
+  notifPrefs       NotificationPreference[]
+
+  // Buyer activity
+  enquiriesAssigned BuyerEnquiry[] @relation("EnquiryAssignedTo")
+
+  // Telnyx / comms
+  telnyxNumbers    TelnyxPhoneNumber[] @relation("NumberAssignedTo")
+  repCallSessions  CallSession[] @relation("RepCallSessions")
+  dispositionsSet  CallSession[] @relation("DispositionSetBy")
+  diallerSessions  DiallerSession[] @relation("DiallerRep")
+  smsSent          SmsMessage[] @relation("SmsSentBy")
+  smsThreadsOwned  SmsThread[]  @relation("ThreadRep")
+  templatesCreated SmsTemplate[] @relation("TemplateCreatedBy")
+  templatesApproved SmsTemplate[] @relation("TemplateApprovedBy")
+  optOutsLogged    CommunicationOptOut[] @relation("OptOutBy")
+
+  // System
+  auditLogs        AuditLog[]  @relation("AuditChangedBy")
+  apiKeys          ApiKey[]    @relation("ApiKeyOwner")
+
+  @@map("users")
+}
+
+/// Seller-specific profile data. Linked 1:1 to users.
+/// Bank details are encrypted at rest — never store plain text.
+model SellerProfile {
+  id                String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String           @unique @map("user_id") @db.ObjectId
+  firstName         String           @map("first_name")
+  lastName          String           @map("last_name")
+  addressLine1      String?          @map("address_line1")
+  addressLine2      String?          @map("address_line2")
+  city              String?
+  postcode          String?
+  payoutMethod      PayoutMethod?    @map("payout_method")
+  /// Encrypted at rest (AES-256). Never log or expose.
+  bankAccountName   String?          @map("bank_account_name")
+  /// Encrypted at rest. Format: 00-00-00
+  bankSortCode      String?          @map("bank_sort_code")
+  /// Encrypted at rest. 8 digits.
+  bankAccountNumber String?          @map("bank_account_number")
+  preferredContact  PreferredContact? @map("preferred_contact")
+  source            SellerSource?
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  user              User             @relation(fields: [userId], references: [id])
+  consignments      Consignment[]    @relation("ConsignmentSeller")
+
+  @@map("seller_profiles")
+}
+
+/// Buyer-specific profile. Identity verification via Stripe Identity.
+/// Pre-qualification status drives finance product surfacing on the VDP.
+model BuyerProfile {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String              @unique @map("user_id") @db.ObjectId
+  firstName          String?             @map("first_name")
+  lastName           String?             @map("last_name")
+  addressLine1       String?             @map("address_line1")
+  postcode           String?
+  identityVerified   Boolean             @default(false) @map("identity_verified")
+  identityVerifiedAt DateTime?           @map("identity_verified_at")
+  preQualStatus      BuyerPreQualStatus  @default(none) @map("pre_qual_status")
+  /// Stored in pence. Never use floats for monetary values.
+  preQualAmountGbp   Int?                @map("pre_qual_amount_gbp")
+  preQualExpiresAt   DateTime?           @map("pre_qual_expires_at")
+  marketingConsent   Boolean             @default(false) @map("marketing_consent")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  user               User                @relation(fields: [userId], references: [id])
+  deals              Deal[]              @relation("DealBuyer")
+  financeApps        FinanceApplication[] @relation("FinanceBuyer")
+  wishlists          VehicleWishlist[]
+  enquiries          BuyerEnquiry[]      @relation("EnquiryBuyer")
+  views              VehicleView[]       @relation("VehicleViewer")
+  savedSearches      SavedSearch[]
+
+  @@map("buyer_profiles")
+}
+
+/// Staff-specific profile. KPIs set per rep for CRM performance tracking.
+model StaffProfile {
+  id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId                 String    @unique @map("user_id") @db.ObjectId
+  firstName              String    @map("first_name")
+  lastName               String    @map("last_name")
+  lotId                  String?   @map("lot_id") @db.ObjectId
+  hireDate               DateTime? @map("hire_date")
+  isRemote               Boolean   @default(false) @map("is_remote")
+  /// Sales reps only. Tracked daily in dialler_sessions.
+  dailyCallTarget        Int?      @map("daily_call_target")
+  /// Sales reps only. Tracked weekly against converted leads.
+  weeklyConversionTarget Int?      @map("weekly_conversion_target")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  user                   User      @relation(fields: [userId], references: [id])
+  lot                    Lot?      @relation("StaffLot", fields: [lotId], references: [id])
+
+  @@map("staff_profiles")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 2 — LOTS
+// ─────────────────────────────────────────────────────────────
+
+/// Physical lot/site. Each vehicle is assigned to a lot.
+/// lat/lng used for storefront map display.
+model Lot {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  addressLine1     String?   @map("address_line1")
+  addressLine2     String?   @map("address_line2")
+  city             String?
+  postcode         String?
+  phone            String?
+  capacityVehicles Int       @map("capacity_vehicles")
+  managerId        String?   @map("manager_id") @db.ObjectId
+  status           LotStatus @default(active)
+  lat              Float?
+  lng              Float?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  manager          User?     @relation("LotManager", fields: [managerId], references: [id])
+  slots            LotSlot[]
+  vehicles         Vehicle[] @relation("VehicleLot")
+  consignments     Consignment[] @relation("ConsignmentLot")
+  staffProfiles    StaffProfile[] @relation("StaffLot")
+  telnyxNumbers    TelnyxPhoneNumber[] @relation("LotNumber")
+
+  @@map("lots")
+}
+
+/// Individual parking bays within a lot.
+/// is_available computed from vehicle_id IS NULL — no manual toggle needed.
+model LotSlot {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  lotId          String   @map("lot_id") @db.ObjectId
+  slotReference  String   @map("slot_reference")
+  vehicleId      String?  @map("vehicle_id") @db.ObjectId
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  lot            Lot      @relation(fields: [lotId], references: [id])
+  vehicle        Vehicle? @relation("SlotVehicle", fields: [vehicleId], references: [id])
+
+  @@unique([lotId, slotReference])
+  @@map("lot_slots")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 3 — VEHICLES
+// ─────────────────────────────────────────────────────────────
+
+/// Core asset record. One row per physical vehicle in the system.
+/// All monetary values stored in pence (integer) — no floats.
+model Vehicle {
+  id                  String         @id @default(auto()) @map("_id") @db.ObjectId
+  vin                 String?
+  /// UK registration, uppercase, no spaces. e.g. AB21XYZ
+  registration        String         @unique
+  make                String
+  model               String
+  trim                String?
+  variant             String?
+  year                Int
+  mileageAtIntake     Int            @map("mileage_at_intake")
+  fuelType            FuelType       @map("fuel_type")
+  transmission        Transmission
+  bodyType            BodyType       @map("body_type")
+  /// Engine displacement in cc. e.g. 1984 for 2.0L
+  engineSizeCc        Int?           @map("engine_size_cc")
+  doors               Int?
+  seats               Int?
+  exteriorColour      String?        @map("exterior_colour")
+  interiorColour      String?        @map("interior_colour")
+  keysCount           Int            @default(1) @map("keys_count")
+  motExpiry           DateTime?      @map("mot_expiry")
+  serviceHistoryType  ServiceHistoryType @map("service_history_type")
+  /// From V5C at intake
+  ownersCountAtIntake Int?           @map("owners_count_at_intake")
+  conditionGrade      ConditionGrade? @map("condition_grade")
+  currentStage        VehicleStage   @default(offer_accepted) @map("current_stage")
+  lotId               String?        @map("lot_id") @db.ObjectId
+  /// Current active listing price in pence
+  listingPriceGbp     Int?           @map("listing_price_gbp")
+  /// Minimum acceptable price — never exposed publicly
+  floorPriceGbp       Int?           @map("floor_price_gbp")
+  hasHpiClear         Boolean        @default(false) @map("has_hpi_clear")
+  collectedAt         DateTime?      @map("collected_at")
+  listedAt            DateTime?      @map("listed_at")
+  soldAt              DateTime?      @map("sold_at")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  lot                 Lot?           @relation("VehicleLot", fields: [lotId], references: [id])
+  lotSlots            LotSlot[]      @relation("SlotVehicle")
+  specs               VehicleSpec?
+  features            VehicleFeature[]
+  priceHistory        VehiclePriceHistory[]
+  statusHistory       VehicleStatusHistory[]
+  damageItems         VehicleDamageItem[]
+  mediaFiles          MediaFile[]    @relation("VehicleMedia")
+  hpiCheck            HpiCheck?
+  consignment         Consignment?   @relation("ConsignmentVehicle")
+  deals               Deal[]         @relation("DealVehicle")
+  views               VehicleView[]
+  wishlists           VehicleWishlist[]
+  buyerEnquiries      BuyerEnquiry[] @relation("VehicleEnquiry")
+  convertedFromLeads  Lead[]         @relation("ConvertedVehicle")
+  reconStages         ReconStage[]
+
+  @@index([currentStage])
+  @@index([make, model, bodyType, fuelType, year])
+  @@map("vehicles")
+}
+
+/// Detailed technical specifications. Separate from vehicles to keep
+/// the main vehicles table lean for list/search queries.
+model VehicleSpec {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId             String   @unique @map("vehicle_id") @db.ObjectId
+  acceleration0To60     Float?   @map("acceleration_0_to_60")
+  topSpeedMph           Int?     @map("top_speed_mph")
+  fuelEconomyUrban      Float?   @map("fuel_economy_urban")
+  fuelEconomyExtraUrban Float?   @map("fuel_economy_extra_urban")
+  fuelEconomyCombined   Float?   @map("fuel_economy_combined")
+  co2EmissionsGkm       Int?     @map("co2_emissions_gkm")
+  euroEmissionsStandard String?  @map("euro_emissions_standard")
+  bhp                   Int?
+  torqueNm              Int?     @map("torque_nm")
+  driveType             String?  @map("drive_type")
+  kerbWeightKg          Int?     @map("kerb_weight_kg")
+
+  vehicle               Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_specs")
+}
+
+/// Individual features/options. Supports multi-value filter queries.
+model VehicleFeature {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId   String          @map("vehicle_id") @db.ObjectId
+  category    FeatureCategory
+  featureName String          @map("feature_name")
+
+  vehicle     Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([featureName, vehicleId])
+  @@index([vehicleId])
+  @@map("vehicle_features")
+}
+
+/// Append-only price change log. Never UPDATE — only INSERT.
+/// Source of truth for seller portal price history chart.
+model VehiclePriceHistory {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId        String            @map("vehicle_id") @db.ObjectId
+  priceGbp         Int               @map("price_gbp")
+  previousPriceGbp Int?              @map("previous_price_gbp")
+  changeReason     PriceChangeReason @map("change_reason")
+  changedBy        String?           @map("changed_by") @db.ObjectId
+  changedAt        DateTime          @default(now()) @map("changed_at")
+
+  vehicle          Vehicle           @relation(fields: [vehicleId], references: [id])
+  user             User?             @relation("PriceChangedBy", fields: [changedBy], references: [id])
+
+  @@index([vehicleId, changedAt(sort: Desc)])
+  @@map("vehicle_price_history")
+}
+
+/// Append-only stage change log. Never UPDATE — only INSERT.
+/// Source of truth for the seller portal recon tracker timestamps.
+model VehicleStatusHistory {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId  String   @map("vehicle_id") @db.ObjectId
+  fromStage  String?  @map("from_stage")
+  toStage    String   @map("to_stage")
+  changedBy  String?  @map("changed_by") @db.ObjectId
+  notes      String?
+  changedAt  DateTime @default(now()) @map("changed_at")
+
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+  user       User?    @relation("StatusChangedBy", fields: [changedBy], references: [id])
+
+  @@index([vehicleId, changedAt(sort: Desc)])
+  @@map("vehicle_status_history")
+}
+
+/// Condition issues identified at inspection.
+/// is_disclosed_to_buyer defaults true — all damage disclosed unless overridden.
+model VehicleDamageItem {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId             String   @map("vehicle_id") @db.ObjectId
+  location              String
+  severity              String
+  description           String?
+  estimatedRepairCostGbp Int?    @map("estimated_repair_cost_gbp")
+  isDisclosedToBuyer    Boolean  @default(true) @map("is_disclosed_to_buyer")
+  isRepaired            Boolean  @default(false) @map("is_repaired")
+  repairedAt            DateTime? @map("repaired_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  vehicle               Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@map("vehicle_damage_items")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 4 — MEDIA
+// ─────────────────────────────────────────────────────────────
+
+/// All image and video assets. Polymorphic via entity_type + entity_id.
+/// cdn_url is the ONLY URL exposed publicly — always points to Cloudflare R2.
+/// storage_key used internally for R2 deletion operations.
+/// 360 spin: 24 rows per vehicle with is_360_frame=true, frame_index 0-23.
+/// Primary photo: one is_primary=true per vehicle.
+model MediaFile {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  entityType    MediaEntityType @map("entity_type")
+  entityId      String          @map("entity_id") @db.ObjectId
+  category      MediaCategory
+  /// Cloudflare R2 CDN URL — public-facing. Default: 960px WebP variant.
+  cdnUrl        String          @map("cdn_url")
+  /// R2 object key — used for deletion. Never expose publicly.
+  storageKey    String          @map("storage_key")
+  mimeType      String?         @map("mime_type")
+  fileSizeBytes Int?            @map("file_size_bytes")
+  widthPx       Int?            @map("width_px")
+  heightPx      Int?            @map("height_px")
+  sortOrder     Int?            @map("sort_order")
+  /// One primary per vehicle.
+  isPrimary     Boolean         @default(false) @map("is_primary")
+  is360Frame    Boolean         @default(false) @map("is_360_frame")
+  /// 0-23 for 360 spin frames. Null for all other types.
+  frameIndex    Int?            @map("frame_index")
+  uploadedBy    String?         @map("uploaded_by") @db.ObjectId
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  uploader      User?           @relation("MediaUploadedBy", fields: [uploadedBy], references: [id])
+  vehicle       Vehicle?        @relation("VehicleMedia", fields: [entityId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([entityId, is360Frame, frameIndex])
+  @@map("media_files")
+}
+
+/// Signed agreements, certificates, and reports.
+/// Tracks signing state unlike media_files.
+/// version incremented when a document is superseded.
+/// is_current=false on old versions; only one current per type per entity.
+model Document {
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  entityType       DocumentEntityType @map("entity_type")
+  entityId         String             @map("entity_id") @db.ObjectId
+  documentType     DocumentType       @map("document_type")
+  title            String
+  cdnUrl           String?            @map("cdn_url")
+  storageKey       String?            @map("storage_key")
+  fileSizeBytes    Int?               @map("file_size_bytes")
+  version          Int                @default(1)
+  isCurrent        Boolean            @default(true) @map("is_current")
+  signedBySellerAt DateTime?          @map("signed_by_seller_at")
+  signedByBuyerAt  DateTime?          @map("signed_by_buyer_at")
+  signedByIautoAt  DateTime?          @map("signed_by_iauto_at")
+  uploadedBy       String?            @map("uploaded_by") @db.ObjectId
+  createdAt        DateTime           @default(now()) @map("created_at")
+
+  uploader         User?              @relation("DocumentUploadedBy", fields: [uploadedBy], references: [id])
+  consignments     Consignment[]      @relation("AgreementDocument")
+
+  @@index([entityType, entityId, documentType])
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 5 — LEADS & AUTOTRADER IMPORT
+// ─────────────────────────────────────────────────────────────
+
+/// Source of truth for the outbound sales CRM pipeline.
+model Lead {
+  id                       String      @id @default(auto()) @map("_id") @db.ObjectId
+  /// Telnyx listing ID. ON CONFLICT DO UPDATE on re-scrape.
+  autotraderListingId      String?     @unique @map("autotrader_listing_id")
+  listingUrl               String?     @map("listing_url")
+  /// Full scrape payload stored verbatim — never discard.
+  rawScrapedData           Json?       @map("raw_scraped_data")
+  sellerFirstName          String?     @map("seller_first_name")
+  sellerLastName           String?     @map("seller_last_name")
+  sellerPhone              String?     @map("seller_phone")
+  sellerEmail              String?     @map("seller_email")
+  sellerContactUrl         String?     @map("seller_contact_url")
+  vehicleReg               String?     @map("vehicle_reg")
+  vehicleVin               String?     @map("vehicle_vin")
+  vehicleYear              Int?        @map("vehicle_year")
+  vehicleMake              String?     @map("vehicle_make")
+  vehicleModel             String?     @map("vehicle_model")
+  vehicleTrim              String?     @map("vehicle_trim")
+  vehicleMileage           Int?        @map("vehicle_mileage")
+  vehicleBodyType          String?     @map("vehicle_body_type")
+  vehicleFuelType          String?     @map("vehicle_fuel_type")
+  vehicleTransmission      String?     @map("vehicle_transmission")
+  /// In pence
+  askingPriceGbp           Int?        @map("asking_price_gbp")
+  listingDescription       String?     @map("listing_description")
+  locationPostcode         String?     @map("location_postcode")
+  /// Array of AutoTrader image URLs at time of scrape
+  scrapedImageUrls         Json?       @map("scraped_image_urls")
+  listingDate              DateTime?   @map("listing_date")
+  daysListedAtImport       Int?        @map("days_listed_at_import")
+  /// 0-100. Higher = better fit for iAutoSale proposition.
+  scoutScore               Int?        @map("scout_score")
+  scoutTier                ScoutTier?  @map("scout_tier")
+  status                   LeadStatus  @default(new)
+  assignedTo               String?     @map("assigned_to") @db.ObjectId
+  /// Set at conversion. Links lead to the vehicle record created.
+  convertedToVehicleId     String?     @map("converted_to_vehicle_id") @db.ObjectId
+  convertedToConsignmentId String?     @map("converted_to_consignment_id") @db.ObjectId
+  /// Denormalised from communication_opt_outs for fast CRM filtering.
+  doNotCall                Boolean     @default(false) @map("do_not_call")
+  doNotSms                 Boolean     @default(false) @map("do_not_sms")
+  /// Shortcut to last call — avoids subquery in CRM list view.
+  lastCallSessionId        String?     @map("last_call_session_id") @db.ObjectId
+  scrapedAt                DateTime?   @map("scraped_at")
+  importedAt               DateTime    @default(now()) @map("imported_at")
+  updatedAt                DateTime    @updatedAt @map("updated_at")
+
+  assignedRep              User?       @relation("LeadAssignedTo", fields: [assignedTo], references: [id])
+  convertedVehicle         Vehicle?    @relation("ConvertedVehicle", fields: [convertedToVehicleId], references: [id])
+  convertedConsignment     Consignment? @relation("ConvertedConsignment", fields: [convertedToConsignmentId], references: [id])
+  lastCallSession          CallSession? @relation("LeadLastCall", fields: [lastCallSessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  outreachLogs             LeadOutreachLog[]
+  offers                   LeadOffer[]
+  callSessions             CallSession[] @relation("LeadCallSessions")
+  smsThreads               SmsThread[] @relation("LeadSmsThreads")
+  diallerQueueItems        DiallerQueueItem[] @relation("QueueItemLead")
+
+  @@index([status, scoutTier])
+  @@index([assignedTo, status])
+  @@index([sellerPhone])
+  @@map("leads")
+}
+
+/// Every contact attempt against a lead, in or out.
+/// call_session_id and sms_message_id link to the Telnyx records.
+model LeadOutreachLog {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  leadId          String           @map("lead_id") @db.ObjectId
+  staffId         String           @map("staff_id") @db.ObjectId
+  contactMethod   ContactMethod    @map("contact_method")
+  direction       ContactDirection
+  outcome         OutreachOutcome
+  durationSeconds Int?             @map("duration_seconds")
+  notes           String?
+  nextContactAt   DateTime?        @map("next_contact_at")
+  /// Set when contact method was phone_call — links to full Telnyx record.
+  callSessionId   String?          @map("call_session_id") @db.ObjectId
+  /// Set when contact method was sms — links to full Telnyx SMS record.
+  smsMessageId    String?          @map("sms_message_id") @db.ObjectId
+  contactedAt     DateTime         @default(now()) @map("contacted_at")
+
+  lead            Lead             @relation(fields: [leadId], references: [id])
+  staff           User             @relation("OutreachStaff", fields: [staffId], references: [id])
+  callSession     CallSession?     @relation("OutreachCallSession", fields: [callSessionId], references: [id])
+  smsMessage      SmsMessage?      @relation("OutreachSmsMessage", fields: [smsMessageId], references: [id])
+
+  @@index([leadId, contactedAt(sort: Desc)])
+  @@index([staffId, contactedAt(sort: Desc)])
+  @@map("lead_outreach_log")
+}
+
+/// Negotiation history for a lead — every offer made in either direction.
+model LeadOffer {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  leadId          String      @map("lead_id") @db.ObjectId
+  staffId         String?     @map("staff_id") @db.ObjectId
+  offerType       OfferType   @map("offer_type")
+  /// In pence
+  offeredPriceGbp Int         @map("offered_price_gbp")
+  status          OfferStatus @default(pending)
+  notes           String?
+  offeredAt       DateTime    @default(now()) @map("offered_at")
+  respondedAt     DateTime?   @map("responded_at")
+
+  lead            Lead        @relation(fields: [leadId], references: [id])
+  staff           User?       @relation("OfferStaff", fields: [staffId], references: [id])
+
+  @@index([leadId, offeredAt(sort: Desc)])
+  @@map("lead_offers")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 6 — CONSIGNMENTS & RECON
+// ─────────────────────────────────────────────────────────────
+
+/// The formal agreement between seller and iAutoSale for a specific vehicle.
+/// One active consignment per vehicle enforced by unique on vehicle_id.
+model Consignment {
+  id                    String            @id @default(auto()) @map("_id") @db.ObjectId
+  /// Null for direct consignments with no AutoTrader lead.
+  leadId                String?           @map("lead_id") @db.ObjectId
+  vehicleId             String            @unique @map("vehicle_id") @db.ObjectId
+  sellerId              String            @map("seller_id") @db.ObjectId
+  lotId                 String            @map("lot_id") @db.ObjectId
+  /// Agreed retail listing price in pence
+  agreedListingPriceGbp Int               @map("agreed_listing_price_gbp")
+  /// Minimum acceptable — never shown to seller or buyer
+  agreedFloorPriceGbp   Int?              @map("agreed_floor_price_gbp")
+  status                ConsignmentStatus @default(pending_collection)
+  collectionScheduledAt DateTime?         @map("collection_scheduled_at")
+  collectedAt           DateTime?         @map("collected_at")
+  listedAt              DateTime?         @map("listed_at")
+  soldAt                DateTime?         @map("sold_at")
+  agreementSignedAt     DateTime?         @map("agreement_signed_at")
+  agreementDocumentId   String?           @map("agreement_document_id") @db.ObjectId
+  /// Pre-authorised recon spend ceiling in pence
+  maxReconSpendGbp      Int?              @map("max_recon_spend_gbp")
+  /// Notes from seller at intake — visible to seller
+  sellerNotes           String?           @map("seller_notes")
+  /// Internal staff notes — never shown to seller
+  internalNotes         String?           @map("internal_notes")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+
+  vehicle               Vehicle           @relation("ConsignmentVehicle", fields: [vehicleId], references: [id])
+  seller                SellerProfile     @relation("ConsignmentSeller", fields: [sellerId], references: [id])
+  lot                   Lot               @relation("ConsignmentLot", fields: [lotId], references: [id])
+  agreementDocument     Document?         @relation("AgreementDocument", fields: [agreementDocumentId], references: [id])
+  convertedFromLeads    Lead[]            @relation("ConvertedConsignment")
+  reconStages           ReconStage[]
+  deals                 Deal[]            @relation("ConsignmentDeals")
+  payout                Payout?           @relation("ConsignmentPayout")
+
+  @@map("consignments")
+}
+
+/// HPI check result at vehicle intake. One per vehicle.
+/// If has_outstanding_finance=true the vehicle cannot list until resolved.
+model HpiCheck {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId             String   @unique @map("vehicle_id") @db.ObjectId
+  checkReference        String?  @map("check_reference")
+  isClear               Boolean  @map("is_clear")
+  hasOutstandingFinance Boolean  @map("has_outstanding_finance")
+  /// In pence if any
+  outstandingFinanceGbp Int?     @map("outstanding_finance_gbp")
+  isStolen              Boolean  @default(false) @map("is_stolen")
+  isWrittenOff          Boolean  @default(false) @map("is_written_off")
+  /// A, B, S, or N
+  writeOffCategory      String?  @map("write_off_category")
+  plateChangesCount     Int      @default(0) @map("plate_changes_count")
+  previousKeepersCount  Int?     @map("previous_keepers_count")
+  /// Array of MOT test records from DVLA
+  motHistory            Json?    @map("mot_history")
+  /// Full API response — never discard
+  rawResponse           Json?    @map("raw_response")
+  performedBy           String?  @map("performed_by") @db.ObjectId
+  checkedAt             DateTime @default(now()) @map("checked_at")
+
+  vehicle               Vehicle  @relation(fields: [vehicleId], references: [id])
+  performer             User?    @relation("HpiPerformedBy", fields: [performedBy], references: [id])
+
+  @@map("hpi_checks")
+}
+
+/// One row per reconditioning stage per consignment (up to 7 per vehicle).
+/// Unique on (consignment_id, stage_name) — each stage appears once.
+model ReconStage {
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId        String           @map("vehicle_id") @db.ObjectId
+  consignmentId    String           @map("consignment_id") @db.ObjectId
+  stageName        ReconStageName   @map("stage_name")
+  status           ReconStageStatus @default(pending)
+  assignedVendor   String?          @map("assigned_vendor")
+  estimatedCostGbp Int?             @map("estimated_cost_gbp")
+  actualCostGbp    Int?             @map("actual_cost_gbp")
+  preAuthorisedAt  DateTime?        @map("pre_authorised_at")
+  preAuthorisedBy  String?          @map("pre_authorised_by") @db.ObjectId
+  startedAt        DateTime?        @map("started_at")
+  completedAt      DateTime?        @map("completed_at")
+  notes            String?
+  createdBy        String?          @map("created_by") @db.ObjectId
+  updatedBy        String?          @map("updated_by") @db.ObjectId
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  vehicle          Vehicle          @relation(fields: [vehicleId], references: [id])
+  consignment      Consignment      @relation(fields: [consignmentId], references: [id])
+  preAuthUser      User?            @relation("ReconPreAuth", fields: [preAuthorisedBy], references: [id])
+  updatedByUser    User?            @relation("ReconUpdatedBy", fields: [updatedBy], references: [id])
+  workItems        ReconWorkItem[]
+
+  @@unique([consignmentId, stageName])
+  @@index([vehicleId])
+  @@map("recon_stages")
+}
+
+/// Individual line items within a recon stage.
+/// Every item must be approved before work begins.
+/// actual_cost_gbp feeds the payout deductions calculation.
+model ReconWorkItem {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  reconStageId     String            @map("recon_stage_id") @db.ObjectId
+  description      String
+  category         ReconWorkCategory
+  estimatedCostGbp Int?              @map("estimated_cost_gbp")
+  actualCostGbp    Int?              @map("actual_cost_gbp")
+  isApproved       Boolean           @default(false) @map("is_approved")
+  approvedBy       String?           @map("approved_by") @db.ObjectId
+  approvedAt       DateTime?         @map("approved_at")
+  isCompleted      Boolean           @default(false) @map("is_completed")
+  completedAt      DateTime?         @map("completed_at")
+
+  reconStage       ReconStage        @relation(fields: [reconStageId], references: [id])
+  approver         User?             @relation("WorkItemApprovedBy", fields: [approvedBy], references: [id])
+
+  @@index([reconStageId])
+  @@map("recon_work_items")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 7 — DEALS, FINANCE & PAYOUTS
+// ─────────────────────────────────────────────────────────────
+
+/// Buyer transaction for a vehicle. One deal per consignment at a time.
+/// return_window_expires_at = funded_at + 7 days.
+model Deal {
+  id                    String     @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId             String     @map("vehicle_id") @db.ObjectId
+  consignmentId         String     @map("consignment_id") @db.ObjectId
+  buyerId               String     @map("buyer_id") @db.ObjectId
+  /// Final agreed sale price in pence
+  salePriceGbp          Int        @map("sale_price_gbp")
+  status                DealStatus @default(reserved)
+  reservationFeeGbp     Int?       @map("reservation_fee_gbp")
+  reservationPaidAt     DateTime?  @map("reservation_paid_at")
+  identityVerifiedAt    DateTime?  @map("identity_verified_at")
+  documentsSentAt       DateTime?  @map("documents_sent_at")
+  documentsSignedAt     DateTime?  @map("documents_signed_at")
+  fundedAt              DateTime?  @map("funded_at")
+  deliveredAt           DateTime?  @map("delivered_at")
+  /// funded_at + 7 days
+  returnWindowExpiresAt DateTime?  @map("return_window_expires_at")
+  returnInitiatedAt     DateTime?  @map("return_initiated_at")
+  closedAt              DateTime?  @map("closed_at")
+  assignedTo            String?    @map("assigned_to") @db.ObjectId
+  createdAt             DateTime   @default(now()) @map("created_at")
+  updatedAt             DateTime   @updatedAt @map("updated_at")
+
+  vehicle               Vehicle    @relation("DealVehicle", fields: [vehicleId], references: [id])
+  consignment           Consignment @relation("ConsignmentDeals", fields: [consignmentId], references: [id])
+  buyer                 BuyerProfile @relation("DealBuyer", fields: [buyerId], references: [id])
+  assignedRep           User?      @relation("DealAssignedTo", fields: [assignedTo], references: [id])
+  financeApplication    FinanceApplication?
+  escrowConditions      EscrowCondition[]
+  payout                Payout?    @relation("DealPayout")
+
+  @@index([status])
+  @@index([buyerId])
+  @@index([consignmentId])
+  @@map("deals")
+}
+
+/// Buyer finance application for a deal. One application per deal.
+/// commission_gbp is iAutoSale's primary revenue field — feeds Finance P&L.
+model FinanceApplication {
+  id                   String                   @id @default(auto()) @map("_id") @db.ObjectId
+  dealId               String                   @unique @map("deal_id") @db.ObjectId
+  buyerId              String                   @map("buyer_id") @db.ObjectId
+  lenderName           String?                  @map("lender_name")
+  applicationReference String?                  @map("application_reference")
+  requestedAmountGbp   Int?                     @map("requested_amount_gbp")
+  depositAmountGbp     Int?                     @map("deposit_amount_gbp")
+  approvedAmountGbp    Int?                     @map("approved_amount_gbp")
+  aprPct               Float?                   @map("apr_pct")
+  termMonths           Int?                     @map("term_months")
+  monthlyPaymentGbp    Int?                     @map("monthly_payment_gbp")
+  totalRepayableGbp    Int?                     @map("total_repayable_gbp")
+  status               FinanceApplicationStatus @default(draft)
+  /// iAutoSale's revenue from this deal — in pence
+  commissionGbp        Int?                     @map("commission_gbp")
+  appliedAt            DateTime?                @map("applied_at")
+  decisionAt           DateTime?                @map("decision_at")
+  fundedAt             DateTime?                @map("funded_at")
+  notes                String?
+
+  deal                 Deal                     @relation(fields: [dealId], references: [id])
+  buyer                BuyerProfile             @relation("FinanceBuyer", fields: [buyerId], references: [id])
+
+  @@index([status])
+  @@map("finance_applications")
+}
+
+/// Five conditions that must all be met before payout releases.
+/// Unique on (deal_id, condition_type) — one row per condition per deal.
+model EscrowCondition {
+  id            String              @id @default(auto()) @map("_id") @db.ObjectId
+  dealId        String              @map("deal_id") @db.ObjectId
+  conditionType EscrowConditionType @map("condition_type")
+  isMet         Boolean             @default(false) @map("is_met")
+  metAt         DateTime?           @map("met_at")
+  metBy         String?             @map("met_by") @db.ObjectId
+  notes         String?
+
+  deal          Deal                @relation(fields: [dealId], references: [id])
+  metByUser     User?               @relation("EscrowMetBy", fields: [metBy], references: [id])
+
+  @@unique([dealId, conditionType])
+  @@map("escrow_conditions")
+}
+
+/// Seller payment record. One per consignment.
+/// net_payout_gbp should be computed in application as:
+///   gross_sale_price - recon_costs - transport_costs - finance_payoff - other_deductions
+model Payout {
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  consignmentId      String       @unique @map("consignment_id") @db.ObjectId
+  dealId             String       @unique @map("deal_id") @db.ObjectId
+  sellerId           String       @map("seller_id") @db.ObjectId
+  grossSalePriceGbp  Int          @map("gross_sale_price_gbp")
+  reconCostsGbp      Int          @default(0) @map("recon_costs_gbp")
+  transportCostsGbp  Int          @default(0) @map("transport_costs_gbp")
+  financePayoffGbp   Int          @default(0) @map("finance_payoff_gbp")
+  otherDeductionsGbp Int          @default(0) @map("other_deductions_gbp")
+  /// Compute as: gross - recon - transport - finance_payoff - other
+  netPayoutGbp       Int          @map("net_payout_gbp")
+  payoutMethod       PayoutMethod @map("payout_method")
+  /// Snapshot of bank details at time of payout — not FK to profile
+  bankAccountName    String?      @map("bank_account_name")
+  paymentReference   String?      @map("payment_reference")
+  status             PayoutStatus @default(pending)
+  approvedBy         String?      @map("approved_by") @db.ObjectId
+  approvedAt         DateTime?    @map("approved_at")
+  sentAt             DateTime?    @map("sent_at")
+  confirmedAt        DateTime?    @map("confirmed_at")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  consignment        Consignment  @relation("ConsignmentPayout", fields: [consignmentId], references: [id])
+  deal               Deal         @relation("DealPayout", fields: [dealId], references: [id])
+  approver           User?        @relation("PayoutApprovedBy", fields: [approvedBy], references: [id])
+
+  @@index([status])
+  @@map("payouts")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 8 — BUYER ACTIVITY
+// ─────────────────────────────────────────────────────────────
+
+/// Saved search with alert-on-match capability.
+/// filters stored as JSON — full filter state for re-running the query.
+model SavedSearch {
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId         String       @map("buyer_id") @db.ObjectId
+  searchName      String       @map("search_name")
+  /// Full filter state. See schema in documentation.
+  filters         Json
+  alertOnNewMatch Boolean      @default(true) @map("alert_on_new_match")
+  lastAlertedAt   DateTime?    @map("last_alerted_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  buyer           BuyerProfile @relation(fields: [buyerId], references: [id])
+
+  @@index([buyerId])
+  @@map("saved_searches")
+}
+
+/// Buyer wishlist. Drives "X saves" count on admin inventory view.
+model VehicleWishlist {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId   String       @map("buyer_id") @db.ObjectId
+  vehicleId String       @map("vehicle_id") @db.ObjectId
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  buyer     BuyerProfile @relation(fields: [buyerId], references: [id])
+  vehicle   Vehicle      @relation(fields: [vehicleId], references: [id])
+
+  @@unique([buyerId, vehicleId])
+  @@map("vehicle_wishlists")
+}
+
+/// Every VDP view, authenticated or anonymous.
+/// session_id used to track anonymous sessions.
+/// Drives "X views (7 days)" on seller portal and admin inventory.
+model VehicleView {
+  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId           String        @map("vehicle_id") @db.ObjectId
+  viewerId            String?       @map("viewer_id") @db.ObjectId
+  sessionId           String        @map("session_id")
+  source              String?
+  viewDurationSeconds Int?          @map("view_duration_seconds")
+  viewedAt            DateTime      @default(now()) @map("viewed_at")
+
+  vehicle             Vehicle       @relation(fields: [vehicleId], references: [id])
+  viewer              BuyerProfile? @relation("VehicleViewer", fields: [viewerId], references: [id])
+
+  @@index([vehicleId, viewedAt(sort: Desc)])
+  @@map("vehicle_views")
+}
+
+/// Buyer enquiry on a specific vehicle.
+/// Anonymous enquiries allowed — buyerId nullable.
+model BuyerEnquiry {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId   String        @map("vehicle_id") @db.ObjectId
+  buyerId     String?       @map("buyer_id") @db.ObjectId
+  name        String?
+  email       String?
+  phone       String?
+  message     String?
+  status      String        @default("open")
+  assignedTo  String?       @map("assigned_to") @db.ObjectId
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  vehicle     Vehicle       @relation("VehicleEnquiry", fields: [vehicleId], references: [id])
+  buyer       BuyerProfile? @relation("EnquiryBuyer", fields: [buyerId], references: [id])
+  assignedRep User?         @relation("EnquiryAssignedTo", fields: [assignedTo], references: [id])
+
+  @@index([vehicleId])
+  @@map("buyer_enquiries")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 9 — MESSAGING
+// ─────────────────────────────────────────────────────────────
+
+/// Thread context linked to a specific entity (consignment, deal, lead).
+/// updated_at advances on each new message — drives newest-first sort.
+model Conversation {
+  id               String                 @id @default(auto()) @map("_id") @db.ObjectId
+  conversationType ConversationType       @map("conversation_type")
+  entityType       ConversationEntityType @map("entity_type")
+  entityId         String                 @map("entity_id") @db.ObjectId
+  subject          String?
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
+
+  participants     ConversationParticipant[]
+  messages         Message[]
+
+  @@index([entityType, entityId])
+  @@map("conversations")
+}
+
+/// Participants in a conversation thread.
+/// last_read_at drives unread badge count on nav.
+model ConversationParticipant {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String       @map("conversation_id") @db.ObjectId
+  userId         String       @map("user_id") @db.ObjectId
+  lastReadAt     DateTime?    @map("last_read_at")
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+/// Individual messages within a conversation.
+/// system_event type used for automated stage-change notifications.
+model Message {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String      @map("conversation_id") @db.ObjectId
+  senderId       String      @map("sender_id") @db.ObjectId
+  body           String
+  messageType    MessageType @default(text) @map("message_type")
+  isDeleted      Boolean     @default(false) @map("is_deleted")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+model Notification {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String    @map("user_id") @db.ObjectId
+  type       String
+  title      String
+  body       String?
+  entityType String?   @map("entity_type")
+  entityId   String?   @map("entity_id")
+  isRead     Boolean   @default(false) @map("is_read")
+  readAt     DateTime? @map("read_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user       User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @map("user_id") @db.ObjectId
+  eventType    String   @map("event_type")
+  channelEmail Boolean  @default(true) @map("channel_email")
+  channelSms   Boolean  @default(false) @map("channel_sms")
+  channelPush  Boolean  @default(true) @map("channel_push")
+  isEnabled    Boolean  @default(true) @map("is_enabled")
+
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, eventType])
+  @@map("notification_preferences")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 10 — AUDIT & SYSTEM
+// ─────────────────────────────────────────────────────────────
+
+/// Append-only, immutable change log across all key tables.
+/// Source of truth for admin compliance page and dispute resolution.
+model AuditLog {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  tableName  String         @map("table_name")
+  recordId   String         @map("record_id")
+  operation  AuditOperation
+  /// Full previous row state — null on INSERT
+  oldValues  Json?          @map("old_values")
+  /// Full new row state — null on DELETE
+  newValues  Json?          @map("new_values")
+  changedBy  String?        @map("changed_by") @db.ObjectId
+  changedAt  DateTime       @default(now()) @map("changed_at")
+  ipAddress  String?        @map("ip_address")
+  sessionId  String?        @map("session_id")
+
+  user       User?          @relation("AuditChangedBy", fields: [changedBy], references: [id])
+
+  @@index([tableName, recordId])
+  @@index([changedBy, changedAt(sort: Desc)])
+  @@index([changedAt(sort: Desc)])
+  @@map("audit_log")
+}
+
+model ApiKey {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String    @map("user_id") @db.ObjectId
+  name       String
+  keyHash    String    @unique @map("key_hash")
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user       User      @relation("ApiKeyOwner", fields: [userId], references: [id])
+
+  @@map("api_keys")
+}
+
+model Webhook {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  url         String
+  events      Json
+  secretHash  String    @map("secret_hash")
+  isActive    Boolean   @default(true) @map("is_active")
+  lastFiredAt DateTime? @map("last_fired_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("webhooks")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOMAIN 11 — TELNYX / COMMS
+// ─────────────────────────────────────────────────────────────
+
+/// Every phone number iAutoSale owns in Telnyx.
+/// number_type drives inbound routing logic.
+model TelnyxPhoneNumber {
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  /// Telnyx internal ID — used for API operations
+  telnyxNumberId   String           @unique @map("telnyx_number_id")
+  /// E.164 format: +441212345678
+  phoneNumber      String           @unique @map("phone_number")
+  friendlyName     String?          @map("friendly_name")
+  numberType       TelnyxNumberType @map("number_type")
+  assignedTo       String?          @map("assigned_to") @db.ObjectId
+  lotId            String?          @map("lot_id") @db.ObjectId
+  /// {"voice": true, "sms": true, "mms": false}
+  capabilities     Json?
+  isActive         Boolean          @default(true) @map("is_active")
+  monthlyCostPence Int?             @map("monthly_cost_pence")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  assignedUser     User?            @relation("NumberAssignedTo", fields: [assignedTo], references: [id])
+  lot              Lot?             @relation("LotNumber", fields: [lotId], references: [id])
+  callSessions     CallSession[]    @relation("CallTelnyxNumber")
+  smsThreads       SmsThread[]      @relation("ThreadTelnyxNumber")
+
+  @@map("telnyx_phone_numbers")
+}
+
+/// Master record for every call leg, inbound or outbound.
+/// telnyx_call_control_id is the webhook routing key — unique, indexed.
+model CallSession {
+  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
+  /// Telnyx Call Control ID — used to send mid-call commands.
+  telnyxCallControlId String        @unique @map("telnyx_call_control_id")
+  telnyxCallLegId     String?       @map("telnyx_call_leg_id")
+  direction           CallDirection
+  /// E.164
+  fromNumber          String        @map("from_number")
+  /// E.164
+  toNumber            String        @map("to_number")
+  telnyxNumberId      String?       @map("telnyx_number_id") @db.ObjectId
+  repId               String?       @map("rep_id") @db.ObjectId
+  /// 'lead' | 'seller' | 'buyer' | 'unknown'
+  entityType          String?       @map("entity_type")
+  entityId            String?       @map("entity_id")
+  /// Denormalised from entity for fast CRM queries
+  leadId              String?       @map("lead_id") @db.ObjectId
+  diallerQueueId      String?       @map("dialler_queue_id")
+  status              CallStatus    @default(initiated)
+  outcome             CallOutcome?
+  outcomeNotes        String?       @map("outcome_notes")
+  dispositionSetBy    String?       @map("disposition_set_by") @db.ObjectId
+  dispositionSetAt    DateTime?     @map("disposition_set_at")
+  /// answered_at - ringing_at in seconds
+  durationSeconds     Int?          @map("duration_seconds")
+  recordingAvailable  Boolean       @default(false) @map("recording_available")
+  costPence           Int?          @map("cost_pence")
+  initiatedAt         DateTime?     @map("initiated_at")
+  ringingAt           DateTime?     @map("ringing_at")
+  answeredAt          DateTime?     @map("answered_at")
+  endedAt             DateTime?     @map("ended_at")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  telnyxNumber        TelnyxPhoneNumber? @relation("CallTelnyxNumber", fields: [telnyxNumberId], references: [id])
+  rep                 User?         @relation("RepCallSessions", fields: [repId], references: [id])
+  dispositionUser     User?         @relation("DispositionSetBy", fields: [dispositionSetBy], references: [id])
+  lead                Lead?         @relation("LeadCallSessions", fields: [leadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  diallerQueueItems   DiallerQueueItem[] @relation("CallQueueItem")
+  /// Reference from leads.last_call_session_id
+  leadLastCallRef     Lead[]        @relation("LeadLastCall")
+  events              CallEvent[]
+  recording           CallRecording?
+  outreachLogs        LeadOutreachLog[] @relation("OutreachCallSession")
+
+  @@index([repId, initiatedAt(sort: Desc)])
+  @@index([leadId, initiatedAt(sort: Desc)])
+  @@index([status])
+  @@map("call_sessions")
+}
+
+/// Raw Telnyx webhook events — full audit trail per call.
+/// Write-only in normal operation. Used for debugging and billing reconciliation.
+model CallEvent {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  callSessionId   String      @map("call_session_id") @db.ObjectId
+  /// e.g. call.initiated, call.answered, call.hangup, call.recording.saved
+  telnyxEventType String      @map("telnyx_event_type")
+  eventPayload    Json        @map("event_payload")
+  receivedAt      DateTime    @default(now()) @map("received_at")
+
+  callSession     CallSession @relation(fields: [callSessionId], references: [id])
+
+  @@index([callSessionId, receivedAt(sort: Desc)])
+  @@map("call_events")
+}
+
+/// Processed call recordings stored in Cloudflare R2.
+model CallRecording {
+  id                String               @id @default(auto()) @map("_id") @db.ObjectId
+  callSessionId     String               @unique @map("call_session_id") @db.ObjectId
+  telnyxRecordingId String?              @map("telnyx_recording_id")
+  /// Telnyx hosted URL — used for initial download only
+  telnyxSourceUrl   String?              @map("telnyx_source_url")
+  /// R2 CDN URL — served to admin UI
+  cdnUrl            String?              @map("cdn_url")
+  storageKey        String?              @map("storage_key")
+  durationSeconds   Int?                 @map("duration_seconds")
+  fileSizeBytes     Int?                 @map("file_size_bytes")
+  isTranscribed     Boolean              @default(false) @map("is_transcribed")
+  transcript        String?
+  transcriptSummary String?              @map("transcript_summary")
+  /// False until downloaded from Telnyx and stored in R2
+  isAvailable       Boolean              @default(false) @map("is_available")
+  accessLevel       RecordingAccessLevel @default(admin_only) @map("access_level")
+  createdAt         DateTime             @default(now()) @map("created_at")
+
+  callSession       CallSession          @relation(fields: [callSessionId], references: [id])
+
+  @@map("call_recordings")
+}
+
+/// SMS conversation context between one iAutoSale number and one contact.
+/// Unique on (iautosale_number, contact_number) — one thread per pair.
+model SmsThread {
+  id                   String        @id @default(auto()) @map("_id") @db.ObjectId
+  /// The iAutoSale E.164 number used in this thread
+  iautoSaleNumber      String        @map("iautosale_number")
+  /// The external contact E.164 number
+  contactNumber        String        @map("contact_number")
+  repId                String?       @map("rep_id") @db.ObjectId
+  entityType           String?       @map("entity_type")
+  entityId             String?       @map("entity_id")
+  leadId               String?       @map("lead_id") @db.ObjectId
+  lastMessageAt        DateTime?     @map("last_message_at")
+  lastMessageDirection SmsDirection? @map("last_message_direction")
+  /// First 100 chars of last message — avoids subquery in inbox
+  lastMessagePreview   String?       @map("last_message_preview")
+  unreadCountRep       Int           @default(0) @map("unread_count_rep")
+  /// Denormalised from communication_opt_outs
+  isOptedOut           Boolean       @default(false) @map("is_opted_out")
+  optedOutAt           DateTime?     @map("opted_out_at")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  rep                  User?         @relation("ThreadRep", fields: [repId], references: [id])
+  lead                 Lead?         @relation("LeadSmsThreads", fields: [leadId], references: [id])
+  telnyxNumber         TelnyxPhoneNumber? @relation("ThreadTelnyxNumber", fields: [iautoSaleNumber], references: [phoneNumber])
+  messages             SmsMessage[]
+
+  @@unique([iautoSaleNumber, contactNumber])
+  @@index([repId, lastMessageAt(sort: Desc)])
+  @@map("sms_threads")
+}
+
+/// Individual SMS/MMS messages sent or received.
+model SmsMessage {
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  threadId        String       @map("thread_id") @db.ObjectId
+  /// Telnyx message ID — null until sent confirmation received
+  telnyxMessageId String?      @unique @map("telnyx_message_id")
+  direction       SmsDirection
+  fromNumber      String       @map("from_number")
+  toNumber        String       @map("to_number")
+  body            String
+  /// MMS attachment URLs
+  mediaUrls       Json?        @map("media_urls")
+  status          SmsStatus    @default(queued)
+  telnyxStatus    String?      @map("telnyx_status")
+  errorCode       String?      @map("error_code")
+  errorMessage    String?      @map("error_message")
+  sentBy          String?      @map("sent_by") @db.ObjectId
+  templateId      String?      @map("template_id") @db.ObjectId
+  costPence       Int?         @map("cost_pence")
+  sentAt          DateTime?    @map("sent_at")
+  deliveredAt     DateTime?    @map("delivered_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  thread          SmsThread    @relation(fields: [threadId], references: [id])
+  sender          User?        @relation("SmsSentBy", fields: [sentBy], references: [id])
+  template        SmsTemplate? @relation(fields: [templateId], references: [id])
+  outreachLogs    LeadOutreachLog[] @relation("OutreachSmsMessage")
+
+  @@index([threadId, createdAt(sort: Desc)])
+  @@map("sms_messages")
+}
+
+/// Pre-approved message templates. Reps select from approved templates only.
+model SmsTemplate {
+  id             String              @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  /// Body with {{variable}} placeholders
+  body           String
+  category       SmsTemplateCategory
+  /// ["seller_first_name", "vehicle_year", "vehicle_make"] etc.
+  variables      Json?
+  characterCount Int?                @map("character_count")
+  isActive       Boolean             @default(true) @map("is_active")
+  createdBy      String?             @map("created_by") @db.ObjectId
+  approvedBy     String?             @map("approved_by") @db.ObjectId
+  approvedAt     DateTime?           @map("approved_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  creator        User?               @relation("TemplateCreatedBy", fields: [createdBy], references: [id])
+  approver       User?               @relation("TemplateApprovedBy", fields: [approvedBy], references: [id])
+  messages       SmsMessage[]
+
+  @@map("sms_templates")
+}
+
+/// A rep's active power dialling session.
+/// One active session per rep at a time.
+model DiallerSession {
+  id                     String               @id @default(auto()) @map("_id") @db.ObjectId
+  repId                  String               @map("rep_id") @db.ObjectId
+  status                 DiallerSessionStatus @default(active)
+  /// Lead filter used to build this queue
+  filterCriteria         Json?                @map("filter_criteria")
+  totalLeadsQueued       Int                  @default(0) @map("total_leads_queued")
+  leadsCalled            Int                  @default(0) @map("leads_called")
+  leadsConnected         Int                  @default(0) @map("leads_connected")
+  leadsConverted         Int                  @default(0) @map("leads_converted")
+  avgCallDurationSeconds Int?                 @map("avg_call_duration_seconds")
+  startedAt              DateTime             @default(now()) @map("started_at")
+  pausedAt               DateTime?            @map("paused_at")
+  endedAt                DateTime?            @map("ended_at")
+  createdAt              DateTime             @default(now()) @map("created_at")
+  updatedAt              DateTime             @updatedAt @map("updated_at")
+
+  rep                    User                 @relation("DiallerRep", fields: [repId], references: [id])
+  queueItems             DiallerQueueItem[]
+
+  @@index([repId, startedAt(sort: Desc)])
+  @@index([status])
+  @@map("dialler_sessions")
+}
+
+/// Ordered list of leads for a dialling session.
+model DiallerQueueItem {
+  id            String                 @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId     String                 @map("session_id") @db.ObjectId
+  leadId        String                 @map("lead_id") @db.ObjectId
+  position      Int
+  status        DiallerQueueItemStatus @default(pending)
+  /// Set when the dialler initiates the call for this item
+  callSessionId String?                @map("call_session_id") @db.ObjectId
+  skipReason    String?                @map("skip_reason")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  updatedAt     DateTime               @updatedAt @map("updated_at")
+
+  session       DiallerSession         @relation(fields: [sessionId], references: [id])
+  lead          Lead                   @relation("QueueItemLead", fields: [leadId], references: [id])
+  callSession   CallSession?           @relation("CallQueueItem", fields: [callSessionId], references: [id])
+
+  @@unique([sessionId, leadId])
+  @@unique([sessionId, position])
+  @@index([sessionId, status, position])
+  @@map("dialler_queue_items")
+}
+
+/// PECR compliance opt-out registry.
+/// Checked before every outbound call and SMS — never skip this check.
+model CommunicationOptOut {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  /// E.164 format. Indexed for fast pre-send lookup.
+  phoneNumber    String     @map("phone_number")
+  optOutType     OptOutType @map("opt_out_type")
+  optedOutAt     DateTime   @default(now()) @map("opted_out_at")
+  optedOutVia    OptOutVia  @map("opted_out_via")
+  optedOutBy     String?    @map("opted_out_by") @db.ObjectId
+  /// Set when contact re-opts in
+  optedInAgainAt DateTime?  @map("opted_in_again_at")
+  optedInVia     OptInVia?  @map("opted_in_via")
+  notes          String?
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  optedOutByUser User?      @relation("OptOutBy", fields: [optedOutBy], references: [id])
+
+  @@index([phoneNumber])
+  @@map("communication_opt_outs")
+}

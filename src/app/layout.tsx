@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "@/styles/globals.css";
+import { AuthProvider } from "@/context/auth-context";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -17,9 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AutoConsign — Sell at Retail Price. Keep the Difference.",
+  title: "iAutoSale — Sell at Retail Price. Keep the Difference.",
   description:
-    "AutoConsign gets private sellers retail market price for their cars — with zero effort — through a transparent, technology-led consignment model.",
+    "iAutoSale gets private sellers retail market price for their cars — with zero effort — through a transparent, technology-led consignment model.",
 };
 
 export default function RootLayout({
@@ -29,7 +30,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

@@ -6,16 +6,24 @@ export function Hero() {
   const [regInput, setRegInput] = useState("");
 
   return (
-    <section className="relative w-full overflow-hidden" style={{ backgroundColor: "#008C7C" }}>
-      {/* Background image area */}
+    <section className="relative w-full overflow-hidden" style={{ minHeight: 520 }}>
+      {/* Background image */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute right-0 top-0 h-full w-1/2">
-          {/* Placeholder for hero image — car carrier / lifestyle shot */}
-          <div className="h-full w-full bg-gradient-to-l from-teal-800/30 to-transparent" />
-        </div>
+        <img
+          src="/images/hero-range-rover.jpg"
+          alt="Range Rover driving on a country road"
+          className="h-full w-full object-cover object-center"
+        />
       </div>
+      {/* Brand green overlay: 0% transparent (fully opaque) on left → 100% transparent on right */}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{
+          background: "linear-gradient(to right, rgba(0, 140, 124, 1) 0%, rgba(0, 140, 124, 0.85) 30%, rgba(0, 140, 124, 0.5) 55%, rgba(0, 140, 124, 0) 100%)",
+        }}
+      />
 
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-16 sm:px-8 md:py-20 lg:py-24">
+      <div className="relative z-[2] mx-auto max-w-[1400px] px-6 py-16 sm:px-8 md:py-20 lg:py-24">
         <div className="max-w-2xl">
           {/* Display headline */}
           <h1
@@ -36,20 +44,26 @@ export function Hero() {
             className="mt-4 max-w-lg text-white/90 font-body"
             style={{ fontSize: "17px", lineHeight: 1.65 }}
           >
-            AutoConsign gets private sellers retail market price for their cars
+            iAutoSale gets private sellers retail market price for their cars
             — with zero effort — through a transparent consignment model.
           </p>
 
           {/* Registration bar */}
-          <div
-            className="mt-8 flex items-center gap-1.5 bg-white p-1.5 shadow-lg"
+          <form
+            className="mt-8 flex items-center bg-white shadow-lg"
             style={{
               borderRadius: "14px",
               maxWidth: "520px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
             }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (regInput.trim()) {
+                window.location.href = `/sell/offer?reg=${encodeURIComponent(regInput.trim())}`;
+              }
+            }}
           >
-            <div className="flex flex-1 items-center gap-3 pl-4">
+            <div className="flex flex-1 items-center gap-3 px-5 py-4">
               <svg
                 width="18"
                 height="18"
@@ -59,6 +73,7 @@ export function Hero() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="shrink-0"
               >
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.3-4.3" />
@@ -72,24 +87,12 @@ export function Hero() {
                 style={{ backgroundColor: "#FFFFFF", color: "#374151" }}
               />
             </div>
-            <button
-              className="whitespace-nowrap font-heading text-white transition-colors duration-150"
-              style={{
-                backgroundColor: "#0F1724",
-                borderRadius: "100px",
-                padding: "12px 24px",
-                fontSize: "14px",
-                fontWeight: 600,
-              }}
-            >
-              Get an offer
-            </button>
-          </div>
+          </form>
 
           {/* Trust chips */}
           <div className="mt-6 flex flex-wrap gap-3">
             {[
-              "7% transparent fee",
+              "No commission fee",
               "Avg. £1,800 more than Cazoo",
               "Sold in 38 days avg.",
             ].map((chip) => (

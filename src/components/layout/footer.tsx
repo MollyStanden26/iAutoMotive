@@ -1,5 +1,35 @@
 "use client";
 
+import Link from "next/link";
+
+const linkMap: Record<string, string> = {
+  // Browse
+  "Browse cars": "/cars",
+  "SUVs": "/cars?type=suv",
+  "Saloons": "/cars?type=saloon",
+  "Electric": "/cars?type=electric",
+  "Under \u00a320k": "/cars?maxPrice=20000",
+  // Sell
+  "Sell your car": "/sell",
+  "How it works": "/sell/how-it-works",
+  "Pricing & fees": "/sell/pricing",
+  "Get an offer": "/sell",
+  // Company
+  "About us": "/about",
+  "Press": "/press",
+  "Careers": "/careers",
+  "Contact": "/contact",
+  // Legal
+  "Terms of service": "/legal/terms",
+  "Privacy policy": "/legal/privacy",
+  "Complaints": "/legal/complaints",
+  "FCA disclosure": "/legal/fca",
+  // Support
+  "FAQ": "/faq",
+  "Contact us": "/contact",
+  "support@iautosale.co.uk": "mailto:support@iautosale.co.uk",
+};
+
 const footerColumns = [
   {
     heading: "BROWSE",
@@ -7,7 +37,7 @@ const footerColumns = [
   },
   {
     heading: "SELL",
-    links: ["Sell your car", "How it works", "Pricing & fees", "Get an offer"],
+    links: ["Sell your car", "Pricing & fees", "Get an offer"],
   },
   {
     heading: "COMPANY",
@@ -19,7 +49,7 @@ const footerColumns = [
   },
   {
     heading: "SUPPORT",
-    links: ["FAQ", "Contact us", "support@autoconsign.co.uk"],
+    links: ["FAQ", "Contact us", "support@iautosale.co.uk"],
   },
 ];
 
@@ -45,29 +75,48 @@ export function Footer() {
                 {col.heading}
               </h4>
               <ul className="list-none p-0 m-0">
-                {col.links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="font-body block transition-colors duration-150"
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: 400,
-                        color: "#C8CDD6",
-                        lineHeight: 2.2,
-                        textDecoration: "none",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLAnchorElement).style.color = "#4DD9C7";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLAnchorElement).style.color = "#C8CDD6";
-                      }}
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
+                {col.links.map((link) => {
+                  const href = linkMap[link] || "#";
+                  const isExternal = href.startsWith("mailto:");
+                  const linkStyle = {
+                    fontSize: "14px",
+                    fontWeight: 400,
+                    color: "#C8CDD6",
+                    lineHeight: 2.2,
+                    textDecoration: "none",
+                  };
+                  const hoverIn = (e: React.MouseEvent) => {
+                    (e.currentTarget as HTMLElement).style.color = "#4DD9C7";
+                  };
+                  const hoverOut = (e: React.MouseEvent) => {
+                    (e.currentTarget as HTMLElement).style.color = "#C8CDD6";
+                  };
+                  return (
+                    <li key={link}>
+                      {isExternal ? (
+                        <a
+                          href={href}
+                          className="font-body block transition-colors duration-150"
+                          style={linkStyle}
+                          onMouseEnter={hoverIn}
+                          onMouseLeave={hoverOut}
+                        >
+                          {link}
+                        </a>
+                      ) : (
+                        <Link
+                          href={href}
+                          className="font-body block transition-colors duration-150"
+                          style={linkStyle}
+                          onMouseEnter={hoverIn}
+                          onMouseLeave={hoverOut}
+                        >
+                          {link}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -88,14 +137,14 @@ export function Footer() {
           {/* Left: Logo + copyright */}
           <div className="flex flex-col gap-2">
             <div className="font-heading" style={{ fontSize: "20px" }}>
-              <span style={{ fontWeight: 300, color: "#8492A8" }}>Auto</span>
-              <span style={{ fontWeight: 900, color: "#4DD9C7" }}>Consign</span>
+              <span style={{ fontWeight: 300, color: "#8492A8" }}>iAuto</span>
+              <span style={{ fontWeight: 900, color: "#4DD9C7" }}>Sale</span>
             </div>
             <p
               className="font-body"
               style={{ fontSize: "13px", fontWeight: 400, color: "#8492A8", margin: 0 }}
             >
-              &copy; {new Date().getFullYear()} AutoConsign Ltd. All rights reserved.
+              &copy; {new Date().getFullYear()} iAutoSale Ltd. All rights reserved.
             </p>
           </div>
 
@@ -146,7 +195,7 @@ export function Footer() {
             lineHeight: 1.6,
           }}
         >
-          AutoConsign Ltd is registered in England and Wales. FCA authorisation pending.
+          iAutoSale Ltd is registered in England and Wales. FCA authorisation pending.
         </p>
       </div>
     </footer>

@@ -8,7 +8,7 @@ const competitors = [
     highlighted: false,
   },
   {
-    name: "AutoConsign",
+    name: "iAutoSale",
     amount: "£13,950",
     label: "Net seller payout",
     highlighted: true,
@@ -63,7 +63,7 @@ export function ComparisonTable() {
             marginBottom: 0,
           }}
         >
-          See how AutoConsign compares for a typical £15,000 car
+          See how iAutoSale compares for a typical £15,000 car
         </p>
 
         {/* Comparison grid */}
@@ -132,7 +132,7 @@ export function ComparisonTable() {
                 {card.label}
               </p>
 
-              {/* Callout badge (AutoConsign only) */}
+              {/* Callout badge (iAutoSale only) */}
               {card.highlighted && "callout" in card && (
                 <span
                   style={{

@@ -23,7 +23,7 @@ const steps = [
     number: 4,
     title: "You get paid",
     description:
-      "When it sells, you receive net proceeds within 48 hours. Transparent 7% fee, no surprises.",
+      "When it sells, you receive the full proceeds within 48 hours. No commission fee, no surprises.",
   },
 ];
 

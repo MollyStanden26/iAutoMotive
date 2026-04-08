@@ -1,0 +1,20 @@
+import path from "node:path";
+import { defineConfig } from "prisma/config";
+
+export default defineConfig({
+  earlyAccess: true,
+  schema: path.join(__dirname, "schema.prisma"),
+  migrate: {
+    async url() {
+      return process.env.DATABASE_URL ?? "mongodb://localhost:27017/iautosale";
+    },
+  },
+  migrations: {
+    seed: "npx tsx prisma/seed.ts",
+  },
+  studio: {
+    async url() {
+      return process.env.DATABASE_URL ?? "mongodb://localhost:27017/iautosale";
+    },
+  },
+});

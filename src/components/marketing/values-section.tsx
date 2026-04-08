@@ -39,7 +39,7 @@ const values = [
     ),
     title: "Completely transparent",
     description:
-      "7% fee, taken when it sells. No hidden charges, no surprise deductions. You see your net payout estimate before you commit.",
+      "No commission fee. No hidden charges, no surprise deductions. You see your net payout estimate before you commit.",
   },
   {
     icon: (
@@ -76,7 +76,7 @@ export function ValuesSection() {
             color: "#006058",
           }}
         >
-          Why sellers choose AutoConsign
+          Why sellers choose iAutoSale
         </h2>
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
