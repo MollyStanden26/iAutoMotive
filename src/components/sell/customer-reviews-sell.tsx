@@ -5,14 +5,14 @@ import { useState } from 'react';
 const reviews = [
   {
     quote:
-      'iAutoSale made selling my BMW incredibly easy. I got a fair price and the entire process was handled online. Highly recommend to anyone looking to sell their car without the usual hassle.',
+      'iAutoMotive made selling my BMW incredibly easy. I got a fair price and the entire process was handled online. Highly recommend to anyone looking to sell their car without the usual hassle.',
     name: 'James T.',
     city: 'Manchester',
     date: '14 Feb 2026',
   },
   {
     quote:
-      'I was worried about selling privately but iAutoSale took care of everything. From the valuation to collecting the car, it was seamless. The team kept me updated throughout.',
+      'I was worried about selling privately but iAutoMotive took care of everything. From the valuation to collecting the car, it was seamless. The team kept me updated throughout.',
     name: 'Sarah K.',
     city: 'Edinburgh',
     date: '28 Jan 2026',
@@ -26,14 +26,14 @@ const reviews = [
   },
   {
     quote:
-      'I\u2019d tried other online car selling platforms but iAutoSale was by far the best experience. No hidden fees, no last-minute price drops. Just straightforward and honest.',
+      'I\u2019d tried other online car selling platforms but iAutoMotive was by far the best experience. No hidden fees, no last-minute price drops. Just straightforward and honest.',
     name: 'Emma L.',
     city: 'Birmingham',
     date: '19 Dec 2025',
   },
   {
     quote:
-      'Sold my Mercedes through iAutoSale\u2019s consignment service. They handled all the viewings and paperwork. I literally just handed over the keys and got paid. Fantastic.',
+      'Sold my Mercedes through iAutoMotive\u2019s consignment service. They handled all the viewings and paperwork. I literally just handed over the keys and got paid. Fantastic.',
     name: 'Oliver P.',
     city: 'Leeds',
     date: '7 Jan 2026',

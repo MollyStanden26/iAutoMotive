@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | iAutoSale",
+  title: "Privacy Policy | iAutoMotive",
   description:
-    "iAutoSale Privacy Policy — how we collect, use, and protect your personal data.",
+    "iAutoMotive Privacy Policy — how we collect, use, and protect your personal data.",
 };
 
 /* ------------------------------------------------------------------ */
@@ -199,9 +199,9 @@ export default function PrivacyPolicyPage() {
             className="font-body"
             style={{ fontSize: "14px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}
           >
-            iAutoSale Ltd &middot; Registered in England &amp; Wales &middot;{" "}
-            <a href="mailto:privacy@iautosale.co.uk" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}>
-              privacy@iautosale.co.uk
+            iAutoMotive Ltd &middot; Registered in England &amp; Wales &middot;{" "}
+            <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}>
+              privacy@iautomotive.co.uk
             </a>
           </p>
         </div>
@@ -220,11 +220,11 @@ export default function PrivacyPolicyPage() {
         >
           <p className="font-body" style={{ fontSize: "14px", lineHeight: 1.7, color: "#7A4A00", margin: 0 }}>
             <strong>Important notice:</strong> This Privacy Policy applies to all personal data
-            processed by iAutoSale Ltd in connection with our vehicle consignment platform and
+            processed by iAutoMotive Ltd in connection with our vehicle consignment platform and
             services. Please read this policy carefully. If you have any questions, contact our Data
             Protection contact at{" "}
-            <a href="mailto:privacy@iautosale.co.uk" style={{ color: "#B87209", textDecoration: "underline" }}>
-              privacy@iautosale.co.uk
+            <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "#B87209", textDecoration: "underline" }}>
+              privacy@iautomotive.co.uk
             </a>
             .
           </p>
@@ -270,13 +270,13 @@ export default function PrivacyPolicyPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="who-we-are" number="1" title="Who We Are" />
         <P>
-          iAutoSale Ltd (&ldquo;iAutoSale&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;,
+          iAutoMotive Ltd (&ldquo;iAutoMotive&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;,
           &ldquo;our&rdquo;) is a vehicle consignment platform registered in England and Wales. We
-          operate the iAutoSale platform at iautosale.co.uk, which connects private vehicle
+          operate the iAutoMotive platform at iautomotive.co.uk, which connects private vehicle
           sellers with buyers by managing the end-to-end consignment of used vehicles.
         </P>
         <P>
-          iAutoSale Ltd is the data controller for personal data processed through our platform.
+          iAutoMotive Ltd is the data controller for personal data processed through our platform.
           This means we are responsible for deciding how and why your personal data is used.
         </P>
 
@@ -284,11 +284,11 @@ export default function PrivacyPolicyPage() {
         <PolicyTable
           headers={["", ""]}
           rows={[
-            ["Company", "iAutoSale Ltd"],
+            ["Company", "iAutoMotive Ltd"],
             ["Registered address", "[Registered office address \u2014 to be confirmed]"],
             ["ICO registration number", "[ICO registration number \u2014 to be obtained before launch]"],
-            ["Data Protection contact", "privacy@iautosale.co.uk"],
-            ["General enquiries", "hello@iautosale.co.uk"],
+            ["Data Protection contact", "privacy@iautomotive.co.uk"],
+            ["General enquiries", "hello@iautomotive.co.uk"],
             ["Telephone", "[Phone number \u2014 to be confirmed]"],
           ]}
         />
@@ -515,8 +515,8 @@ export default function PrivacyPolicyPage() {
           Interests Assessment (LIA) to ensure that our interests are not overridden by your rights
           and interests. You have the right to object to processing based on legitimate interests at
           any time. Contact us at{" "}
-          <a href="mailto:privacy@iautosale.co.uk" style={{ color: "#008C7C" }}>
-            privacy@iautosale.co.uk
+          <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+            privacy@iautomotive.co.uk
           </a>
           .
         </P>
@@ -601,7 +601,7 @@ export default function PrivacyPolicyPage() {
           }}
         >
           <p className="font-body" style={{ fontSize: "14px", lineHeight: 1.7, color: "#00332E", margin: 0 }}>
-            <strong>We do not sell your data.</strong> iAutoSale does not sell, rent, or trade
+            <strong>We do not sell your data.</strong> iAutoMotive does not sell, rent, or trade
             personal data with third parties for marketing purposes. We do not share your data with
             advertisers for the purpose of serving you targeted advertising on other platforms.
           </p>
@@ -774,12 +774,12 @@ export default function PrivacyPolicyPage() {
           items={[
             <>
               <strong>Email:</strong>{" "}
-              <a href="mailto:privacy@iautosale.co.uk" style={{ color: "#008C7C" }}>
-                privacy@iautosale.co.uk
+              <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+                privacy@iautomotive.co.uk
               </a>
             </>,
             <>
-              <strong>Post:</strong> iAutoSale Ltd, [Registered address], Attention: Data
+              <strong>Post:</strong> iAutoMotive Ltd, [Registered address], Attention: Data
               Protection
             </>,
           ]}
@@ -822,8 +822,8 @@ export default function PrivacyPolicyPage() {
         <P>
           We would always prefer to resolve concerns directly before you approach the ICO, so please
           contact us first at{" "}
-          <a href="mailto:privacy@iautosale.co.uk" style={{ color: "#008C7C" }}>
-            privacy@iautosale.co.uk
+          <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+            privacy@iautomotive.co.uk
           </a>
           .
         </P>
@@ -883,7 +883,7 @@ export default function PrivacyPolicyPage() {
           to non-essential cookies. You can change your cookie preferences at any time by visiting
           our Cookie Preferences page at{" "}
           <a href="/legal/cookies" style={{ color: "#008C7C" }}>
-            iautosale.co.uk/legal/cookies
+            iautomotive.co.uk/legal/cookies
           </a>
           . You can also control cookies through your browser settings. Please note that disabling
           certain cookies may affect your ability to use some features of our platform.
@@ -1007,8 +1007,8 @@ export default function PrivacyPolicyPage() {
           Our platform is not intended for use by individuals under the age of 18. We do not
           knowingly collect personal data from children. If you believe we have inadvertently
           collected data from a child, please contact us immediately at{" "}
-          <a href="mailto:privacy@iautosale.co.uk" style={{ color: "#008C7C" }}>
-            privacy@iautosale.co.uk
+          <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+            privacy@iautomotive.co.uk
           </a>{" "}
           and we will delete it promptly.
         </P>
@@ -1032,8 +1032,8 @@ export default function PrivacyPolicyPage() {
           We encourage you to review this policy periodically. Continued use of our platform after a
           policy update constitutes acceptance of the revised policy. Previous versions of this
           Privacy Policy are available on request by contacting{" "}
-          <a href="mailto:privacy@iautosale.co.uk" style={{ color: "#008C7C" }}>
-            privacy@iautosale.co.uk
+          <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+            privacy@iautomotive.co.uk
           </a>
           .
         </P>
@@ -1049,9 +1049,9 @@ export default function PrivacyPolicyPage() {
         <PolicyTable
           headers={["", ""]}
           rows={[
-            ["Data Protection contact", "privacy@iautosale.co.uk"],
-            ["General enquiries", "hello@iautosale.co.uk"],
-            ["Post", "iAutoSale Ltd, [Registered address], marked: Data Protection"],
+            ["Data Protection contact", "privacy@iautomotive.co.uk"],
+            ["General enquiries", "hello@iautomotive.co.uk"],
+            ["Post", "iAutoMotive Ltd, [Registered address], marked: Data Protection"],
             ["ICO (to complain)", "www.ico.org.uk  |  0303 123 1113"],
           ]}
         />
@@ -1068,7 +1068,7 @@ export default function PrivacyPolicyPage() {
             className="font-body"
             style={{ fontSize: "13px", color: "#8492A8", lineHeight: 1.6, margin: 0 }}
           >
-            iAutoSale Ltd &middot; Privacy Policy v1.0 &middot; March 2026
+            iAutoMotive Ltd &middot; Privacy Policy v1.0 &middot; March 2026
           </p>
         </div>
       </div>

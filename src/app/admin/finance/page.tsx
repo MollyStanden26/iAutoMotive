@@ -111,9 +111,9 @@ function RevenueChart({ period }: { period: PeriodType }) {
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={REVENUE_DAILY}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,38,64,0.8)" />
-            <XAxis dataKey="day" tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: number, i: number) => i % 7 === 0 ? String(v) : ""} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: number) => `£${v}k`} axisLine={false} tickLine={false} />
-            <Tooltip {...tooltipStyle} formatter={(v: number) => [`£${v}k`, "Revenue"]} labelFormatter={(l: number) => `Day ${l}`} />
+            <XAxis dataKey="day" tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: any, i: any) => i % 7 === 0 ? String(v) : ""} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: any) => `£${v}k`} axisLine={false} tickLine={false} />
+            <Tooltip {...tooltipStyle} formatter={(v: any) => [`£${v}k`, "Revenue"]} labelFormatter={(l: any) => `Day ${l}`} />
             <Bar dataKey="value" radius={[2, 2, 0, 0]}>
               {REVENUE_DAILY.map((entry, idx) => (
                 <Cell key={idx} fill={entry.value > 25 ? "#008C7C" : entry.value > 18 ? "#1D5A4D" : "#172D4D"} />
@@ -140,8 +140,8 @@ function WaterfallChart({ period }: { period: PeriodType }) {
           <BarChart data={WATERFALL_DATA}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,38,64,0.8)" />
             <XAxis dataKey="name" tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: number) => `£${v}k`} axisLine={false} tickLine={false} />
-            <Tooltip {...tooltipStyle} formatter={(v: number, name: string) => name === "offset" ? null : [`£${v}k`, ""]} />
+            <YAxis tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: any) => `£${v}k`} axisLine={false} tickLine={false} />
+            <Tooltip {...tooltipStyle} formatter={(v: any, name: any) => name === "offset" ? null : [`£${v}k`, ""]} />
             <Bar dataKey="offset" stackId="a" fill="transparent" />
             <Bar dataKey="value" stackId="a" radius={[3, 3, 0, 0]}>
               {WATERFALL_DATA.map((entry, idx) => (
@@ -170,8 +170,8 @@ function GpuByLotChart({ period }: { period: PeriodType }) {
           <BarChart data={GPU_BY_LOT}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,38,64,0.8)" />
             <XAxis dataKey="lot" tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} axisLine={false} tickLine={false} />
-            <YAxis domain={[1400, "auto"]} tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: number) => `£${v.toLocaleString()}`} axisLine={false} tickLine={false} />
-            <Tooltip {...tooltipStyle} formatter={(v: number) => [`£${v.toLocaleString()}`, "GPU"]} />
+            <YAxis domain={[1400, "auto"]} tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: any) => `£${v.toLocaleString()}`} axisLine={false} tickLine={false} />
+            <Tooltip {...tooltipStyle} formatter={(v: any) => [`£${v.toLocaleString()}`, "GPU"]} />
             <ReferenceLine y={1847} strokeDasharray="3 3" stroke={T.textDim} label={{ value: "avg", position: "right", fill: T.textDim, fontSize: 9 }} />
             <Bar dataKey="gpu" radius={[4, 4, 0, 0]}>
               {GPU_BY_LOT.map((entry, idx) => (
@@ -213,7 +213,7 @@ function CostBreakdownChart({ period }: { period: PeriodType }) {
                   <Cell key={idx} fill={entry.fill} />
                 ))}
               </Pie>
-              <Tooltip {...tooltipStyle} formatter={(v: number, name: string) => [`£${v}k`, name]} />
+              <Tooltip {...tooltipStyle} formatter={(v: any, name: any) => [`£${v}k`, name]} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -288,9 +288,9 @@ function DealVelocityChart() {
         <ResponsiveContainer width="100%" height={160}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,38,64,0.8)" />
-            <XAxis dataKey="day" tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: number, i: number) => i % 7 === 0 ? String(v) : ""} axisLine={false} tickLine={false} />
+            <XAxis dataKey="day" tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: any, i: any) => i % 7 === 0 ? String(v) : ""} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} axisLine={false} tickLine={false} />
-            <Tooltip {...tooltipStyle} labelFormatter={(l: number) => `Day ${l}`} />
+            <Tooltip {...tooltipStyle} labelFormatter={(l: any) => `Day ${l}`} />
             <Line type="monotone" dataKey="current" stroke={T.teal200} strokeWidth={2} dot={false} name="March" connectNulls={false} />
             <Line type="monotone" dataKey="prior" stroke="#172D4D" strokeWidth={1.5} dot={false} strokeDasharray="4 3" name="February" connectNulls={false} />
           </LineChart>
@@ -325,8 +325,8 @@ function ForecastPanel() {
             <BarChart data={FORECAST_DATA} barGap={2}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,38,64,0.8)" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: number) => `£${v}k`} axisLine={false} tickLine={false} />
-              <Tooltip {...tooltipStyle} formatter={(v: number, name: string) => [`£${v}k`, name === "forecast" ? "Forecast" : "Prior year"]} />
+              <YAxis tick={{ fill: T.textDim, fontSize: 9, fontFamily: "Inter" }} tickFormatter={(v: any) => `£${v}k`} axisLine={false} tickLine={false} />
+              <Tooltip {...tooltipStyle} formatter={(v: any, name: any) => [`£${v}k`, name === "forecast" ? "Forecast" : "Prior year"]} />
               <Bar dataKey="priorYear" name="priorYear" radius={[3, 3, 0, 0]}>
                 {FORECAST_DATA.map((_, idx) => (
                   <Cell key={idx} fill="#172D4D" fillOpacity={0.8} />

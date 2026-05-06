@@ -503,7 +503,7 @@ export default function ContactPage() {
           >
             {/* Email */}
             <a
-              href="mailto:hello@iautosale.co.uk"
+              href="mailto:hello@iautomotive.co.uk"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -545,7 +545,7 @@ export default function ContactPage() {
                 Email Us
               </p>
               <p className="font-body" style={{ fontSize: "13px", color: "#008C7C", margin: 0 }}>
-                hello@iautosale.co.uk
+                hello@iautomotive.co.uk
               </p>
               <p className="font-body" style={{ fontSize: "12px", color: "#8492A8", margin: 0, textAlign: "center" }}>
                 We typically respond within 2 hours
@@ -676,7 +676,7 @@ export default function ContactPage() {
                 Make a Complaint
               </p>
               <p className="font-body" style={{ fontSize: "13px", color: "#008C7C", margin: 0 }}>
-                complaints@iautosale.co.uk
+                complaints@iautomotive.co.uk
               </p>
               <p className="font-body" style={{ fontSize: "12px", color: "#8492A8", margin: 0, textAlign: "center" }}>
                 View our full complaints policy

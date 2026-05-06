@@ -29,7 +29,7 @@ export function AdminSidebar() {
           href="/admin"
           className="text-base font-bold text-white font-[family-name:var(--font-heading)]"
         >
-          iAutoSale
+          iAutoMotive
         </Link>
       </div>
 

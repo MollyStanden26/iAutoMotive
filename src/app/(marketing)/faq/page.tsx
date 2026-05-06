@@ -24,7 +24,7 @@ const faqCategories: FaqCategory[] = [
     label: "Selling",
     items: [
       {
-        q: "How do I sell my car with iAutoSale?",
+        q: "How do I sell my car with iAutoMotive?",
         a: "Simply enter your registration number on our homepage or the Sell page. We\u2019ll pull your vehicle details automatically and provide a real market valuation in just 2 minutes. If you\u2019re happy with the offer, we\u2019ll arrange collection and handle the entire sale process on your behalf.",
       },
       {
@@ -32,11 +32,11 @@ const faqCategories: FaqCategory[] = [
         a: "Consignment means we sell your car on your behalf at full retail market price, rather than buying it from you at a discounted trade price. You retain ownership until a buyer is found. This typically means you earn significantly more than you would through a part-exchange or instant sale.",
       },
       {
-        q: "How does iAutoSale determine the value of my vehicle?",
+        q: "How does iAutoMotive determine the value of my vehicle?",
         a: "We use live UK market data from AutoTrader, Cazana, and Glass\u2019s Guide, combined with your vehicle\u2019s specific condition, mileage, service history, MOT status, and current demand. Our valuation algorithm provides a fair and competitive price based on what similar vehicles are actually selling for.",
       },
       {
-        q: "How much does it cost to sell my car with iAutoSale?",
+        q: "How much does it cost to sell my car with iAutoMotive?",
         a: "There is no commission fee. We do not charge a percentage of the sale price. Any additional costs (such as collection or reconditioning) are agreed with you in advance and deducted from the sale proceeds. There are no hidden fees.",
       },
       {
@@ -82,7 +82,7 @@ const faqCategories: FaqCategory[] = [
     label: "Buying",
     items: [
       {
-        q: "How do I buy a car from iAutoSale?",
+        q: "How do I buy a car from iAutoMotive?",
         a: "Browse our inventory online, save your favourites, and when you find the right car, you can reserve it or proceed to checkout directly. We handle all the paperwork, title transfer, and delivery. Every vehicle comes with a full history check and has been inspected before listing.",
       },
       {
@@ -105,7 +105,7 @@ const faqCategories: FaqCategory[] = [
         q: "What checks are done on each vehicle?",
         a: (
           <>
-            Every vehicle listed on iAutoSale has been through our rigorous preparation process,
+            Every vehicle listed on iAutoMotive has been through our rigorous preparation process,
             including:
             <br />
             <br />
@@ -124,7 +124,7 @@ const faqCategories: FaqCategory[] = [
       },
       {
         q: "Are the prices negotiable?",
-        a: "Our pricing is based on live market data and is set to be competitive from the start. However, iAutoSale manages pricing on behalf of sellers and may adjust prices over time using our dynamic pricing strategy. If you\u2019re interested in a vehicle, get in touch \u2014 we\u2019re always happy to discuss.",
+        a: "Our pricing is based on live market data and is set to be competitive from the start. However, iAutoMotive manages pricing on behalf of sellers and may adjust prices over time using our dynamic pricing strategy. If you\u2019re interested in a vehicle, get in touch \u2014 we\u2019re always happy to discuss.",
       },
     ],
   },
@@ -133,16 +133,16 @@ const faqCategories: FaqCategory[] = [
     label: "General",
     items: [
       {
-        q: "What is iAutoSale?",
-        a: "iAutoSale is a UK vehicle consignment platform. We connect private sellers with buyers by managing the end-to-end sale of used vehicles at full retail market price. Think of us as your dedicated sales team \u2014 we handle collection, inspection, photography, listing, buyer enquiries, negotiation, and the legal transfer, so you don\u2019t have to.",
+        q: "What is iAutoMotive?",
+        a: "iAutoMotive is a UK vehicle consignment platform. We connect private sellers with buyers by managing the end-to-end sale of used vehicles at full retail market price. Think of us as your dedicated sales team \u2014 we handle collection, inspection, photography, listing, buyer enquiries, negotiation, and the legal transfer, so you don\u2019t have to.",
       },
       {
-        q: "Is iAutoSale regulated?",
-        a: "Yes. iAutoSale Ltd is registered in England and Wales and is authorised by the Financial Conduct Authority (FCA) for credit broking activities. We also comply with the Money Laundering Regulations 2017, the Consumer Rights Act 2015, and the UK GDPR. You can verify our FCA status on the Financial Services Register at register.fca.org.uk.",
+        q: "Is iAutoMotive regulated?",
+        a: "Yes. iAutoMotive Ltd is registered in England and Wales and is authorised by the Financial Conduct Authority (FCA) for credit broking activities. We also comply with the Money Laundering Regulations 2017, the Consumer Rights Act 2015, and the UK GDPR. You can verify our FCA status on the Financial Services Register at register.fca.org.uk.",
       },
       {
         q: "How is my money protected?",
-        a: "All buyer funds are held in a designated client account, completely separate from iAutoSale\u2019s operating accounts. Your money is never commingled with our business funds. Seller payouts are made from this protected client account once all sale conditions are met.",
+        a: "All buyer funds are held in a designated client account, completely separate from iAutoMotive\u2019s operating accounts. Your money is never commingled with our business funds. Seller payouts are made from this protected client account once all sale conditions are met.",
       },
       {
         q: "Is my personal data safe?",
@@ -160,7 +160,7 @@ const faqCategories: FaqCategory[] = [
       },
       {
         q: "Where are you based?",
-        a: "iAutoSale is based in England and operates vehicle lots across the UK. We offer nationwide collection and delivery services, so you don\u2019t need to be near one of our lots to use our platform.",
+        a: "iAutoMotive is based in England and operates vehicle lots across the UK. We offer nationwide collection and delivery services, so you don\u2019t need to be near one of our lots to use our platform.",
       },
       {
         q: "How do I make a complaint?",
@@ -168,10 +168,10 @@ const faqCategories: FaqCategory[] = [
           <>
             We take complaints seriously. You can email us at{" "}
             <a
-              href="mailto:complaints@iautosale.co.uk"
+              href="mailto:complaints@iautomotive.co.uk"
               style={{ color: "#008C7C", textDecoration: "underline" }}
             >
-              complaints@iautosale.co.uk
+              complaints@iautomotive.co.uk
             </a>
             , call us, or write to us. We\u2019ll acknowledge your complaint within 2 working days
             and aim to resolve it within 8 weeks. Full details are in our{" "}
@@ -184,11 +184,11 @@ const faqCategories: FaqCategory[] = [
       },
       {
         q: "Do you buy cars outright?",
-        a: "iAutoSale is a consignment platform \u2014 we sell your car on your behalf rather than buying it from you. This means you typically earn more because your vehicle is sold at full retail market price, not at a discounted trade price. If you need an instant sale, we can discuss options with you.",
+        a: "iAutoMotive is a consignment platform \u2014 we sell your car on your behalf rather than buying it from you. This means you typically earn more because your vehicle is sold at full retail market price, not at a discounted trade price. If you need an instant sale, we can discuss options with you.",
       },
       {
         q: "Can I sell a van, motorbike, or commercial vehicle?",
-        a: "At launch, iAutoSale focuses on cars and SUVs. We plan to expand into vans and light commercial vehicles in the future. If you have a specific enquiry, please contact us at hello@iautosale.co.uk and we\u2019ll see what we can do.",
+        a: "At launch, iAutoMotive focuses on cars and SUVs. We plan to expand into vans and light commercial vehicles in the future. If you have a specific enquiry, please contact us at hello@iautomotive.co.uk and we\u2019ll see what we can do.",
       },
     ],
   },
@@ -320,7 +320,7 @@ export default function FaqPage() {
               marginRight: "auto",
             }}
           >
-            Everything you need to know about selling and buying with iAutoSale.
+            Everything you need to know about selling and buying with iAutoMotive.
           </p>
 
           {/* Search bar */}
@@ -570,7 +570,7 @@ export default function FaqPage() {
             }}
           >
             <a
-              href="mailto:hello@iautosale.co.uk"
+              href="mailto:hello@iautomotive.co.uk"
               className="font-body"
               style={{
                 display: "inline-flex",

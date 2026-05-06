@@ -10,67 +10,67 @@ import Link from "next/link";
 const comparisonRows = [
   {
     feature: "Sale price achieved",
-    iautosale: "Full retail price",
+    iautomotive: "Full retail price",
     tradeIn: "Wholesale price",
     privateSale: "Retail (if lucky)",
   },
   {
     feature: "Average seller uplift",
-    iautosale: "+18% vs trade-in",
+    iautomotive: "+18% vs trade-in",
     tradeIn: "Baseline",
     privateSale: "+10\u201320% (variable)",
   },
   {
     feature: "Effort required",
-    iautosale: "Hand over keys",
+    iautomotive: "Hand over keys",
     tradeIn: "Drive to dealer",
     privateSale: "Ads, calls, viewings, negotiation",
   },
   {
     feature: "Time to sale",
-    iautosale: "14 days average",
+    iautomotive: "14 days average",
     tradeIn: "Same day",
     privateSale: "Weeks to months",
   },
   {
     feature: "Vehicle preparation",
-    iautosale: "Professional valet & photography",
+    iautomotive: "Professional valet & photography",
     tradeIn: "None",
     privateSale: "DIY",
   },
   {
     feature: "82-point RAC inspection",
-    iautosale: "Included",
+    iautomotive: "Included",
     tradeIn: "No",
     privateSale: "No",
   },
   {
     feature: "Nationwide advertising",
-    iautosale: "Included",
+    iautomotive: "Included",
     tradeIn: "N/A",
     privateSale: "Self-funded",
   },
   {
     feature: "Test drives & enquiries",
-    iautosale: "We handle everything",
+    iautomotive: "We handle everything",
     tradeIn: "N/A",
     privateSale: "You handle everything",
   },
   {
     feature: "Paperwork & payment",
-    iautosale: "We handle everything",
+    iautomotive: "We handle everything",
     tradeIn: "Dealer handles",
     privateSale: "You handle everything",
   },
   {
     feature: "Buyer protection",
-    iautosale: "7-day money-back guarantee",
+    iautomotive: "7-day money-back guarantee",
     tradeIn: "Limited",
     privateSale: "None",
   },
   {
     feature: "Safety risk",
-    iautosale: "None — no strangers at your door",
+    iautomotive: "None — no strangers at your door",
     tradeIn: "None",
     privateSale: "Strangers visiting your home",
   },
@@ -131,7 +131,7 @@ const includedServices = [
       </svg>
     ),
     title: "Nationwide advertising",
-    desc: "Listed on iAutoSale, Auto Trader, eBay Motors & more",
+    desc: "Listed on iAutoMotive, Auto Trader, eBay Motors & more",
   },
   {
     icon: (
@@ -495,7 +495,7 @@ export default function PricingPage() {
               How we compare
             </h2>
             <p className="text-gray-500 max-w-lg mx-auto">
-              iAutoSale vs dealer trade-in vs selling privately.
+              iAutoMotive vs dealer trade-in vs selling privately.
             </p>
           </div>
 
@@ -513,7 +513,7 @@ export default function PricingPage() {
                           className="w-2 h-2 rounded-full inline-block"
                           style={{ background: "#008C7C" }}
                         />
-                        iAutoSale
+                        iAutoMotive
                       </div>
                     </th>
                     <th className="text-left px-6 py-4 font-semibold text-gray-500 text-xs uppercase tracking-wider">
@@ -533,7 +533,7 @@ export default function PricingPage() {
                     >
                       <td className="px-6 py-4 font-medium text-gray-700">{row.feature}</td>
                       <td className="px-6 py-4 font-semibold" style={{ color: "#008C7C" }}>
-                        {row.iautosale}
+                        {row.iautomotive}
                       </td>
                       <td className="px-6 py-4 text-gray-500">{row.tradeIn}</td>
                       <td className="px-6 py-4 text-gray-500">{row.privateSale}</td>

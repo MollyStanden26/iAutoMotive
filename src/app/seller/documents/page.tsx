@@ -298,7 +298,7 @@ export default function SellerDocumentsPage() {
                 color: "#FFFFFF",
               }}
             >
-              Your iAutoSale contact
+              Your iAutoMotive contact
             </div>
             <div
               style={{

@@ -44,7 +44,7 @@ export const callScripts: CallScript[] = [
     sections: [
       {
         label: "Opening",
-        text: "Hi, is that [seller name]? Calling from iAutoSale about your [vehicle] on AutoTrader. We're a consignment platform — we sell it at full retail and you keep the proceeds. No commission fee. Do you have 2 minutes?",
+        text: "Hi, is that [seller name]? Calling from iAutoMotive about your [vehicle] on AutoTrader. We're a consignment platform — we sell it at full retail and you keep the proceeds. No commission fee. Do you have 2 minutes?",
       },
       {
         label: "Value Proposition",
@@ -72,7 +72,7 @@ export const callScripts: CallScript[] = [
     sections: [
       {
         label: "Opening",
-        text: "Hi [seller name], it's [agent name] from iAutoSale — we spoke on [last contact date] about your [vehicle]. Hope I've caught you at a good time?",
+        text: "Hi [seller name], it's [agent name] from iAutoMotive — we spoke on [last contact date] about your [vehicle]. Hope I've caught you at a good time?",
       },
       {
         label: "Recap",
@@ -100,7 +100,7 @@ export const callScripts: CallScript[] = [
     sections: [
       {
         label: "Opening",
-        text: "Hi [seller name], it's [agent name] calling from iAutoSale. I left you a voicemail earlier today — just wanted to follow up quickly.",
+        text: "Hi [seller name], it's [agent name] calling from iAutoMotive. I left you a voicemail earlier today — just wanted to follow up quickly.",
       },
       {
         label: "Reference VM",
@@ -128,7 +128,7 @@ export const callScripts: CallScript[] = [
     sections: [
       {
         label: "Greeting",
-        text: "Good [morning/afternoon], thanks for calling iAutoSale — my name's [agent name]. How can I help you today?",
+        text: "Good [morning/afternoon], thanks for calling iAutoMotive — my name's [agent name]. How can I help you today?",
       },
       {
         label: "Qualification",
@@ -184,7 +184,7 @@ export const callScripts: CallScript[] = [
     sections: [
       {
         label: "Opening",
-        text: "Hi [seller name], it's [agent name] from iAutoSale. Thanks for your time over the past few days — I wanted to come back with our final offer on the [vehicle].",
+        text: "Hi [seller name], it's [agent name] from iAutoMotive. Thanks for your time over the past few days — I wanted to come back with our final offer on the [vehicle].",
       },
       {
         label: "Summary",
@@ -216,7 +216,7 @@ export const smsTemplates: SmsTemplate[] = [
     id: "sms-001",
     name: "Initial Outreach — AutoTrader Lead",
     category: "initial_outreach",
-    body: "Hi {{seller_first_name}}, saw your {{vehicle}} on AutoTrader. We sell cars at full retail on consignment — no commission. Interested in a free valuation? Reply YES or call 0800 123 4567. iAutoSale",
+    body: "Hi {{seller_first_name}}, saw your {{vehicle}} on AutoTrader. We sell cars at full retail on consignment — no commission. Interested in a free valuation? Reply YES or call 0800 123 4567. iAutoMotive",
     variables: ["seller_first_name", "vehicle"],
     characterCount: 184,
     isActive: true,
@@ -228,7 +228,7 @@ export const smsTemplates: SmsTemplate[] = [
     id: "sms-002",
     name: "Follow-Up — Post Call",
     category: "follow_up",
-    body: "Hi {{seller_first_name}}, thanks for chatting today about your {{vehicle}}. As discussed, your estimated net payout is {{net_estimate}}. Any questions, just reply here. — {{agent_name}}, iAutoSale",
+    body: "Hi {{seller_first_name}}, thanks for chatting today about your {{vehicle}}. As discussed, your estimated net payout is {{net_estimate}}. Any questions, just reply here. — {{agent_name}}, iAutoMotive",
     variables: ["seller_first_name", "vehicle", "net_estimate", "agent_name"],
     characterCount: 198,
     isActive: true,
@@ -240,7 +240,7 @@ export const smsTemplates: SmsTemplate[] = [
     id: "sms-003",
     name: "Offer — Valuation Sent",
     category: "offer",
-    body: "Hi {{seller_first_name}}, your valuation for the {{vehicle}} is ready. Listing price: {{offer_price}}, est. net payout: {{net_estimate}}. View full offer: {{offer_link}} — iAutoSale",
+    body: "Hi {{seller_first_name}}, your valuation for the {{vehicle}} is ready. Listing price: {{offer_price}}, est. net payout: {{net_estimate}}. View full offer: {{offer_link}} — iAutoMotive",
     variables: ["seller_first_name", "vehicle", "offer_price", "net_estimate", "offer_link"],
     characterCount: 189,
     isActive: true,
@@ -252,7 +252,7 @@ export const smsTemplates: SmsTemplate[] = [
     id: "sms-004",
     name: "Callback Confirmation",
     category: "callback_confirmation",
-    body: "Hi {{seller_first_name}}, confirming your callback at {{time}} on {{date}}. We'll call on {{phone}}. Need to reschedule? Reply here. — iAutoSale",
+    body: "Hi {{seller_first_name}}, confirming your callback at {{time}} on {{date}}. We'll call on {{phone}}. Need to reschedule? Reply here. — iAutoMotive",
     variables: ["seller_first_name", "time", "date", "phone"],
     characterCount: 148,
     isActive: true,
@@ -264,7 +264,7 @@ export const smsTemplates: SmsTemplate[] = [
     id: "sms-005",
     name: "Seller Update — Vehicle Collected",
     category: "seller_update",
-    body: "Hi {{seller_first_name}}, your {{vehicle}} has been collected and is now at our prep centre. We'll have it photographed and listed within 48hrs. — iAutoSale",
+    body: "Hi {{seller_first_name}}, your {{vehicle}} has been collected and is now at our prep centre. We'll have it photographed and listed within 48hrs. — iAutoMotive",
     variables: ["seller_first_name", "vehicle"],
     characterCount: 157,
     isActive: true,
@@ -276,7 +276,7 @@ export const smsTemplates: SmsTemplate[] = [
     id: "sms-006",
     name: "Seller Update — Vehicle Listed",
     category: "seller_update",
-    body: "Great news {{seller_first_name}}! Your {{vehicle}} is now live on AutoTrader, eBay Motors & our platform. View listing: {{listing_link}} — iAutoSale",
+    body: "Great news {{seller_first_name}}! Your {{vehicle}} is now live on AutoTrader, eBay Motors & our platform. View listing: {{listing_link}} — iAutoMotive",
     variables: ["seller_first_name", "vehicle", "listing_link"],
     characterCount: 152,
     isActive: true,
@@ -288,7 +288,7 @@ export const smsTemplates: SmsTemplate[] = [
     id: "sms-007",
     name: "Payout Notification",
     category: "payout_notification",
-    body: "Hi {{seller_first_name}}, your {{vehicle}} has sold! Payment of {{payout_amount}} has been sent to your account ending {{account_last4}}. Funds arrive within 1-2 working days. — iAutoSale",
+    body: "Hi {{seller_first_name}}, your {{vehicle}} has sold! Payment of {{payout_amount}} has been sent to your account ending {{account_last4}}. Funds arrive within 1-2 working days. — iAutoMotive",
     variables: ["seller_first_name", "vehicle", "payout_amount", "account_last4"],
     characterCount: 192,
     isActive: true,
@@ -300,7 +300,7 @@ export const smsTemplates: SmsTemplate[] = [
     id: "sms-008",
     name: "General — Thank You / No-Go",
     category: "general",
-    body: "Hi {{seller_first_name}}, thanks for considering iAutoSale for your {{vehicle}}. If you change your mind, we're here. Best of luck! — iAutoSale",
+    body: "Hi {{seller_first_name}}, thanks for considering iAutoMotive for your {{vehicle}}. If you change your mind, we're here. Best of luck! — iAutoMotive",
     variables: ["seller_first_name", "vehicle"],
     characterCount: 146,
     isActive: false,
@@ -362,7 +362,7 @@ export const VARIABLE_REFERENCE = [
   { key: "agent_name",        description: "Assigned agent's name" },
   { key: "vehicle",           description: "Full vehicle description (year, make, model)" },
   { key: "asking_price",      description: "Seller's original asking price" },
-  { key: "offer_price",       description: "iAutoSale listing/offer price" },
+  { key: "offer_price",       description: "iAutoMotive listing/offer price" },
   { key: "net_estimate",      description: "Estimated net payout to seller" },
   { key: "market_low",        description: "Market low price for comparable vehicles" },
   { key: "market_high",       description: "Market high price for comparable vehicles" },

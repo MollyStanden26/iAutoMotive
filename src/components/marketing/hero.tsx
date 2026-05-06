@@ -44,7 +44,7 @@ export function Hero() {
             className="mt-4 max-w-lg text-white/90 font-body"
             style={{ fontSize: "17px", lineHeight: 1.65 }}
           >
-            iAutoSale gets private sellers retail market price for their cars
+            iAutoMotive gets private sellers retail market price for their cars
             — with zero effort — through a transparent consignment model.
           </p>
 

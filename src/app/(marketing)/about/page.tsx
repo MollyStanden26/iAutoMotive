@@ -22,7 +22,7 @@ const timeline = [
   {
     date: "Oct 2025",
     title: "Beta launch in London",
-    desc: "iAutoSale opens to the first sellers and buyers in Greater London, proving the consignment model works for private owners.",
+    desc: "iAutoMotive opens to the first sellers and buyers in Greater London, proving the consignment model works for private owners.",
   },
   {
     date: "Jan 2026",
@@ -32,7 +32,7 @@ const timeline = [
   {
     date: "Jan 2026",
     title: "FCA authorisation",
-    desc: "iAutoSale receives Financial Conduct Authority authorisation for finance introductions, a first for a UK consignment platform.",
+    desc: "iAutoMotive receives Financial Conduct Authority authorisation for finance introductions, a first for a UK consignment platform.",
   },
   {
     date: "Feb 2026",
@@ -42,7 +42,7 @@ const timeline = [
   {
     date: "Mar 2026",
     title: "Nationwide expansion",
-    desc: "Free vehicle collection launches across England and Wales, opening iAutoSale to over 50 million potential customers.",
+    desc: "Free vehicle collection launches across England and Wales, opening iAutoMotive to over 50 million potential customers.",
   },
 ];
 
@@ -249,7 +249,7 @@ export default function AboutPage() {
             className="text-sm font-semibold tracking-[0.2em] uppercase mb-4"
             style={{ color: "#4DD9C7" }}
           >
-            About iAutoSale
+            About iAutoMotive
           </p>
           <h1
             className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight"
@@ -260,7 +260,7 @@ export default function AboutPage() {
             <span style={{ color: "#4DD9C7" }}>more for your car</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10">
-            iAutoSale is the UK&rsquo;s first dedicated vehicle consignment
+            iAutoMotive is the UK&rsquo;s first dedicated vehicle consignment
             platform. We sell your car at full retail price, handle everything,
             and put thousands more in your pocket.
           </p>
@@ -329,7 +329,7 @@ export default function AboutPage() {
                 tyre-kickers, no-shows, and safety concerns.
               </p>
               <p className="text-gray-600 leading-relaxed">
-                We built iAutoSale to give car owners a third option: sell at
+                We built iAutoMotive to give car owners a third option: sell at
                 full retail price with none of the hassle. We collect your car,
                 prepare it to showroom standard, advertise it everywhere, handle
                 every enquiry and test drive, and put the money in your account

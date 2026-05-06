@@ -23,7 +23,7 @@ const steps = [
   {
     title: 'Consign or sell',
     description:
-      'Consign your car for the best price, or sell it outright to iAutoSale.',
+      'Consign your car for the best price, or sell it outright to iAutoMotive.',
     icon: (
       <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="32" cy="32" r="30" stroke="#008C7C" strokeWidth="2" />
@@ -91,7 +91,7 @@ export default function HowItWorksSell() {
               lineHeight: 1.6,
             }}
           >
-            Consign or sell your vehicle to iAutoSale in just a few easy steps.
+            Consign or sell your vehicle to iAutoMotive in just a few easy steps.
           </p>
         </div>
 

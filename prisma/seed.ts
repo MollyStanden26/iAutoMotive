@@ -29,7 +29,13 @@ function hoursAgo(n: number): Date {
 // ─────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log("Seeding iAutoSale database...\n");
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_SEED !== "true") {
+    throw new Error(
+      "Refusing to seed in production. The seed creates demo users with password 'demo'. " +
+      "Set ALLOW_SEED=true only on a dedicated demo/staging database."
+    );
+  }
+  console.log("Seeding iAutoMotive database...\n");
 
   // Using prisma directly (no transaction) — MongoDB Atlas M0 has a 1min tx limit
   const tx = prisma;
@@ -39,7 +45,7 @@ async function main() {
 
     const jamesThornton = await tx.user.create({
       data: {
-        email: "james.thornton@iautosale.co.uk",
+        email: "james.thornton@iautomotive.co.uk",
         phone: "+447700900001",
         passwordHash: PASSWORD_HASH,
         role: "super_admin",
@@ -52,7 +58,7 @@ async function main() {
 
     const sarahWhitfield = await tx.user.create({
       data: {
-        email: "sarah.whitfield@iautosale.co.uk",
+        email: "sarah.whitfield@iautomotive.co.uk",
         phone: "+447700900002",
         passwordHash: PASSWORD_HASH,
         role: "site_manager",
@@ -64,7 +70,7 @@ async function main() {
 
     const danielOkoye = await tx.user.create({
       data: {
-        email: "daniel.okoye@iautosale.co.uk",
+        email: "daniel.okoye@iautomotive.co.uk",
         phone: "+447700900003",
         passwordHash: PASSWORD_HASH,
         role: "finance",
@@ -76,7 +82,7 @@ async function main() {
 
     const emmaRichardson = await tx.user.create({
       data: {
-        email: "emma.richardson@iautosale.co.uk",
+        email: "emma.richardson@iautomotive.co.uk",
         phone: "+447700900004",
         passwordHash: PASSWORD_HASH,
         role: "sales",
@@ -88,7 +94,7 @@ async function main() {
 
     const liamPatel = await tx.user.create({
       data: {
-        email: "liam.patel@iautosale.co.uk",
+        email: "liam.patel@iautomotive.co.uk",
         phone: "+447700900005",
         passwordHash: PASSWORD_HASH,
         role: "recon_tech",
@@ -100,7 +106,7 @@ async function main() {
 
     const oliviaCampbell = await tx.user.create({
       data: {
-        email: "olivia.campbell@iautosale.co.uk",
+        email: "olivia.campbell@iautomotive.co.uk",
         phone: "+447700900006",
         passwordHash: PASSWORD_HASH,
         role: "compliance",
@@ -113,7 +119,7 @@ async function main() {
 
     const hassanMirza = await tx.user.create({
       data: {
-        email: "hassan.mirza@iautosale.co.uk",
+        email: "hassan.mirza@iautomotive.co.uk",
         phone: "+447700900007",
         passwordHash: PASSWORD_HASH,
         role: "read_only",
@@ -125,7 +131,7 @@ async function main() {
 
     const charlotteEvans = await tx.user.create({
       data: {
-        email: "charlotte.evans@iautosale.co.uk",
+        email: "charlotte.evans@iautomotive.co.uk",
         phone: "+447700900008",
         passwordHash: PASSWORD_HASH,
         role: "seller",
@@ -137,7 +143,7 @@ async function main() {
 
     const ryanMcgregor = await tx.user.create({
       data: {
-        email: "ryan.mcgregor@iautosale.co.uk",
+        email: "ryan.mcgregor@iautomotive.co.uk",
         phone: "+447700900009",
         passwordHash: PASSWORD_HASH,
         role: "buyer",
@@ -149,7 +155,7 @@ async function main() {
 
     const priyaSharma = await tx.user.create({
       data: {
-        email: "priya.sharma@iautosale.co.uk",
+        email: "priya.sharma@iautomotive.co.uk",
         phone: "+447700900010",
         passwordHash: PASSWORD_HASH,
         role: "dealer",
@@ -1264,7 +1270,7 @@ async function main() {
 
     console.log("  Creating lead offers...");
 
-    // Negotiating lead — initial offer from iAutoSale
+    // Negotiating lead — initial offer from iAutoMotive
     await tx.leadOffer.create({
       data: {
         leadId: lead3.id,

@@ -24,7 +24,7 @@ export function DealerNavbar() {
           href="/dealer"
           className="text-base font-bold text-[#0F1724] font-[family-name:var(--font-heading)]"
         >
-          iAutoSale
+          iAutoMotive
         </Link>
 
         {/* Nav links */}

@@ -8,7 +8,7 @@ const competitors = [
     highlighted: false,
   },
   {
-    name: "iAutoSale",
+    name: "iAutoMotive",
     amount: "£13,950",
     label: "Net seller payout",
     highlighted: true,
@@ -63,7 +63,7 @@ export function ComparisonTable() {
             marginBottom: 0,
           }}
         >
-          See how iAutoSale compares for a typical £15,000 car
+          See how iAutoMotive compares for a typical £15,000 car
         </p>
 
         {/* Comparison grid */}
@@ -132,7 +132,7 @@ export function ComparisonTable() {
                 {card.label}
               </p>
 
-              {/* Callout badge (iAutoSale only) */}
+              {/* Callout badge (iAutoMotive only) */}
               {card.highlighted && "callout" in card && (
                 <span
                   style={{

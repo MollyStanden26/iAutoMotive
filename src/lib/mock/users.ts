@@ -15,7 +15,7 @@ interface MockBuyer extends Buyer {
 export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   {
     id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-    email: "james.thornton@iautosale.co.uk",
+    email: "james.thornton@iautomotive.co.uk",
     name: "James Thornton",
     phone: "+44 7700 900100",
     role: "super-admin",
@@ -25,7 +25,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   },
   {
     id: "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-    email: "sarah.whitfield@iautosale.co.uk",
+    email: "sarah.whitfield@iautomotive.co.uk",
     name: "Sarah Whitfield",
     phone: "+44 7700 900101",
     role: "site-manager",
@@ -35,7 +35,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   },
   {
     id: "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
-    email: "daniel.okoye@iautosale.co.uk",
+    email: "daniel.okoye@iautomotive.co.uk",
     name: "Daniel Okoye",
     phone: "+44 7700 900102",
     role: "finance",
@@ -45,7 +45,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   },
   {
     id: "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80",
-    email: "emma.richardson@iautosale.co.uk",
+    email: "emma.richardson@iautomotive.co.uk",
     name: "Emma Richardson",
     phone: "+44 7700 900103",
     role: "sales",
@@ -55,7 +55,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   },
   {
     id: "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091",
-    email: "liam.patel@iautosale.co.uk",
+    email: "liam.patel@iautomotive.co.uk",
     name: "Liam Patel",
     phone: "+44 7700 900104",
     role: "recon-tech",
@@ -65,7 +65,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   },
   {
     id: "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
-    email: "olivia.campbell@iautosale.co.uk",
+    email: "olivia.campbell@iautomotive.co.uk",
     name: "Olivia Campbell",
     phone: "+44 7700 900105",
     role: "compliance",
@@ -75,7 +75,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   },
   {
     id: "07b8c9d0-e1f2-4a3b-4c5d-6e7f80910213",
-    email: "hassan.mirza@iautosale.co.uk",
+    email: "hassan.mirza@iautomotive.co.uk",
     name: "Hassan Mirza",
     phone: "+44 7700 900106",
     role: "read-only",
@@ -85,7 +85,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   },
   {
     id: "18c9d0e1-f2a3-4b4c-5d6e-7f8091021324",
-    email: "charlotte.evans@iautosale.co.uk",
+    email: "charlotte.evans@iautomotive.co.uk",
     name: "Charlotte Evans",
     phone: "+44 7700 900107",
     role: "seller",
@@ -96,7 +96,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   } as MockSeller,
   {
     id: "29d0e1f2-a3b4-4c5d-6e7f-809102132435",
-    email: "ryan.mcgregor@iautosale.co.uk",
+    email: "ryan.mcgregor@iautomotive.co.uk",
     name: "Ryan McGregor",
     phone: "+44 7700 900108",
     role: "buyer",
@@ -108,7 +108,7 @@ export const MOCK_USERS: (MockUser | MockSeller | MockBuyer)[] = [
   } as MockBuyer,
   {
     id: "3ae1f2a3-b4c5-4d6e-7f80-910213243546",
-    email: "priya.sharma@iautosale.co.uk",
+    email: "priya.sharma@iautomotive.co.uk",
     name: "Priya Sharma",
     phone: "+44 7700 900109",
     role: "dealer",

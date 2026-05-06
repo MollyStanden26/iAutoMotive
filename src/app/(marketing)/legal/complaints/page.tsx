@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Complaints Policy | iAutoSale",
+  title: "Complaints Policy | iAutoMotive",
   description:
-    "How to make a complaint about iAutoSale's services and how we handle complaints.",
+    "How to make a complaint about iAutoMotive's services and how we handle complaints.",
 };
 
 /* ------------------------------------------------------------------ */
@@ -168,12 +168,12 @@ export default function ComplaintsPolicyPage() {
             className="font-body"
             style={{ fontSize: "14px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}
           >
-            iAutoSale Ltd &middot; Registered in England &amp; Wales &middot;{" "}
+            iAutoMotive Ltd &middot; Registered in England &amp; Wales &middot;{" "}
             <a
-              href="mailto:complaints@iautosale.co.uk"
+              href="mailto:complaints@iautomotive.co.uk"
               style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}
             >
-              complaints@iautosale.co.uk
+              complaints@iautomotive.co.uk
             </a>
           </p>
         </div>
@@ -239,7 +239,7 @@ export default function ComplaintsPolicyPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="introduction" number="1" title="Introduction" />
         <P>
-          iAutoSale Ltd (&ldquo;iAutoSale&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;,
+          iAutoMotive Ltd (&ldquo;iAutoMotive&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;,
           &ldquo;our&rdquo;) is committed to providing an excellent service to every customer. We
           recognise, however, that things can occasionally go wrong. When they do, we want to hear
           about it.
@@ -250,7 +250,7 @@ export default function ComplaintsPolicyPage() {
           you&rsquo;re not satisfied with our response.
         </P>
         <P>
-          This policy applies to all customers of iAutoSale, including sellers (vehicle
+          This policy applies to all customers of iAutoMotive, including sellers (vehicle
           consignors), buyers, and any other individual who has interacted with our platform or
           services.
         </P>
@@ -273,8 +273,8 @@ export default function ComplaintsPolicyPage() {
             {
               icon: "\u2709\uFE0F",
               label: "Email",
-              value: "complaints@iautosale.co.uk",
-              href: "mailto:complaints@iautosale.co.uk",
+              value: "complaints@iautomotive.co.uk",
+              href: "mailto:complaints@iautomotive.co.uk",
             },
             {
               icon: "\uD83D\uDCDE",
@@ -285,13 +285,13 @@ export default function ComplaintsPolicyPage() {
             {
               icon: "\u270F\uFE0F",
               label: "Post",
-              value: "iAutoSale Ltd, [Registered address], marked: Complaints",
+              value: "iAutoMotive Ltd, [Registered address], marked: Complaints",
               href: undefined,
             },
             {
               icon: "\uD83D\uDCAC",
               label: "In person",
-              value: "At any iAutoSale lot during operating hours",
+              value: "At any iAutoMotive lot during operating hours",
               href: undefined,
             },
           ].map((ch) => (
@@ -343,7 +343,7 @@ export default function ComplaintsPolicyPage() {
         <BulletList
           items={[
             "Your full name and contact details",
-            "Your iAutoSale account email address or consignment reference number (if applicable)",
+            "Your iAutoMotive account email address or consignment reference number (if applicable)",
             "The vehicle registration number (if your complaint relates to a specific vehicle)",
             "A clear description of what went wrong and when it happened",
             "Any relevant documentation, photographs, or correspondence",
@@ -504,7 +504,7 @@ export default function ComplaintsPolicyPage() {
         <SectionHeading id="adr" number="7" title="Alternative Dispute Resolution" />
         <P>
           Under the Alternative Dispute Resolution for Consumer Disputes (Competent Authorities and
-          Information) Regulations 2015, we are required to inform you about ADR. iAutoSale is
+          Information) Regulations 2015, we are required to inform you about ADR. iAutoMotive is
           committed to participating in ADR where appropriate.
         </P>
 
@@ -575,7 +575,7 @@ export default function ComplaintsPolicyPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="fca" number="8" title="FCA-Regulated Activities" />
         <P>
-          Where iAutoSale carries out activities that are regulated by the Financial Conduct
+          Where iAutoMotive carries out activities that are regulated by the Financial Conduct
           Authority (FCA) &mdash; such as introducing buyers to FCA-authorised lenders for vehicle
           finance &mdash; complaints about those activities will be handled in accordance with the
           FCA&rsquo;s Dispute Resolution rules (DISP).
@@ -699,10 +699,10 @@ export default function ComplaintsPolicyPage() {
           >
             <tbody>
               {[
-                ["Complaints email", "complaints@iautosale.co.uk"],
-                ["General enquiries", "hello@iautosale.co.uk"],
+                ["Complaints email", "complaints@iautomotive.co.uk"],
+                ["General enquiries", "hello@iautomotive.co.uk"],
                 ["Telephone", "[Phone number \u2014 to be confirmed]"],
-                ["Post", "iAutoSale Ltd, [Registered address], marked: Complaints"],
+                ["Post", "iAutoMotive Ltd, [Registered address], marked: Complaints"],
               ].map(([label, value]) => (
                 <tr key={label}>
                   <td
@@ -778,7 +778,7 @@ export default function ComplaintsPolicyPage() {
             className="font-body"
             style={{ fontSize: "13px", color: "#8492A8", lineHeight: 1.6, margin: 0 }}
           >
-            iAutoSale Ltd &middot; Complaints Policy v1.0 &middot; March 2026
+            iAutoMotive Ltd &middot; Complaints Policy v1.0 &middot; March 2026
           </p>
         </div>
       </div>

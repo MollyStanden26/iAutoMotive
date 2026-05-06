@@ -105,7 +105,7 @@ export default function RegisterPage() {
             color: "#008C7C",
           }}
         >
-          Sale
+          Motive
         </span>
       </div>
 
@@ -131,7 +131,7 @@ export default function RegisterPage() {
           marginTop: 6,
         }}
       >
-        Choose how you want to use iAutoSale
+        Choose how you want to use iAutoMotive
       </p>
 
       {/* Role selector */}

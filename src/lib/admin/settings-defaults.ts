@@ -104,8 +104,8 @@ export const DEFAULT_NOTIFICATION_RULES: NotificationRule[] = [
 
 /* ── Branding defaults ── */
 export const DEFAULT_BRANDING_CONFIG: BrandingConfig = {
-  platformName: 'iAutoSale',
-  domain: 'iautosale.co.uk',
+  platformName: 'iAutoMotive',
+  domain: 'iautomotive.co.uk',
   primaryColor: '#008C7C',
   accentColor: '#4DD9C7',
   listingTemplate: 'full',

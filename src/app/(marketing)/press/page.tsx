@@ -24,58 +24,58 @@ const pressReleases: {
 }[] = [
   {
     date: "20 Mar 2026",
-    title: "iAutoSale Launches Nationwide Collection Service Across England & Wales",
+    title: "iAutoMotive Launches Nationwide Collection Service Across England & Wales",
     excerpt:
       "Sellers can now have their vehicles collected from any address in England and Wales at no extra cost, expanding our reach to over 50 million potential customers.",
     tag: "Expansion",
   },
   {
     date: "4 Mar 2026",
-    title: "iAutoSale Reaches 1,000 Vehicles Sold Milestone",
+    title: "iAutoMotive Reaches 1,000 Vehicles Sold Milestone",
     excerpt:
-      "Just nine months after launch, iAutoSale has facilitated the sale of over 1,000 consignment vehicles, with an average selling price 18% above traditional trade-in values.",
+      "Just nine months after launch, iAutoMotive has facilitated the sale of over 1,000 consignment vehicles, with an average selling price 18% above traditional trade-in values.",
     tag: "Milestone",
   },
   {
     date: "12 Feb 2026",
-    title: "iAutoSale Partners with RAC for 82-Point Vehicle Inspections",
+    title: "iAutoMotive Partners with RAC for 82-Point Vehicle Inspections",
     excerpt:
-      "Every vehicle listed on iAutoSale will now receive a comprehensive RAC-approved 82-point mechanical and cosmetic inspection, giving buyers complete confidence.",
+      "Every vehicle listed on iAutoMotive will now receive a comprehensive RAC-approved 82-point mechanical and cosmetic inspection, giving buyers complete confidence.",
     tag: "Partnership",
   },
   {
     date: "28 Jan 2026",
-    title: "iAutoSale Secures FCA Authorisation for Finance Introductions",
+    title: "iAutoMotive Secures FCA Authorisation for Finance Introductions",
     excerpt:
-      "iAutoSale is now authorised and regulated by the Financial Conduct Authority to introduce customers to a panel of FCA-regulated finance providers.",
+      "iAutoMotive is now authorised and regulated by the Financial Conduct Authority to introduce customers to a panel of FCA-regulated finance providers.",
     tag: "Regulatory",
   },
   {
     date: "9 Jan 2026",
-    title: "iAutoSale Raises \u00a34.5M Seed Round Led by Octopus Ventures",
+    title: "iAutoMotive Raises \u00a34.5M Seed Round Led by Octopus Ventures",
     excerpt:
       "Funding will accelerate platform development, expand the vehicle operations team, and open two new preparation centres in the Midlands and North West.",
     tag: "Funding",
   },
   {
     date: "15 Nov 2025",
-    title: "iAutoSale Appoints Former Auto Trader VP as Chief Commercial Officer",
+    title: "iAutoMotive Appoints Former Auto Trader VP as Chief Commercial Officer",
     excerpt:
       "Sarah Mitchell brings over 15 years of automotive marketplace experience to lead commercial strategy, dealer partnerships, and revenue growth.",
     tag: "Leadership",
   },
   {
     date: "2 Oct 2025",
-    title: "iAutoSale Beta Launches in Greater London",
+    title: "iAutoMotive Beta Launches in Greater London",
     excerpt:
       "The UK\u2019s first dedicated vehicle consignment platform opens to sellers and buyers in the Greater London area, offering a transparent alternative to part-exchange.",
     tag: "Launch",
   },
   {
     date: "18 Aug 2025",
-    title: "iAutoSale Announces Advisory Board with Industry Veterans",
+    title: "iAutoMotive Announces Advisory Board with Industry Veterans",
     excerpt:
-      "Four automotive and fintech leaders join iAutoSale\u2019s advisory board to guide the company through its growth phase and national expansion.",
+      "Four automotive and fintech leaders join iAutoMotive\u2019s advisory board to guide the company through its growth phase and national expansion.",
     tag: "Leadership",
   },
 ];
@@ -86,7 +86,7 @@ const mediaCoverage: PressItem[] = [
     outlet: "The Times",
     title: "The startup promising car sellers thousands more",
     excerpt:
-      "iAutoSale\u2019s consignment model is disrupting the traditional dealer trade-in, delivering an average of 18% more for sellers.",
+      "iAutoMotive\u2019s consignment model is disrupting the traditional dealer trade-in, delivering an average of 18% more for sellers.",
     url: "#",
     logo: (
       <svg width="100" height="28" viewBox="0 0 100 28" fill="none">
@@ -99,9 +99,9 @@ const mediaCoverage: PressItem[] = [
   {
     date: "5 Mar 2026",
     outlet: "Auto Express",
-    title: "iAutoSale review: Is consignment the future of car selling?",
+    title: "iAutoMotive review: Is consignment the future of car selling?",
     excerpt:
-      "We tested the full iAutoSale experience from listing to sale \u2014 here\u2019s how it compares to selling privately or trading in.",
+      "We tested the full iAutoMotive experience from listing to sale \u2014 here\u2019s how it compares to selling privately or trading in.",
     url: "#",
     logo: (
       <svg width="120" height="28" viewBox="0 0 120 28" fill="none">
@@ -114,7 +114,7 @@ const mediaCoverage: PressItem[] = [
   {
     date: "14 Feb 2026",
     outlet: "TechCrunch",
-    title: "iAutoSale wants to be the Carvana of the UK \u2014 but with your car",
+    title: "iAutoMotive wants to be the Carvana of the UK \u2014 but with your car",
     excerpt:
       "The London-based startup is betting that British car owners would rather consign than trade in, and the numbers are starting to prove them right.",
     url: "#",
@@ -131,7 +131,7 @@ const mediaCoverage: PressItem[] = [
     outlet: "Financial Times",
     title: "UK car consignment platform secures FCA approval",
     excerpt:
-      "iAutoSale becomes one of the first vehicle consignment platforms in the UK to receive full FCA authorisation for finance introductions.",
+      "iAutoMotive becomes one of the first vehicle consignment platforms in the UK to receive full FCA authorisation for finance introductions.",
     url: "#",
     logo: (
       <svg width="130" height="28" viewBox="0 0 130 28" fill="none">
@@ -144,7 +144,7 @@ const mediaCoverage: PressItem[] = [
   {
     date: "10 Jan 2026",
     outlet: "Sifted",
-    title: "iAutoSale closes \u00a34.5M to shake up UK used car market",
+    title: "iAutoMotive closes \u00a34.5M to shake up UK used car market",
     excerpt:
       "The Octopus Ventures-backed startup plans to use the funding to expand beyond London and open new vehicle preparation centres.",
     url: "#",
@@ -161,7 +161,7 @@ const mediaCoverage: PressItem[] = [
     outlet: "Car Dealer Magazine",
     title: "Could consignment disrupt the UK dealer model?",
     excerpt:
-      "iAutoSale\u2019s launch has dealers watching closely as the platform offers sellers retail prices without the hassle of private sales.",
+      "iAutoMotive\u2019s launch has dealers watching closely as the platform offers sellers retail prices without the hassle of private sales.",
     url: "#",
     logo: (
       <svg width="140" height="28" viewBox="0 0 140 28" fill="none">
@@ -298,13 +298,13 @@ export default function PressPage() {
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10">
             The latest news, announcements, and media coverage from
-            iAutoSale — the UK&rsquo;s first dedicated vehicle consignment
+            iAutoMotive — the UK&rsquo;s first dedicated vehicle consignment
             platform.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
             <a
-              href="mailto:press@iautosale.co.uk"
+              href="mailto:press@iautomotive.co.uk"
               className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all"
               style={{
                 background: "#008C7C",
@@ -514,7 +514,7 @@ export default function PressPage() {
         </div>
       </section>
 
-      {/* ── About iAutoSale ───────────────────────────────────── */}
+      {/* ── About iAutoMotive ───────────────────────────────────── */}
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
@@ -526,13 +526,13 @@ export default function PressPage() {
               className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
-              About iAutoSale
+              About iAutoMotive
             </h2>
           </div>
 
           <div className="rounded-2xl border border-gray-100 bg-white p-8 md:p-12 max-w-3xl mx-auto">
             <p className="text-gray-600 leading-relaxed mb-6">
-              iAutoSale is the UK&rsquo;s first dedicated vehicle consignment
+              iAutoMotive is the UK&rsquo;s first dedicated vehicle consignment
               platform. We sell cars on behalf of private owners at full retail
               price — handling collection, inspection, photography, advertising,
               test drives, paperwork, and payment — so sellers get thousands
@@ -540,7 +540,7 @@ export default function PressPage() {
               with full vehicle history.
             </p>
             <p className="text-gray-600 leading-relaxed mb-6">
-              Founded in 2025 and headquartered in London, iAutoSale is
+              Founded in 2025 and headquartered in London, iAutoMotive is
               authorised and regulated by the Financial Conduct Authority for
               finance introductions. The company is backed by Octopus Ventures
               and a group of angel investors with deep automotive and fintech
@@ -549,15 +549,15 @@ export default function PressPage() {
             <p className="text-gray-600 leading-relaxed">
               For more information visit{" "}
               <Link href="/" className="font-semibold" style={{ color: "#008C7C" }}>
-                iautosale.co.uk
+                iautomotive.co.uk
               </Link>{" "}
               or contact{" "}
               <a
-                href="mailto:press@iautosale.co.uk"
+                href="mailto:press@iautomotive.co.uk"
                 className="font-semibold"
                 style={{ color: "#008C7C" }}
               >
-                press@iautosale.co.uk
+                press@iautomotive.co.uk
               </a>
               .
             </p>
@@ -585,7 +585,7 @@ export default function PressPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a
-              href="mailto:press@iautosale.co.uk"
+              href="mailto:press@iautomotive.co.uk"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-base transition-all"
               style={{ background: "#FFFFFF", color: "#008C7C" }}
             >
@@ -593,7 +593,7 @@ export default function PressPage() {
                 <rect x="2" y="4" width="14" height="10" rx="2" />
                 <path d="M2 4l7 5 7-5" />
               </svg>
-              press@iautosale.co.uk
+              press@iautomotive.co.uk
             </a>
             <Link
               href="/contact"

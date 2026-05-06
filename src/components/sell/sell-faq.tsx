@@ -4,17 +4,17 @@ import { useState } from 'react';
 
 const faqs = [
   {
-    question: 'How do I sell my car online with iAutoSale?',
+    question: 'How do I sell my car online with iAutoMotive?',
     answer:
       'Simply enter your registration number and a few details about your vehicle. We\u2019ll provide you with a real offer in just 2 minutes. If you\u2019re happy, you can either sell directly or consign your car with us for a higher price.',
   },
   {
     question: 'Can I sell my vehicle without buying another car?',
     answer:
-      'Absolutely. There\u2019s no obligation to purchase a vehicle from us. You can sell or consign your car with iAutoSale regardless of whether you\u2019re looking to buy another one.',
+      'Absolutely. There\u2019s no obligation to purchase a vehicle from us. You can sell or consign your car with iAutoMotive regardless of whether you\u2019re looking to buy another one.',
   },
   {
-    question: 'How does iAutoSale determine the value of my vehicle?',
+    question: 'How does iAutoMotive determine the value of my vehicle?',
     answer:
       'We use live UK market data, recent sale prices, and your vehicle\u2019s specific condition to calculate a fair and competitive valuation. Our algorithm considers mileage, service history, MOT status, and current demand for your model.',
   },

@@ -70,7 +70,7 @@ export default function ResetPasswordPage() {
             color: "#8492A8",
           }}
         >
-          Auto
+          iAuto
         </span>
         <span
           style={{
@@ -80,7 +80,7 @@ export default function ResetPasswordPage() {
             color: "#008C7C",
           }}
         >
-          Consign
+          Motive
         </span>
       </div>
 

@@ -83,7 +83,7 @@ export function IconSidebar() {
             whiteSpace: "nowrap", opacity: expanded ? 1 : 0, transition: "opacity 150ms ease",
           }}
         >
-          iAutoSale
+          iAutoMotive
         </span>
       </div>
 

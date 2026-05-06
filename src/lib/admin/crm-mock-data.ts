@@ -118,7 +118,7 @@ export const crmDashboardData = {
   scriptSections: [
     {
       label: 'Opening',
-      text: "Hi, is that [seller name]? Calling from iAutoSale about your [vehicle] on AutoTrader. We're a consignment platform — we sell it at full retail and you keep the proceeds. No commission fee. Do you have 2 minutes?",
+      text: "Hi, is that [seller name]? Calling from iAutoMotive about your [vehicle] on AutoTrader. We're a consignment platform — we sell it at full retail and you keep the proceeds. No commission fee. Do you have 2 minutes?",
     },
     {
       label: 'Value proposition',

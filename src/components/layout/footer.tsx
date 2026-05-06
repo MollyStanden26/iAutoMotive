@@ -27,7 +27,7 @@ const linkMap: Record<string, string> = {
   // Support
   "FAQ": "/faq",
   "Contact us": "/contact",
-  "support@iautosale.co.uk": "mailto:support@iautosale.co.uk",
+  "support@iautomotive.co.uk": "mailto:support@iautomotive.co.uk",
 };
 
 const footerColumns = [
@@ -49,7 +49,7 @@ const footerColumns = [
   },
   {
     heading: "SUPPORT",
-    links: ["FAQ", "Contact us", "support@iautosale.co.uk"],
+    links: ["FAQ", "Contact us", "support@iautomotive.co.uk"],
   },
 ];
 
@@ -138,13 +138,13 @@ export function Footer() {
           <div className="flex flex-col gap-2">
             <div className="font-heading" style={{ fontSize: "20px" }}>
               <span style={{ fontWeight: 300, color: "#8492A8" }}>iAuto</span>
-              <span style={{ fontWeight: 900, color: "#4DD9C7" }}>Sale</span>
+              <span style={{ fontWeight: 900, color: "#4DD9C7" }}>Motive</span>
             </div>
             <p
               className="font-body"
               style={{ fontSize: "13px", fontWeight: 400, color: "#8492A8", margin: 0 }}
             >
-              &copy; {new Date().getFullYear()} iAutoSale Ltd. All rights reserved.
+              &copy; {new Date().getFullYear()} iAutoMotive Ltd. All rights reserved.
             </p>
           </div>
 
@@ -195,7 +195,7 @@ export function Footer() {
             lineHeight: 1.6,
           }}
         >
-          iAutoSale Ltd is registered in England and Wales. FCA authorisation pending.
+          iAutoMotive Ltd is registered in England and Wales. FCA authorisation pending.
         </p>
       </div>
     </footer>

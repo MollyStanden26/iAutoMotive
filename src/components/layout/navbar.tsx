@@ -46,7 +46,7 @@ export function Navbar() {
             className="font-heading"
             style={{ fontSize: 22, fontWeight: 800, color: "#008C7C" }}
           >
-            Sale
+            Motive
           </span>
         </Link>
 
@@ -276,7 +276,7 @@ export function Navbar() {
               ) : (
                 <>
                   <h2 className="font-heading" style={{ fontSize: 24, fontWeight: 700, color: "#0F1724", margin: "0 0 4px" }}>
-                    Welcome to iAutoSale
+                    Welcome to iAutoMotive
                   </h2>
                   <p className="font-body" style={{ fontSize: 14, color: "#8492A8", margin: "0 0 20px" }}>
                     Personalise your experience
@@ -419,7 +419,7 @@ export function Navbar() {
                   <line x1="8" y1="21" x2="16" y2="21" />
                   <line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
-                About iAutoSale
+                About iAutoMotive
               </Link>
             </div>
 

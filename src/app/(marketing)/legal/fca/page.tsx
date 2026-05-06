@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FCA Disclosure | iAutoSale",
+  title: "FCA Disclosure | iAutoMotive",
   description:
-    "iAutoSale FCA regulatory disclosure — our regulatory status, the services we provide, and how we are remunerated.",
+    "iAutoMotive FCA regulatory disclosure — our regulatory status, the services we provide, and how we are remunerated.",
 };
 
 /* ------------------------------------------------------------------ */
@@ -158,12 +158,12 @@ export default function FcaDisclosurePage() {
             className="font-body"
             style={{ fontSize: "14px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}
           >
-            iAutoSale Ltd &middot; Registered in England &amp; Wales &middot;{" "}
+            iAutoMotive Ltd &middot; Registered in England &amp; Wales &middot;{" "}
             <a
-              href="mailto:hello@iautosale.co.uk"
+              href="mailto:hello@iautomotive.co.uk"
               style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}
             >
-              hello@iautosale.co.uk
+              hello@iautomotive.co.uk
             </a>
           </p>
         </div>
@@ -185,7 +185,7 @@ export default function FcaDisclosurePage() {
             style={{ fontSize: "14px", lineHeight: 1.7, color: "#7A4A00", margin: 0 }}
           >
             <strong>Important regulatory information:</strong> This page contains information about
-            iAutoSale Ltd&rsquo;s regulatory status in accordance with the requirements of the
+            iAutoMotive Ltd&rsquo;s regulatory status in accordance with the requirements of the
             Financial Conduct Authority (FCA). You should read this information before using our
             finance introduction services.
           </p>
@@ -231,7 +231,7 @@ export default function FcaDisclosurePage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="regulatory-status" number="1" title="Our Regulatory Status" />
         <P>
-          iAutoSale Ltd is authorised and regulated by the Financial Conduct Authority (FCA) for
+          iAutoMotive Ltd is authorised and regulated by the Financial Conduct Authority (FCA) for
           credit broking activities. Our FCA permissions allow us to introduce buyers to
           FCA-authorised lenders for the purpose of vehicle finance.
         </P>
@@ -283,8 +283,8 @@ export default function FcaDisclosurePage() {
             style={{ fontSize: "14px", lineHeight: 1.6, borderCollapse: "collapse" }}
           >
             <tbody>
-              <InfoRow label="Registered name">iAutoSale Ltd</InfoRow>
-              <InfoRow label="Trading name">iAutoSale</InfoRow>
+              <InfoRow label="Registered name">iAutoMotive Ltd</InfoRow>
+              <InfoRow label="Trading name">iAutoMotive</InfoRow>
               <InfoRow label="Company registration number">[To be inserted]</InfoRow>
               <InfoRow label="Registered address">[Registered office address &mdash; to be confirmed]</InfoRow>
               <InfoRow label="FCA firm reference number">[FCA FRN &mdash; to be obtained before launch]</InfoRow>
@@ -301,8 +301,8 @@ export default function FcaDisclosurePage() {
               </InfoRow>
               <InfoRow label="ICO registration number">[ICO registration number &mdash; to be obtained]</InfoRow>
               <InfoRow label="Data Protection contact">
-                <a href="mailto:privacy@iautosale.co.uk" style={{ color: "#008C7C" }}>
-                  privacy@iautosale.co.uk
+                <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+                  privacy@iautomotive.co.uk
                 </a>
               </InfoRow>
             </tbody>
@@ -313,7 +313,7 @@ export default function FcaDisclosurePage() {
         {/* 3. Services We Provide                                   */}
         {/* -------------------------------------------------------- */}
         <SectionHeading id="services" number="3" title="Services We Provide" />
-        <P>iAutoSale provides the following services:</P>
+        <P>iAutoMotive provides the following services:</P>
 
         <div
           style={{
@@ -366,7 +366,7 @@ export default function FcaDisclosurePage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="finance-introductions" number="4" title="Finance Introductions" />
         <P>
-          When you express interest in financing your vehicle purchase, iAutoSale will introduce you
+          When you express interest in financing your vehicle purchase, iAutoMotive will introduce you
           to one or more FCA-authorised lenders from our panel. We do not provide financial advice.
           Our role is limited to introducing you to lenders who may be able to offer you a finance
           agreement.
@@ -387,7 +387,7 @@ export default function FcaDisclosurePage() {
             </>,
             <>
               <strong>Limited panel:</strong> We work with a limited number of lenders. We do not
-              search the whole market. The finance offers you receive through iAutoSale may not be
+              search the whole market. The finance offers you receive through iAutoMotive may not be
               the cheapest or most suitable available to you.
             </>,
             <>
@@ -415,7 +415,7 @@ export default function FcaDisclosurePage() {
           Our lender panel
         </h3>
         <P>
-          iAutoSale works with the following FCA-authorised lenders (this list will be updated as
+          iAutoMotive works with the following FCA-authorised lenders (this list will be updated as
           new lender relationships are established):
         </P>
         <P>
@@ -428,7 +428,7 @@ export default function FcaDisclosurePage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="remuneration" number="5" title="How We Are Remunerated" />
         <P>
-          It is important that you understand how iAutoSale earns money from its services. We
+          It is important that you understand how iAutoMotive earns money from its services. We
           believe in full transparency about our remuneration.
         </P>
 
@@ -541,8 +541,8 @@ export default function FcaDisclosurePage() {
             className="font-body"
             style={{ fontSize: "14px", lineHeight: 1.7, color: "#00332E", margin: 0 }}
           >
-            <strong>Important:</strong> The commission iAutoSale receives from lenders does not
-            affect the Seller&rsquo;s Minimum Return. iAutoSale does not charge a commission fee
+            <strong>Important:</strong> The commission iAutoMotive receives from lenders does not
+            affect the Seller&rsquo;s Minimum Return. iAutoMotive does not charge a commission fee
             on vehicle consignment sales. Finance commissions do not reduce the amount the Seller
             receives from the sale of their vehicle.
           </p>
@@ -585,19 +585,19 @@ export default function FcaDisclosurePage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="complaints" number="7" title="Complaints" />
         <P>
-          If you wish to make a complaint about iAutoSale&rsquo;s finance introduction service or
+          If you wish to make a complaint about iAutoMotive&rsquo;s finance introduction service or
           any other FCA-regulated activity, please contact us:
         </P>
         <BulletList
           items={[
             <>
               <strong>Email:</strong>{" "}
-              <a href="mailto:complaints@iautosale.co.uk" style={{ color: "#008C7C" }}>
-                complaints@iautosale.co.uk
+              <a href="mailto:complaints@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+                complaints@iautomotive.co.uk
               </a>
             </>,
             <>
-              <strong>Post:</strong> iAutoSale Ltd, [Registered address], marked: Complaints
+              <strong>Post:</strong> iAutoMotive Ltd, [Registered address], marked: Complaints
             </>,
             <>
               <strong>Telephone:</strong> [Phone number &mdash; to be confirmed]
@@ -693,7 +693,7 @@ export default function FcaDisclosurePage() {
           authorised firm is unable to pay claims against it.
         </P>
         <P>
-          As a credit broker, iAutoSale&rsquo;s activities may be covered by the FSCS. If you
+          As a credit broker, iAutoMotive&rsquo;s activities may be covered by the FSCS. If you
           believe you have a claim, you can contact the FSCS:
         </P>
 
@@ -779,7 +779,7 @@ export default function FcaDisclosurePage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="contact" number="11" title="Contact Us" />
         <P>
-          If you have any questions about iAutoSale&rsquo;s regulatory status or the information
+          If you have any questions about iAutoMotive&rsquo;s regulatory status or the information
           on this page, please contact us:
         </P>
 
@@ -790,23 +790,23 @@ export default function FcaDisclosurePage() {
           >
             <tbody>
               <InfoRow label="General enquiries">
-                <a href="mailto:hello@iautosale.co.uk" style={{ color: "#008C7C" }}>
-                  hello@iautosale.co.uk
+                <a href="mailto:hello@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+                  hello@iautomotive.co.uk
                 </a>
               </InfoRow>
               <InfoRow label="Complaints">
-                <a href="mailto:complaints@iautosale.co.uk" style={{ color: "#008C7C" }}>
-                  complaints@iautosale.co.uk
+                <a href="mailto:complaints@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+                  complaints@iautomotive.co.uk
                 </a>
               </InfoRow>
               <InfoRow label="Data Protection">
-                <a href="mailto:privacy@iautosale.co.uk" style={{ color: "#008C7C" }}>
-                  privacy@iautosale.co.uk
+                <a href="mailto:privacy@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+                  privacy@iautomotive.co.uk
                 </a>
               </InfoRow>
               <InfoRow label="Telephone">[Phone number &mdash; to be confirmed]</InfoRow>
               <InfoRow label="Post">
-                iAutoSale Ltd, [Registered address]
+                iAutoMotive Ltd, [Registered address]
               </InfoRow>
               <InfoRow label="FCA Register">
                 <a
@@ -842,7 +842,7 @@ export default function FcaDisclosurePage() {
             className="font-body"
             style={{ fontSize: "14px", lineHeight: 1.7, color: "#7A4A00", margin: 0 }}
           >
-            iAutoSale Ltd is authorised and regulated by the Financial Conduct Authority for credit
+            iAutoMotive Ltd is authorised and regulated by the Financial Conduct Authority for credit
             broking activities. FCA firm reference number: [to be obtained]. Registered in England
             and Wales. Company number: [to be inserted]. Registered office: [to be confirmed].
           </p>
@@ -860,7 +860,7 @@ export default function FcaDisclosurePage() {
             className="font-body"
             style={{ fontSize: "13px", color: "#8492A8", lineHeight: 1.6, margin: 0 }}
           >
-            iAutoSale Ltd &middot; FCA Disclosure v1.0 &middot; March 2026
+            iAutoMotive Ltd &middot; FCA Disclosure v1.0 &middot; March 2026
           </p>
         </div>
       </div>

@@ -44,7 +44,7 @@ function SellerNav() {
       {/* Logo */}
       <div style={{ cursor: "pointer", marginRight: 32, flexShrink: 0 }} onClick={() => router.push("/")}>
         <span style={{ fontFamily: "var(--font-body)", fontWeight: 300, fontSize: 17, color: C.textMuted }}>iAuto</span>
-        <span style={{ fontFamily: "var(--font-body)", fontWeight: 900, fontSize: 17, color: C.teal }}>Sale</span>
+        <span style={{ fontFamily: "var(--font-body)", fontWeight: 900, fontSize: 17, color: C.teal }}>Motive</span>
       </div>
 
       {/* Nav links */}
@@ -116,7 +116,7 @@ function SellerFooter() {
         fontFamily: "var(--font-body)", fontSize: 11, color: C.textDim,
         display: "flex", flexDirection: "column", gap: 4,
       }}>
-        <span>iAutoSale Ltd — Registered in England & Wales</span>
+        <span>iAutoMotive Ltd — Registered in England & Wales</span>
         <span>FCA status: [placeholder] · ICO registration: [placeholder]</span>
         <span>
           Consumer Rights Act 2015 ·{" "}

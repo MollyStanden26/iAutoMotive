@@ -54,7 +54,7 @@ const departments = [
   },
   {
     title: "Customer Experience",
-    desc: "Be the voice of iAutoSale \u2014 guide customers from first enquiry to successful sale.",
+    desc: "Be the voice of iAutoMotive \u2014 guide customers from first enquiry to successful sale.",
     gradient: "linear-gradient(135deg, #008C7C 0%, #4DD9C7 100%)",
     icon: (
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -198,7 +198,7 @@ export default function CareersPage() {
               marginBottom: "12px",
             }}
           >
-            Careers at iAutoSale
+            Careers at iAutoMotive
           </p>
           <h1
             className="font-heading text-white"
@@ -209,7 +209,7 @@ export default function CareersPage() {
               lineHeight: 1.1,
             }}
           >
-            Work at iAutoSale
+            Work at iAutoMotive
           </h1>
           <p
             className="font-body"
@@ -729,7 +729,7 @@ export default function CareersPage() {
             }}
           >
             We&rsquo;re always looking for talented people. Send us your CV and tell us why you want
-            to join iAutoSale.
+            to join iAutoMotive.
           </p>
           <div
             style={{
@@ -741,7 +741,7 @@ export default function CareersPage() {
             }}
           >
             <a
-              href="mailto:careers@iautosale.co.uk"
+              href="mailto:careers@iautomotive.co.uk"
               className="font-body"
               style={{
                 display: "inline-flex",

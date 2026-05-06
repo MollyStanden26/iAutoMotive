@@ -93,7 +93,7 @@ function SignInForm() {
             color: "#8492A8",
           }}
         >
-          Auto
+          iAuto
         </span>
         <span
           style={{
@@ -103,7 +103,7 @@ function SignInForm() {
             color: "#008C7C",
           }}
         >
-          Consign
+          Motive
         </span>
       </div>
 
@@ -244,6 +244,7 @@ function SignInForm() {
       </p>
 
       {/* ── Demo section ──────────────────────────────────── */}
+      {process.env.NEXT_PUBLIC_SHOW_DEMO === "true" && (
       <div className="mt-8">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex-1" style={{ height: 1, backgroundColor: "#EAECEF" }} />
@@ -295,6 +296,7 @@ function SignInForm() {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }

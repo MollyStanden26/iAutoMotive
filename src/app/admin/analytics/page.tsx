@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, Label,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  TooltipProps,
 } from "recharts";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
 import * as D from "@/lib/admin/analytics-mock-data";
@@ -55,7 +54,7 @@ function formatValue(value: number | undefined, key: string): string {
   return value.toLocaleString();
 }
 
-function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-[8px] px-3 py-2" style={{ background: T.bgRow, border: `1px solid ${T.border}` }}>
@@ -217,7 +216,7 @@ function OverviewTab() {
             <BarChart data={D.revenueChartData} margin={chartMargin}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="day" tick={tickStyle} axisLine={false} tickLine={false} />
-              <YAxis tick={tickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v: number) => `£${(v / 1000).toFixed(0)}k`} />
+              <YAxis tick={tickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v: any) => `£${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="gross" name="Gross revenue" fill={T.indigoBg} radius={[4, 4, 0, 0]} isAnimationActive={false} />
               <Bar dataKey="fee" name="Platform fee" fill={T.teal200} radius={[4, 4, 0, 0]} isAnimationActive={false} />
@@ -330,7 +329,7 @@ function InventoryTab() {
             <LineChart data={D.avgDaysChartData} margin={chartMargin}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="day" tick={tickStyle} axisLine={false} tickLine={false} />
-              <YAxis domain={[20, 28]} tick={tickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v: number) => `${v}d`} />
+              <YAxis domain={[20, 28]} tick={tickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v: any) => `${v}d`} />
               <Tooltip content={<ChartTooltip />} />
               <Line type="monotone" dataKey="avgDays" name="Avg days" stroke={T.green} dot={{ r: 3 }} activeDot={{ r: 5 }} />
             </LineChart>
@@ -389,7 +388,7 @@ function RevenueTab() {
             <BarChart data={D.revenueFeeChartData} margin={chartMargin}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="day" tick={tickStyle} axisLine={false} tickLine={false} />
-              <YAxis tick={tickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v: number) => `£${v}`} />
+              <YAxis tick={tickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v: any) => `£${v}`} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="fee" name="Platform fee" fill={T.teal200} radius={[4, 4, 0, 0]} isAnimationActive={false} />
             </BarChart>
@@ -502,7 +501,7 @@ function PayoutsTab() {
             <BarChart data={D.payoutChartData} margin={chartMargin}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="day" tick={tickStyle} axisLine={false} tickLine={false} />
-              <YAxis tick={tickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v: number) => `£${(v / 1000).toFixed(0)}k`} />
+              <YAxis tick={tickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v: any) => `£${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="payout" name="Payout" fill={T.teal200} radius={[4, 4, 0, 0]} isAnimationActive={false} minPointSize={3} />
             </BarChart>

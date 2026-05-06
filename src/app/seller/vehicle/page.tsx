@@ -12,7 +12,7 @@ const BADGE_MAP: Record<string, { bg: string; color: string; label: string }> = 
 };
 
 const PARTY_MAP: Record<string, { bg: string; color: string; icon: string }> = {
-  iautosale: { bg: '#E0FAF5', color: '#006058', icon: 'AC' },
+  iautomotive: { bg: '#E0FAF5', color: '#006058', icon: 'AC' },
   seller:      { bg: '#FFF8E6', color: '#92400E', icon: 'JS' },
   agreed:      { bg: '#D1FAE5', color: '#064E3B', icon: '✓' },
 };

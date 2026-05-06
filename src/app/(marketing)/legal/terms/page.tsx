@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions | iAutoSale",
+  title: "Terms & Conditions | iAutoMotive",
   description:
-    "iAutoSale Vehicle Consignment Agreement — the terms and conditions governing consignment sales on our platform.",
+    "iAutoMotive Vehicle Consignment Agreement — the terms and conditions governing consignment sales on our platform.",
 };
 
 /* ------------------------------------------------------------------ */
@@ -188,7 +188,7 @@ const tocItems = [
   { id: "defined-terms", letter: "A", title: "Defined Terms" },
   { id: "summary", letter: "B", title: "Summary of Agreement" },
   { id: "payment", letter: "C", title: "Payment Administration" },
-  { id: "liability", letter: "D", title: "iAutoSale Liability and Insurance" },
+  { id: "liability", letter: "D", title: "iAutoMotive Liability and Insurance" },
   { id: "condition", letter: "E", title: "Vehicle Condition Declaration" },
   { id: "handover", letter: "F", title: "Handover Appointment" },
   { id: "collection", letter: "G", title: "Collection and Transportation" },
@@ -242,13 +242,13 @@ export default function TermsPage() {
             className="font-body"
             style={{ fontSize: "14px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}
           >
-            iAutoSale Ltd &middot;{" "}
-            <a href="https://iautosale.co.uk" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}>
-              iautosale.co.uk
+            iAutoMotive Ltd &middot;{" "}
+            <a href="https://iautomotive.co.uk" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}>
+              iautomotive.co.uk
             </a>{" "}
             &middot;{" "}
-            <a href="mailto:hello@iautosale.co.uk" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}>
-              hello@iautosale.co.uk
+            <a href="mailto:hello@iautomotive.co.uk" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}>
+              hello@iautomotive.co.uk
             </a>
           </p>
         </div>
@@ -269,16 +269,16 @@ export default function TermsPage() {
             <strong>Important &mdash; read before signing</strong>
           </p>
           <p className="font-body" style={{ fontSize: "14px", lineHeight: 1.7, color: "#7A4A00", margin: "0 0 8px" }}>
-            This agreement is between you (the Seller) and iAutoSale Ltd. By signing, you
-            authorise iAutoSale to take physical possession of your vehicle, list it for sale at
+            This agreement is between you (the Seller) and iAutoMotive Ltd. By signing, you
+            authorise iAutoMotive to take physical possession of your vehicle, list it for sale at
             full retail market price, negotiate with buyers, and remit the net proceeds to you after
             deducting any pre-authorised costs.
           </p>
           <p className="font-body" style={{ fontSize: "14px", lineHeight: 1.7, color: "#7A4A00", margin: "0 0 8px" }}>
             You should read this agreement in full before signing. If you have any questions,
             contact us at{" "}
-            <a href="mailto:hello@iautosale.co.uk" style={{ color: "#B87209", textDecoration: "underline" }}>
-              hello@iautosale.co.uk
+            <a href="mailto:hello@iautomotive.co.uk" style={{ color: "#B87209", textDecoration: "underline" }}>
+              hello@iautomotive.co.uk
             </a>{" "}
             before you sign.
           </p>
@@ -332,12 +332,12 @@ export default function TermsPage() {
         <DefTable
           rows={[
             [
-              "\u201CiAutoSale\u201D",
-              "iAutoSale Ltd, a company registered in England and Wales, operator of the vehicle consignment platform at iautosale.co.uk.",
+              "\u201CiAutoMotive\u201D",
+              "iAutoMotive Ltd, a company registered in England and Wales, operator of the vehicle consignment platform at iautomotive.co.uk.",
             ],
             [
               "\u201CSeller\u201D / \u201CVendor\u201D",
-              "The individual or entity named in the Seller Details section of this agreement who is the lawful owner of the Vehicle and who has entered into this agreement with iAutoSale.",
+              "The individual or entity named in the Seller Details section of this agreement who is the lawful owner of the Vehicle and who has entered into this agreement with iAutoMotive.",
             ],
             [
               "\u201CVehicle\u201D",
@@ -345,11 +345,11 @@ export default function TermsPage() {
             ],
             [
               "\u201CClient\u201D / \u201CBuyer\u201D",
-              "The person or entity who purchases the Vehicle from iAutoSale acting as agent for the Seller. The identity of prospective buyers will remain confidential until a sale is agreed.",
+              "The person or entity who purchases the Vehicle from iAutoMotive acting as agent for the Seller. The identity of prospective buyers will remain confidential until a sale is agreed.",
             ],
             [
               "\u201CListing Price\u201D",
-              "The price at which iAutoSale will advertise the Vehicle for sale, as agreed between iAutoSale and the Seller and stated in the Financial Summary section of this agreement.",
+              "The price at which iAutoMotive will advertise the Vehicle for sale, as agreed between iAutoMotive and the Seller and stated in the Financial Summary section of this agreement.",
             ],
             [
               "\u201CSale Price\u201D",
@@ -357,11 +357,11 @@ export default function TermsPage() {
             ],
             [
               "\u201CPlatform Fee\u201D",
-              "No commission fee is charged by iAutoSale for its consignment services under this agreement. iAutoSale may separately earn commissions from warranty or finance products sold to the Buyer \u2014 these do not reduce the Seller\u2019s return.",
+              "No commission fee is charged by iAutoMotive for its consignment services under this agreement. iAutoMotive may separately earn commissions from warranty or finance products sold to the Buyer \u2014 these do not reduce the Seller\u2019s return.",
             ],
             [
               "\u201CMinimum Return\u201D",
-              "The guaranteed net amount to be paid to the Seller on completion of a sale, as stated in the Financial Summary. This figure is the Sale Price minus any agreed Costs. iAutoSale will not pay the Seller less than this amount from a completed sale.",
+              "The guaranteed net amount to be paid to the Seller on completion of a sale, as stated in the Financial Summary. This figure is the Sale Price minus any agreed Costs. iAutoMotive will not pay the Seller less than this amount from a completed sale.",
             ],
             [
               "\u201CPrice Positioning\u201D",
@@ -373,27 +373,27 @@ export default function TermsPage() {
             ],
             [
               "\u201CHandover\u201D",
-              "The physical transfer of the Vehicle, all keys, and all documents from the Seller to iAutoSale, which marks the official commencement of the Minimum Period. Handover may take place at the Seller\u2019s address (collection service) or at an iAutoSale lot.",
+              "The physical transfer of the Vehicle, all keys, and all documents from the Seller to iAutoMotive, which marks the official commencement of the Minimum Period. Handover may take place at the Seller\u2019s address (collection service) or at an iAutoMotive lot.",
             ],
             [
               "\u201CMinimum Period\u201D",
-              "The period of 30 clear days commencing on the date of Handover during which the Seller agrees to give iAutoSale the exclusive right to market and sell the Vehicle under this agreement.",
+              "The period of 30 clear days commencing on the date of Handover during which the Seller agrees to give iAutoMotive the exclusive right to market and sell the Vehicle under this agreement.",
             ],
             [
               "\u201CTermination Fee\u201D",
-              "A fee of \u00a3399 payable by the Seller to iAutoSale if the Seller gives Notice to withdraw from this agreement within the Minimum Period for any reason other than rejection of an unexpected PDI quote.",
+              "A fee of \u00a3399 payable by the Seller to iAutoMotive if the Seller gives Notice to withdraw from this agreement within the Minimum Period for any reason other than rejection of an unexpected PDI quote.",
             ],
             [
               "\u201CNotice\u201D",
-              "A written notice of no less than 7 clear days provided by the Seller to iAutoSale, expressing the Seller\u2019s intention to withdraw from, terminate, or conclude this agreement. Notice must be sent to hello@iautosale.co.uk.",
+              "A written notice of no less than 7 clear days provided by the Seller to iAutoMotive, expressing the Seller\u2019s intention to withdraw from, terminate, or conclude this agreement. Notice must be sent to hello@iautomotive.co.uk.",
             ],
             [
               "\u201CWorks\u201D",
-              "Any mechanical, electrical, technical, software, cosmetic or bodywork repairs, replacements, preparation, or restoration work carried out on the Vehicle by iAutoSale or its approved suppliers.",
+              "Any mechanical, electrical, technical, software, cosmetic or bodywork repairs, replacements, preparation, or restoration work carried out on the Vehicle by iAutoMotive or its approved suppliers.",
             ],
             [
               "\u201CCost\u201D",
-              "Any sum of money spent or incurred by iAutoSale on behalf of the Seller in connection with the Vehicle under this agreement \u2014 including pre-agreed Works, transportation, preparation costs, and Finance Balance settlement \u2014 that is to be reimbursed to iAutoSale from the sale proceeds or by means of Payment. Cost expressly excludes any expense arising from damage caused by iAutoSale\u2019s own negligence, breach of duty, or acts or omissions whilst the Vehicle is in iAutoSale\u2019s care.",
+              "Any sum of money spent or incurred by iAutoMotive on behalf of the Seller in connection with the Vehicle under this agreement \u2014 including pre-agreed Works, transportation, preparation costs, and Finance Balance settlement \u2014 that is to be reimbursed to iAutoMotive from the sale proceeds or by means of Payment. Cost expressly excludes any expense arising from damage caused by iAutoMotive\u2019s own negligence, breach of duty, or acts or omissions whilst the Vehicle is in iAutoMotive\u2019s care.",
             ],
             [
               "\u201CPayment\u201D",
@@ -401,11 +401,11 @@ export default function TermsPage() {
             ],
             [
               "\u201CPDI\u201D",
-              "A pre-delivery inspection and road test performed by iAutoSale on the Vehicle after Handover to assess its mechanical, electrical, and cosmetic condition.",
+              "A pre-delivery inspection and road test performed by iAutoMotive on the Vehicle after Handover to assess its mechanical, electrical, and cosmetic condition.",
             ],
             [
               "\u201CHPI Check\u201D",
-              "A vehicle history check conducted by iAutoSale at or shortly after Handover, confirming outstanding finance, theft, write-off status, and registration history. A clear HPI result is required before the Vehicle can be listed for sale.",
+              "A vehicle history check conducted by iAutoMotive at or shortly after Handover, confirming outstanding finance, theft, write-off status, and registration history. A clear HPI result is required before the Vehicle can be listed for sale.",
             ],
             [
               "\u201CFinance Balance\u201D",
@@ -423,15 +423,15 @@ export default function TermsPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="summary" letter="B" title="Summary of Agreement" />
         <P>
-          This is a consignment sale agreement between iAutoSale and the Seller. iAutoSale acts
+          This is a consignment sale agreement between iAutoMotive and the Seller. iAutoMotive acts
           as the Seller&rsquo;s agent to advertise, market, negotiate, and conclude the sale of the
           Vehicle to a Buyer at the best available retail market price, in accordance with the terms
-          of this agreement. iAutoSale does not purchase the Vehicle from the Seller. Title to the
+          of this agreement. iAutoMotive does not purchase the Vehicle from the Seller. Title to the
           Vehicle remains with the Seller until such time as a sale to a Buyer is completed and
-          funds are received by iAutoSale.
+          funds are received by iAutoMotive.
         </P>
         <P>
-          iAutoSale will manage the entire sale process on the Seller&rsquo;s behalf, including:
+          iAutoMotive will manage the entire sale process on the Seller&rsquo;s behalf, including:
         </P>
         <BulletList
           items={[
@@ -449,7 +449,7 @@ export default function TermsPage() {
           The Seller will receive the Minimum Return as stated in the Financial Summary section,
           paid within 48 hours of the closing conditions being satisfied. The Seller&rsquo;s funds
           are held in a separate client account at all times and are never commingled with
-          iAutoSale&rsquo;s operating funds.
+          iAutoMotive&rsquo;s operating funds.
         </P>
 
         {/* -------------------------------------------------------- */}
@@ -457,10 +457,10 @@ export default function TermsPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="payment" letter="C" title="Payment Administration" />
         <Clause number="1">
-          iAutoSale will advertise the Vehicle at the Listing Price stated in the Financial
-          Summary section of this agreement, at a Price Positioning determined by iAutoSale based
-          on live market data. iAutoSale will work to achieve the highest possible Sale Price.
-          iAutoSale does not charge a commission fee on the Sale Price. iAutoSale
+          iAutoMotive will advertise the Vehicle at the Listing Price stated in the Financial
+          Summary section of this agreement, at a Price Positioning determined by iAutoMotive based
+          on live market data. iAutoMotive will work to achieve the highest possible Sale Price.
+          iAutoMotive does not charge a commission fee on the Sale Price. iAutoMotive
           is entitled to earn commissions from warranty and finance products sold to the
           Buyer &mdash; these do not reduce the Seller&rsquo;s
           Minimum Return.
@@ -468,7 +468,7 @@ export default function TermsPage() {
         <Clause number="2">
           The Seller is entitled to receive Payment of no less than the Minimum Return stated in the
           Financial Summary, after deduction of any pre-agreed Costs, paid to
-          the bank account details provided in the Financial Summary section. iAutoSale will not
+          the bank account details provided in the Financial Summary section. iAutoMotive will not
           adjust or reduce the Minimum Return without the Seller&rsquo;s prior written consent.
         </Clause>
         <Clause number="3">
@@ -477,21 +477,21 @@ export default function TermsPage() {
           Buyer; (ii) the 7-day buyer return period has expired without a return being initiated;
           (iii) no disputes are open in relation to the transaction; (iv) where the Buyer has
           financed their purchase, the lender has confirmed funding; and (v) all compliance checks
-          have been completed. iAutoSale will notify the Seller by SMS and email at each stage of
+          have been completed. iAutoMotive will notify the Seller by SMS and email at each stage of
           this process and when Payment is released.
         </Clause>
         <Clause number="4">
           All funds received from the Buyer are held in a designated client account, separate from
-          iAutoSale&rsquo;s operating accounts, pending satisfaction of the conditions in clause
+          iAutoMotive&rsquo;s operating accounts, pending satisfaction of the conditions in clause
           (3) above. The Seller&rsquo;s funds are protected at all times and may not be used for any
-          other purpose by iAutoSale.
+          other purpose by iAutoMotive.
         </Clause>
         <Clause number="5">
-          Where the Vehicle has an outstanding Finance Balance, iAutoSale will obtain a settlement
+          Where the Vehicle has an outstanding Finance Balance, iAutoMotive will obtain a settlement
           figure from the relevant lender and settle the Finance Balance directly from the sale
           proceeds prior to remitting the balance to the Seller. Where the Finance Balance exceeds
           the expected net proceeds (negative equity), the Seller must pay the shortfall to
-          iAutoSale before the Vehicle is listed for sale. This shortfall will be held in the
+          iAutoMotive before the Vehicle is listed for sale. This shortfall will be held in the
           client account and applied to the settlement on completion.
         </Clause>
         <Clause number="6">
@@ -502,42 +502,42 @@ export default function TermsPage() {
         {/* -------------------------------------------------------- */}
         {/* D. LIABILITY AND INSURANCE                               */}
         {/* -------------------------------------------------------- */}
-        <SectionHeading id="liability" letter="D" title="iAutoSale Liability and Insurance" />
+        <SectionHeading id="liability" letter="D" title="iAutoMotive Liability and Insurance" />
         <P>
           This section is included to provide the Seller with full transparency and legal assurance
-          regarding iAutoSale&rsquo;s duty of care over the Vehicle during the Entire Period.
+          regarding iAutoMotive&rsquo;s duty of care over the Vehicle during the Entire Period.
         </P>
         <Clause number="1">
-          iAutoSale accepts full responsibility for any damage caused to the Vehicle whilst the
-          Vehicle is in iAutoSale&rsquo;s care, custody or control that was not recorded at the
-          time of Handover. Any such damage will be repaired by iAutoSale at iAutoSale&rsquo;s
+          iAutoMotive accepts full responsibility for any damage caused to the Vehicle whilst the
+          Vehicle is in iAutoMotive&rsquo;s care, custody or control that was not recorded at the
+          time of Handover. Any such damage will be repaired by iAutoMotive at iAutoMotive&rsquo;s
           own expense and shall not constitute a Cost chargeable to the Seller.
         </Clause>
         <Clause number="2">
-          The Vehicle will be covered under iAutoSale&rsquo;s motor trade insurance policy at all
-          times whilst in iAutoSale&rsquo;s possession, including during transportation, test
-          drives conducted by approved staff or buyers, and storage at iAutoSale&rsquo;s premises.
-          iAutoSale will provide evidence of this insurance to the Seller upon reasonable request.
+          The Vehicle will be covered under iAutoMotive&rsquo;s motor trade insurance policy at all
+          times whilst in iAutoMotive&rsquo;s possession, including during transportation, test
+          drives conducted by approved staff or buyers, and storage at iAutoMotive&rsquo;s premises.
+          iAutoMotive will provide evidence of this insurance to the Seller upon reasonable request.
         </Clause>
         <Clause number="3">
-          iAutoSale will exercise the same standard of care over the Vehicle as a reasonably
-          competent motor trader would exercise over their own stock. iAutoSale shall not use the
+          iAutoMotive will exercise the same standard of care over the Vehicle as a reasonably
+          competent motor trader would exercise over their own stock. iAutoMotive shall not use the
           Vehicle for any purpose other than those reasonably required to carry out its obligations
           under this agreement.
         </Clause>
         <Clause number="4">
-          In the event that iAutoSale identifies damage to the Vehicle not recorded at Handover,
-          iAutoSale will notify the Seller in writing within 48 hours of discovery, together with a
-          description of the damage and iAutoSale&rsquo;s proposed remedy.
+          In the event that iAutoMotive identifies damage to the Vehicle not recorded at Handover,
+          iAutoMotive will notify the Seller in writing within 48 hours of discovery, together with a
+          description of the damage and iAutoMotive&rsquo;s proposed remedy.
         </Clause>
         <Clause number="5">
-          Nothing in this agreement limits or excludes iAutoSale&rsquo;s liability for negligence,
+          Nothing in this agreement limits or excludes iAutoMotive&rsquo;s liability for negligence,
           breach of duty, or wilful misconduct causing loss or damage to the Vehicle, or any other
           liability that cannot lawfully be excluded or limited under the laws of England and Wales.
         </Clause>
         <Clause number="6">
-          In the event of theft, fire, or total loss of the Vehicle whilst in iAutoSale&rsquo;s
-          possession, iAutoSale will notify the Seller immediately and will process an insurance
+          In the event of theft, fire, or total loss of the Vehicle whilst in iAutoMotive&rsquo;s
+          possession, iAutoMotive will notify the Seller immediately and will process an insurance
           claim on the Seller&rsquo;s behalf. The Seller will be entitled to the insured value of
           the Vehicle less any agreed Costs.
         </Clause>
@@ -547,17 +547,17 @@ export default function TermsPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="condition" letter="E" title="Vehicle Condition Declaration" />
         <Clause number="1">
-          iAutoSale and the Seller agree to record all known damage, faults, and condition issues
+          iAutoMotive and the Seller agree to record all known damage, faults, and condition issues
           relating to the Vehicle at the time of Handover. It is the Seller&rsquo;s responsibility
           to disclose all known cosmetic, mechanical, electrical, technical, or historical defects,
-          including any previous accident damage, to iAutoSale at or before the time of signing
+          including any previous accident damage, to iAutoMotive at or before the time of signing
           this agreement.
         </Clause>
         <Clause number="2">
           The condition notes recorded at Handover represent the Vehicle&rsquo;s condition as
           understood by both parties at the time of signing. Any undisclosed defects or damage
           identified after Handover that are shown to have pre-existed the Handover date may be
-          deducted as a Cost from the Seller&rsquo;s proceeds, provided that iAutoSale has
+          deducted as a Cost from the Seller&rsquo;s proceeds, provided that iAutoMotive has
           obtained the Seller&rsquo;s written approval for the cost of remedying such defect before
           any Works are carried out.
         </Clause>
@@ -567,19 +567,19 @@ export default function TermsPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="handover" letter="F" title="Handover Appointment" />
         <Clause number="1">
-          The Seller is to deliver or make available the Vehicle to iAutoSale at the agreed date,
+          The Seller is to deliver or make available the Vehicle to iAutoMotive at the agreed date,
           time, and location, which will constitute the commencement of the Minimum Period of this
           agreement.
         </Clause>
         <Clause number="2">
           The Seller is responsible for clearing the Vehicle of all personal effects before Handover.
-          iAutoSale is not liable for any personal effects left in the Vehicle after the Handover
+          iAutoMotive is not liable for any personal effects left in the Vehicle after the Handover
           date.
         </Clause>
 
         <SubHeading>Documents and items required at Handover</SubHeading>
         <P>
-          The following documents and items are to be provided to iAutoSale by the Seller at or
+          The following documents and items are to be provided to iAutoMotive by the Seller at or
           before Handover:
         </P>
         <BulletList
@@ -601,26 +601,26 @@ export default function TermsPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="collection" letter="G" title="Collection and Transportation" />
         <Clause number="1">
-          The Seller may request that iAutoSale collects the Vehicle from the Seller&rsquo;s
+          The Seller may request that iAutoMotive collects the Vehicle from the Seller&rsquo;s
           address. Vehicle collection is subject to availability and must be arranged in advance.
-          iAutoSale will confirm the collection date and time in writing.
+          iAutoMotive will confirm the collection date and time in writing.
         </Clause>
         <Clause number="2">
           Collection charges are calculated at &pound;0.50 + VAT per mile between the nearest
-          iAutoSale lot and the Seller&rsquo;s postcode, with a minimum collection charge of
+          iAutoMotive lot and the Seller&rsquo;s postcode, with a minimum collection charge of
           &pound;75 for collections of 10 miles or more from the nearest lot. Collections within 10
           miles of a lot carry no minimum charge. Collection charges constitute a Cost under this
           agreement.
         </Clause>
         <Clause number="3">
           The Seller agrees to ensure the Vehicle has sufficient fuel or charge for transportation to
-          iAutoSale&rsquo;s premises. If iAutoSale is required to purchase additional fuel or
+          iAutoMotive&rsquo;s premises. If iAutoMotive is required to purchase additional fuel or
           arrange charging to return the Vehicle to the lot, the cost of doing so will constitute a
           Cost under this agreement.
         </Clause>
         <Clause number="4">
-          iAutoSale will conduct all collection driving under its motor trade insurance policy. The
-          Seller&rsquo;s own insurance is not required during transportation by iAutoSale.
+          iAutoMotive will conduct all collection driving under its motor trade insurance policy. The
+          Seller&rsquo;s own insurance is not required during transportation by iAutoMotive.
         </Clause>
 
         {/* -------------------------------------------------------- */}
@@ -628,37 +628,37 @@ export default function TermsPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="preparation" letter="H" title="Preparation Process and Conditions" />
         <Clause number="1">
-          Following Handover, iAutoSale will conduct an HPI check on the Vehicle. A clear HPI
+          Following Handover, iAutoMotive will conduct an HPI check on the Vehicle. A clear HPI
           result is required before the Vehicle can be listed for sale. If the HPI check reveals
           outstanding finance, a theft marker, a write-off marker, or any other material issue,
-          iAutoSale will notify the Seller in writing within 48 hours. iAutoSale cannot list the
+          iAutoMotive will notify the Seller in writing within 48 hours. iAutoMotive cannot list the
           Vehicle until any such issues are resolved.
         </Clause>
         <Clause number="2">
           Following the HPI check, the Vehicle will undergo a PDI to determine its mechanical,
           electrical, technical, and cosmetic condition. Any faults or defects identified during the
-          PDI that iAutoSale considers should be remedied before listing will be reported to the
+          PDI that iAutoMotive considers should be remedied before listing will be reported to the
           Seller in writing with a corresponding quote (including parts, labour, and VAT where
           applicable) within 5 working days of Handover.
         </Clause>
         <Clause number="3">
-          iAutoSale will not carry out any Works on the Vehicle without the Seller&rsquo;s prior
+          iAutoMotive will not carry out any Works on the Vehicle without the Seller&rsquo;s prior
           written approval. The Seller&rsquo;s pre-authorised maximum spend for Works is stated in
           the Financial Summary section of this agreement. Any Works exceeding this amount require
           separate written approval from the Seller before being carried out.
         </Clause>
         <Clause number="4">
-          Should the Seller receive a PDI quote from iAutoSale and wish to withdraw from this
+          Should the Seller receive a PDI quote from iAutoMotive and wish to withdraw from this
           agreement solely because they do not wish to proceed with the unexpected costs contained in
           that quote, the Seller must provide written refusal within 5 working days of receiving the
           quote. In such circumstances this agreement will cease and the Seller will not be liable
           for a Termination Fee. The Seller must, however, settle any Costs already incurred (for
-          example, collection charges or HPI check fees) by means of Payment to iAutoSale.
+          example, collection charges or HPI check fees) by means of Payment to iAutoMotive.
         </Clause>
         <Clause number="5">
-          iAutoSale will arrange professional photography and produce an AI-assisted vehicle
+          iAutoMotive will arrange professional photography and produce an AI-assisted vehicle
           description for the listing. The Seller may request to review the listing content before it
-          goes live by notifying iAutoSale in writing at the time of signing this agreement or
+          goes live by notifying iAutoMotive in writing at the time of signing this agreement or
           within 24 hours of Handover.
         </Clause>
 
@@ -670,23 +670,23 @@ export default function TermsPage() {
           Should the Seller wish to withdraw from this agreement within the Minimum Period for any
           reason (other than rejection of an unexpected PDI quote as described in Section H(4)), the
           Seller is liable for the Termination Fee of &pound;399 as well as settlement of all
-          outstanding Costs by means of Payment to iAutoSale. The Vehicle and all its keys and
+          outstanding Costs by means of Payment to iAutoMotive. The Vehicle and all its keys and
           documentation will not be released to the Seller until all outstanding amounts have been
           settled.
         </Clause>
         <Clause number="2">
-          iAutoSale will list the Vehicle in accordance with its pricing strategy. The agreed
+          iAutoMotive will list the Vehicle in accordance with its pricing strategy. The agreed
           Listing Price and the Minimum Return to the Seller are as stated in the Financial Summary
-          section. iAutoSale may, in its reasonable commercial judgement and with the aim of
+          section. iAutoMotive may, in its reasonable commercial judgement and with the aim of
           achieving a sale, reduce the Listing Price during the Entire Period. The following
           automatic price reduction schedule applies unless the Seller has provided written
           instructions to the contrary: a reduction of 3% at Day 30 on lot, 6% at Day 45, and 10%
-          at Day 60. iAutoSale will notify the Seller in writing before each scheduled price
+          at Day 60. iAutoMotive will notify the Seller in writing before each scheduled price
           reduction. The Minimum Return to the Seller will not fall below the figure stated in the
           Financial Summary without the Seller&rsquo;s express written consent.
         </Clause>
         <Clause number="3">
-          From the date of signing this agreement, iAutoSale has full exclusivity over the
+          From the date of signing this agreement, iAutoMotive has full exclusivity over the
           advertisement and sale of the Vehicle. The Seller agrees that no other marketing,
           advertisement, or sales activity will take place in relation to the Vehicle &mdash; whether
           by the Seller personally or by any third party &mdash; during the Entire Period. All
@@ -694,13 +694,13 @@ export default function TermsPage() {
           immediate effect upon signing.
         </Clause>
         <Clause number="4">
-          Should the Vehicle be sold to a buyer not introduced by iAutoSale during the Entire
-          Period, the Seller shall be liable to pay iAutoSale all outstanding Costs before iAutoSale
+          Should the Vehicle be sold to a buyer not introduced by iAutoMotive during the Entire
+          Period, the Seller shall be liable to pay iAutoMotive all outstanding Costs before iAutoMotive
           will release the Vehicle, its keys, and its documentation.
         </Clause>
         <Clause number="5">
           Should the Vehicle carry or fall into negative equity in relation to any outstanding
-          Finance Balance during the Entire Period, iAutoSale will not be able to fund any Works as
+          Finance Balance during the Entire Period, iAutoMotive will not be able to fund any Works as
           a Cost until the negative equity position is resolved. Any outstanding Costs must be
           settled by the Seller by means of Payment on the date of sale or at point of Notice.
         </Clause>
@@ -708,21 +708,21 @@ export default function TermsPage() {
           Should the Vehicle be sold and the Buyer subsequently enforce their right to return the
           Vehicle under the Consumer Rights Act 2015 (including the 30-day short-term right to
           reject), this agreement will continue in full force and effect during any return or
-          resolution period. iAutoSale will manage the return process on the Seller&rsquo;s behalf,
+          resolution period. iAutoMotive will manage the return process on the Seller&rsquo;s behalf,
           including arranging re-collection and relisting the Vehicle if the return is accepted. The
           Seller&rsquo;s Minimum Return will be recalculated accordingly if the Vehicle is relisted
           and sold at a different price.
         </Clause>
         <Clause number="7">
-          iAutoSale reserves the right to conduct appropriate identity and fraud verification
+          iAutoMotive reserves the right to conduct appropriate identity and fraud verification
           checks on the Seller at any point during the Entire Period in accordance with our
-          obligations under the Money Laundering Regulations 2017. iAutoSale may suspend or
+          obligations under the Money Laundering Regulations 2017. iAutoMotive may suspend or
           terminate this agreement if satisfactory verification cannot be obtained, in which case no
           Termination Fee will be charged to the Seller.
         </Clause>
         <Clause number="8">
-          iAutoSale will notify the DVLA of the change of vehicle keeper within 5 working days of
-          a completed sale, as required by law. The Seller authorises iAutoSale to complete the
+          iAutoMotive will notify the DVLA of the change of vehicle keeper within 5 working days of
+          a completed sale, as required by law. The Seller authorises iAutoMotive to complete the
           relevant sections of the V5C logbook on the Seller&rsquo;s behalf for this purpose.
         </Clause>
 
@@ -731,21 +731,21 @@ export default function TermsPage() {
         {/* -------------------------------------------------------- */}
         <SectionHeading id="warranties" letter="J" title="Seller Warranties and Representations" />
         <P>
-          By signing this agreement, the Seller warrants and represents to iAutoSale that:
+          By signing this agreement, the Seller warrants and represents to iAutoMotive that:
         </P>
         <BulletList
           items={[
-            "The Seller is the sole legal owner of the Vehicle and has full authority to enter into this agreement and to authorise iAutoSale to sell the Vehicle on their behalf.",
+            "The Seller is the sole legal owner of the Vehicle and has full authority to enter into this agreement and to authorise iAutoMotive to sell the Vehicle on their behalf.",
             "The Vehicle is free from any outstanding finance, charge, or encumbrance, save as expressly disclosed in the Handover documentation. Where outstanding finance exists, the Seller warrants that the settlement figure provided is accurate and current.",
-            "The Vehicle has not been reported stolen, written off, or subject to any insurance claim that has not been fully disclosed to iAutoSale.",
+            "The Vehicle has not been reported stolen, written off, or subject to any insurance claim that has not been fully disclosed to iAutoMotive.",
             "The mileage shown on the Vehicle\u2019s odometer at the time of Handover is accurate and has not been altered or tampered with.",
             "All information provided by the Seller in connection with this agreement is accurate and complete to the best of the Seller\u2019s knowledge.",
             "The Seller has disclosed all known defects, faults, accident damage, or condition issues relating to the Vehicle.",
           ]}
         />
         <P>
-          iAutoSale relies on these warranties in entering into this agreement. Any breach of these
-          warranties may result in iAutoSale terminating this agreement without liability and
+          iAutoMotive relies on these warranties in entering into this agreement. Any breach of these
+          warranties may result in iAutoMotive terminating this agreement without liability and
           seeking to recover any losses suffered from the Seller.
         </P>
 
@@ -769,12 +769,12 @@ export default function TermsPage() {
           governmental or regulatory authority.
         </Clause>
         <Clause number="4">
-          iAutoSale processes personal data in connection with this agreement in accordance with
+          iAutoMotive processes personal data in connection with this agreement in accordance with
           its{" "}
           <a href="/legal/privacy" style={{ color: "#008C7C", textDecoration: "underline" }}>
             Privacy Policy
           </a>
-          , available at iautosale.co.uk/legal/privacy, and in accordance with the UK General Data
+          , available at iautomotive.co.uk/legal/privacy, and in accordance with the UK General Data
           Protection Regulation and the Data Protection Act 2018.
         </Clause>
         <Clause number="5">
@@ -792,15 +792,15 @@ export default function TermsPage() {
           shall constitute a waiver of that right or remedy.
         </Clause>
         <Clause number="8">
-          <strong>Complaints:</strong> If the Seller has a complaint about iAutoSale&rsquo;s
-          service, they should contact iAutoSale in writing at{" "}
-          <a href="mailto:complaints@iautosale.co.uk" style={{ color: "#008C7C" }}>
-            complaints@iautosale.co.uk
+          <strong>Complaints:</strong> If the Seller has a complaint about iAutoMotive&rsquo;s
+          service, they should contact iAutoMotive in writing at{" "}
+          <a href="mailto:complaints@iautomotive.co.uk" style={{ color: "#008C7C" }}>
+            complaints@iautomotive.co.uk
           </a>
-          . iAutoSale will acknowledge all complaints within 5 working days and aim to resolve them
-          within 8 weeks. If the Seller is not satisfied with iAutoSale&rsquo;s handling of a
+          . iAutoMotive will acknowledge all complaints within 5 working days and aim to resolve them
+          within 8 weeks. If the Seller is not satisfied with iAutoMotive&rsquo;s handling of a
           complaint, they may be entitled to refer the matter to an Alternative Dispute Resolution
-          (ADR) provider. Details of applicable ADR schemes will be provided in iAutoSale&rsquo;s
+          (ADR) provider. Details of applicable ADR schemes will be provided in iAutoMotive&rsquo;s
           response to any complaint.
         </Clause>
 
@@ -849,7 +849,7 @@ export default function TermsPage() {
             className="font-body"
             style={{ fontSize: "13px", color: "#8492A8", lineHeight: 1.6, margin: 0 }}
           >
-            iAutoSale Ltd &middot; Vehicle Consignment Agreement v1.0 &middot; March 2026
+            iAutoMotive Ltd &middot; Vehicle Consignment Agreement v1.0 &middot; March 2026
           </p>
         </div>
       </div>

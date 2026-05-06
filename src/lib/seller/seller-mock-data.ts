@@ -50,7 +50,7 @@ export interface PriceHistoryEntry {
 export interface OfferHistoryEntry {
   id: string;
   date: string;
-  party: 'iautosale' | 'seller' | 'agreed';
+  party: 'iautomotive' | 'seller' | 'agreed';
   label: string;
   detail: string;
 }
@@ -137,7 +137,7 @@ export const MOCK_PRICE_HISTORY: PriceHistoryEntry[] = [
 
 /* ── Offer history ── */
 export const MOCK_OFFER_HISTORY: OfferHistoryEntry[] = [
-  { id: 'o1', date: '14 Mar 2026', party: 'iautosale', label: 'Initial offer sent by iAutoSale', detail: '£19,800 — via AutoTrader message' },
+  { id: 'o1', date: '14 Mar 2026', party: 'iautomotive', label: 'Initial offer sent by iAutoMotive', detail: '£19,800 — via AutoTrader message' },
   { id: 'o2', date: '15 Mar 2026', party: 'seller', label: 'Counter-offer from you', detail: '£20,500 — responded via SMS' },
   { id: 'o3', date: '15 Mar 2026', party: 'agreed', label: 'Offer accepted — consignment agreement signed', detail: '£20,000 consignment value agreed. Listing target: £21,600.' },
 ];
@@ -156,7 +156,7 @@ export const MOCK_DOCUMENTS: SellerDocument[] = [
   { id: 'd1', label: 'Consignment agreement', iconText: 'CA', iconBg: '#E0FAF5', iconColor: '#006058', meta: 'Signed 15 Mar 2026 · PDF · 2 pages', available: true, pending: false },
   { id: 'd2', label: 'HPI check certificate', iconText: 'HPI', iconBg: '#D1FAE5', iconColor: '#064E3B', meta: 'Clear result · Checked 17 Mar 2026 · PDF', available: true, pending: false },
   { id: 'd3', label: 'Condition report', iconText: 'CR', iconBg: '#DBEAFE', iconColor: '#1E40AF', meta: 'Completed 18 Mar 2026 · Grade: Good · PDF', available: true, pending: false },
-  { id: 'd4', label: 'V5C logbook', iconText: 'V5', iconBg: '#FFF8E6', iconColor: '#92400E', meta: 'Held by iAutoSale · Transfer notified to DVLA at point of sale', available: false, pending: false },
+  { id: 'd4', label: 'V5C logbook', iconText: 'V5', iconBg: '#FFF8E6', iconColor: '#92400E', meta: 'Held by iAutoMotive · Transfer notified to DVLA at point of sale', available: false, pending: false },
   { id: 'd5', label: 'Sale confirmation', iconText: 'SA', iconBg: '#F7F8F9', iconColor: '#8492A8', meta: 'Available once sale completes', available: false, pending: true },
   { id: 'd6', label: 'Final net sheet', iconText: 'NS', iconBg: '#F7F8F9', iconColor: '#8492A8', meta: 'Exact payout breakdown — available at close', available: false, pending: true },
 ];
@@ -178,7 +178,7 @@ export const MOCK_MESSAGES: SellerMessage[] = [
 
 /* ── Latest updates ── */
 export const MOCK_UPDATES: SellerUpdate[] = [
-  { id: 'u1', dotColor: 'green', timestamp: '6 days ago', text: 'Your vehicle is live on AutoTrader and the iAutoSale storefront. We\'ve had 84 views in the first 6 days.' },
+  { id: 'u1', dotColor: 'green', timestamp: '6 days ago', text: 'Your vehicle is live on AutoTrader and the iAutoMotive storefront. We\'ve had 84 views in the first 6 days.' },
   { id: 'u2', dotColor: 'amber', timestamp: '4 days ago', text: 'Price adjusted from £21,600 to £21,200 — our pricing engine detected 3 similar vehicles reduced this week.' },
   { id: 'u3', dotColor: 'teal', timestamp: '2 days ago', text: 'A buyer shortlisted your car and made an enquiry. Our team responded within 12 minutes.' },
 ];

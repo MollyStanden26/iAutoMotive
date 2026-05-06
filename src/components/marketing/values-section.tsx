@@ -76,7 +76,7 @@ export function ValuesSection() {
             color: "#006058",
           }}
         >
-          Why sellers choose iAutoSale
+          Why sellers choose iAutoMotive
         </h2>
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">

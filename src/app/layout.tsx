@@ -18,9 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "iAutoSale — Sell at Retail Price. Keep the Difference.",
+  title: "iAutoMotive — Sell at Retail Price. Keep the Difference.",
   description:
-    "iAutoSale gets private sellers retail market price for their cars — with zero effort — through a transparent, technology-led consignment model.",
+    "iAutoMotive gets private sellers retail market price for their cars — with zero effort — through a transparent, technology-led consignment model.",
 };
 
 export default function RootLayout({

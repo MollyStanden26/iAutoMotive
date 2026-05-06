@@ -133,7 +133,7 @@ function RevenueChart() {
           <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#94A3BB" }} axisLine={false} tickLine={false} />
           <Tooltip
             contentStyle={{ background: "#070D18", border: "1px solid #1A2640", borderRadius: 8, fontSize: 12, color: "#E2E8F4" }}
-            formatter={(value: number) => [`£${value}k`, ""]}
+            formatter={(value: any) => [`£${value}k`, ""]}
             labelStyle={{ color: "#C5CDD8" }}
           />
           <Bar dataKey="prev" fill="#1A2640" radius={[4, 4, 0, 0]} name="Prior period" />

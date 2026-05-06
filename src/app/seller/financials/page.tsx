@@ -20,7 +20,7 @@ export default function SellerFinancialsPage() {
 
   const breakdownRows = [
     { label: "Sale price (current listing)", value: formatSellerGBP(p.listingPriceGbp), color: "#1E293B" },
-    { label: "iAutoSale platform fee", value: `−${formatSellerGBP(p.platformFeeGbp)}`, color: "#F87171" },
+    { label: "iAutoMotive platform fee", value: `−${formatSellerGBP(p.platformFeeGbp)}`, color: "#F87171" },
     { label: "Reconditioning — mechanical", value: `−${formatSellerGBP(p.reconMechanicalGbp)}`, color: "#F87171" },
     { label: "Reconditioning — detail & valet", value: `−${formatSellerGBP(p.reconDetailGbp)}`, color: "#F87171" },
     { label: "Transport & collection", value: `−${formatSellerGBP(p.transportGbp)}`, color: "#F87171" },
