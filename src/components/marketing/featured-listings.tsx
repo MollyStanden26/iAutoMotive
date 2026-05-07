@@ -1,34 +1,42 @@
 "use client";
 
-const listings = [
-  {
-    id: 1,
-    make: "2024 BMW 3 Series",
-    trim: "320i Sport · 12k miles",
-    price: "£28,990",
-    monthly: "£459/mo",
-  },
-  {
-    id: 2,
-    make: "2023 Mercedes A-Class",
-    trim: "A200 AMG Line · 18k miles",
-    price: "£24,500",
-    monthly: "£389/mo",
-  },
-  {
-    id: 3,
-    make: "2024 Audi A3",
-    trim: "35 TFSI S Line · 8k miles",
-    price: "£26,750",
-    monthly: "£425/mo",
-  },
-];
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+interface ApiCar {
+  id: string;
+  slug: string;
+  year: number;
+  make: string;
+  model: string;
+  trim: string;
+  mileage: string;
+  price: number;
+  monthlyEstimate: number;
+  imageUrl?: string;
+}
+
+const fmt = (n: number) =>
+  new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0 }).format(n);
 
 export function FeaturedListings() {
+  const [cars, setCars] = useState<ApiCar[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch("/api/vehicles")
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(data => { if (!cancelled) setCars((data.cars ?? []).slice(0, 3)); })
+      .catch(err => { if (!cancelled) console.error("[FeaturedListings] fetch failed:", err); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <section style={{ backgroundColor: "#FFFFFF", padding: "48px 0" }}>
       <div className="mx-auto max-w-[1400px] px-6 sm:px-8">
-        {/* Section heading */}
         <h2
           className="font-heading"
           style={{
@@ -41,13 +49,17 @@ export function FeaturedListings() {
           Featured listings
         </h2>
 
-        {/* Vehicle grid */}
-        <div
-          className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-        >
-          {listings.map((car) => (
-            <div
+        {!loading && cars.length === 0 && (
+          <div className="mt-8 rounded-[12px] border border-slate-200 bg-white px-6 py-8 text-center font-body text-sm text-slate-500">
+            No cars listed yet. New listings will appear here automatically.
+          </div>
+        )}
+
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {cars.map(car => (
+            <Link
               key={car.id}
+              href={`/cars/${car.id}/${car.slug}`}
               className="group relative flex flex-col overflow-hidden"
               style={{
                 backgroundColor: "#FFFFFF",
@@ -68,7 +80,7 @@ export function FeaturedListings() {
                 el.style.boxShadow = "none";
               }}
             >
-              {/* Image placeholder */}
+              {/* Image */}
               <div
                 className="relative w-full"
                 style={{
@@ -76,8 +88,16 @@ export function FeaturedListings() {
                   backgroundColor: "#F7F8F9",
                 }}
               >
-                {/* Heart / save icon */}
+                {car.imageUrl && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={car.imageUrl}
+                    alt={`${car.year} ${car.make} ${car.model}`}
+                    className="h-full w-full object-cover"
+                  />
+                )}
                 <button
+                  type="button"
                   className="absolute right-3 top-3 flex items-center justify-center"
                   style={{
                     width: "36px",
@@ -87,6 +107,7 @@ export function FeaturedListings() {
                     boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
                   }}
                   aria-label="Save listing"
+                  onClick={(e) => { e.preventDefault(); }}
                 >
                   <svg
                     width="18"
@@ -105,7 +126,6 @@ export function FeaturedListings() {
 
               {/* Card content */}
               <div style={{ padding: "20px" }}>
-                {/* Make / model */}
                 <h3
                   className="font-heading"
                   style={{
@@ -115,10 +135,8 @@ export function FeaturedListings() {
                     margin: 0,
                   }}
                 >
-                  {car.make}
+                  {car.year} {car.make} {car.model}
                 </h3>
-
-                {/* Trim + mileage */}
                 <p
                   className="font-body"
                   style={{
@@ -128,10 +146,8 @@ export function FeaturedListings() {
                     margin: "4px 0 0",
                   }}
                 >
-                  {car.trim}
+                  {[car.trim, `${car.mileage} miles`].filter(Boolean).join(" · ")}
                 </p>
-
-                {/* Price */}
                 <p
                   className="font-heading"
                   style={{
@@ -141,10 +157,8 @@ export function FeaturedListings() {
                     margin: "8px 0 0",
                   }}
                 >
-                  {car.price}
+                  {fmt(car.price)}
                 </p>
-
-                {/* Monthly estimate */}
                 <p
                   className="font-body"
                   style={{
@@ -154,11 +168,10 @@ export function FeaturedListings() {
                     margin: "2px 0 0",
                   }}
                 >
-                  {car.monthly} estimated
+                  {fmt(car.monthlyEstimate)}/mo estimated
                 </p>
               </div>
 
-              {/* Footer strip */}
               <div
                 className="mt-auto font-body"
                 style={{
@@ -170,9 +183,9 @@ export function FeaturedListings() {
                   color: "#4A556B",
                 }}
               >
-                Free shipping · Get it Tuesday
+                Free shipping · Door-to-door delivery
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

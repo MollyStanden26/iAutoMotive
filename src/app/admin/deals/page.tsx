@@ -7,6 +7,7 @@ import {
   ArrowDown, ArrowUp, ArrowUpDown, Search,
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { AddDealDrawer } from "@/components/admin/add-deal-drawer";
 import {
   DEALS_KPIS, PIPELINE_STAGES, DEALS,
   AT_RISK_DEALS, FUNDING_ROWS, DOC_STATUS_ROWS, COMPLIANCE_ROWS,
@@ -30,7 +31,7 @@ const T = {
 /* ================================================================== */
 /*  TOPBAR                                                             */
 /* ================================================================== */
-function Topbar({ selectedCount }: { selectedCount: number }) {
+function Topbar({ selectedCount, onNewDeal }: { selectedCount: number; onNewDeal: () => void }) {
   const router = useRouter();
   return (
     <div className="flex items-center justify-between px-5 flex-shrink-0" style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}` }}>
@@ -42,7 +43,7 @@ function Topbar({ selectedCount }: { selectedCount: number }) {
       <div className="flex items-center gap-2">
         <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("export deals CSV", selectedCount > 0 ? selectedCount : "all")}>Export CSV</button>
         <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => router.push("/admin/analytics?tab=revenue")}>Revenue report</button>
-        <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: `1px solid ${T.indigo}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={() => router.push("/admin/deals/new")}>+ New deal</button>
+        <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: `1px solid ${T.indigo}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={onNewDeal}>+ New deal</button>
       </div>
     </div>
   );
@@ -54,11 +55,11 @@ function Topbar({ selectedCount }: { selectedCount: number }) {
 function KpiStrip() {
   const K = DEALS_KPIS;
   const cards = [
-    { label: "LIVE DEALS", value: K.liveDeals.toString(), valueColor: T.textPrimary, delta: "Active pipeline", deltaColor: T.textMuted },
-    { label: "PIPELINE VALUE", value: `£${Math.round(K.pipelineValue / 1000)}k`, valueColor: T.teal200, delta: "Gross vehicle value", deltaColor: T.textMuted },
-    { label: "EST. PLATFORM FEE", value: `£${(K.estPlatformFee / 1000).toFixed(1)}k`, valueColor: T.green, delta: "No commission fee", deltaColor: T.green },
-    { label: "AT RISK", value: K.atRisk.toString(), valueColor: T.red, delta: "AI health score <50", deltaColor: T.red },
-    { label: "CLOSED TODAY", value: K.closedToday.toString(), valueColor: T.teal200, delta: `£${(K.closedTodayRevenue / 1000).toFixed(1)}k revenue`, deltaColor: T.green },
+    { label: "LIVE DEALS", value: K.liveDeals.toString(), valueColor: K.liveDeals > 0 ? T.textPrimary : T.textMuted, delta: K.liveDeals > 0 ? "Active pipeline" : "No data yet", deltaColor: T.textMuted },
+    { label: "PIPELINE VALUE", value: K.pipelineValue > 0 ? `£${Math.round(K.pipelineValue / 1000)}k` : "—", valueColor: K.pipelineValue > 0 ? T.teal200 : T.textMuted, delta: "Gross vehicle value", deltaColor: T.textMuted },
+    { label: "EST. PLATFORM FEE", value: K.estPlatformFee > 0 ? `£${(K.estPlatformFee / 1000).toFixed(1)}k` : "£0", valueColor: T.green, delta: "No commission fee", deltaColor: T.green },
+    { label: "AT RISK", value: K.atRisk.toString(), valueColor: K.atRisk > 0 ? T.red : T.textMuted, delta: K.atRisk > 0 ? "AI health score <50" : "None flagged", deltaColor: K.atRisk > 0 ? T.red : T.textMuted },
+    { label: "CLOSED TODAY", value: K.closedToday.toString(), valueColor: K.closedToday > 0 ? T.teal200 : T.textMuted, delta: K.closedTodayRevenue > 0 ? `£${(K.closedTodayRevenue / 1000).toFixed(1)}k revenue` : "—", deltaColor: K.closedToday > 0 ? T.green : T.textMuted },
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
@@ -291,6 +292,9 @@ function AtRiskPanel() {
         <span className="ml-2 rounded-full px-[7px] py-[2px]" style={{ background: T.redBg, color: T.red, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{AT_RISK_DEALS.length} flagged</span>
       </div>
       <div className="px-[14px]">
+        {AT_RISK_DEALS.length === 0 && (
+          <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No at-risk deals.</div>
+        )}
         {AT_RISK_DEALS.map((d, idx) => (
           <div key={d.id} className="flex items-start gap-2 py-[7px] cursor-pointer transition-colors duration-150"
             style={{ borderBottom: idx < AT_RISK_DEALS.length - 1 ? `1px solid ${T.border}` : "none" }}
@@ -324,6 +328,9 @@ function FundingTrackerPanel() {
         <span className="ml-2 rounded-full px-[7px] py-[2px]" style={{ background: T.amberBg, color: T.amber, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{pendingCount} pending</span>
       </div>
       <div className="px-[14px]">
+        {FUNDING_ROWS.length === 0 && (
+          <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No funding activity.</div>
+        )}
         {FUNDING_ROWS.map((row, idx) => (
           <div key={idx} className="flex items-center gap-2 py-[6px]" style={{ borderBottom: idx < FUNDING_ROWS.length - 1 ? `1px solid ${T.border}` : "none" }}>
             <span className="flex-1 truncate" style={{ fontFamily: "var(--font-body)", fontSize: 11, color: T.textSecondary }}>{row.dealTitle}</span>
@@ -331,17 +338,18 @@ function FundingTrackerPanel() {
             <span className="flex-shrink-0 text-right" style={{ minWidth: 28, fontFamily: "var(--font-body)", fontSize: 10, color: row.ageColor }}>{row.ageLabel}</span>
           </div>
         ))}
-        {/* Footer stats */}
-        <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 6, marginTop: 2 }}>
-          <div className="flex items-center py-[3px]">
-            <span className="flex-1" style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textMuted }}>Avg lender response time</span>
-            <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.teal200 }}>14.2 hrs</span>
+        {FUNDING_ROWS.length > 0 && (
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 6, marginTop: 2 }}>
+            <div className="flex items-center py-[3px]">
+              <span className="flex-1" style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textMuted }}>Avg lender response time</span>
+              <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textMuted }}>—</span>
+            </div>
+            <div className="flex items-center py-[3px]">
+              <span className="flex-1" style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textMuted }}>Deals flagged &gt;72h</span>
+              <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textMuted }}>—</span>
+            </div>
           </div>
-          <div className="flex items-center py-[3px]">
-            <span className="flex-1" style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textMuted }}>Deals flagged &gt;72h</span>
-            <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.red }}>1 deal</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -360,6 +368,9 @@ function DocStatusPanel() {
         {blockedCount > 0 && <span className="ml-2 rounded-full px-[7px] py-[2px]" style={{ background: T.redBg, color: T.red, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{blockedCount} blocked</span>}
       </div>
       <div className="px-[14px]">
+        {DOC_STATUS_ROWS.length === 0 && (
+          <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No document tracking.</div>
+        )}
         {DOC_STATUS_ROWS.map((row, idx) => (
           <div key={idx} className="flex items-center gap-2 py-[6px] cursor-pointer transition-colors duration-150"
             style={{ borderBottom: idx < DOC_STATUS_ROWS.length - 1 ? `1px solid ${T.border}` : "none" }}
@@ -385,15 +396,19 @@ function DocStatusPanel() {
 function CompliancePanel() {
   const allPassing = COMPLIANCE_ROWS.every(r => r.passing);
   const failCount = COMPLIANCE_ROWS.filter(r => !r.passing).length;
+  const empty = COMPLIANCE_ROWS.length === 0;
   return (
     <div className="rounded-[10px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
       <div className="flex items-center px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
         <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Compliance</span>
-        <span className="ml-auto" style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: allPassing ? T.green : T.red }}>
-          {allPassing ? "All deals clear" : `${failCount} issues`}
+        <span className="ml-auto" style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: empty ? T.textMuted : allPassing ? T.green : T.red }}>
+          {empty ? "Idle" : allPassing ? "All deals clear" : `${failCount} issues`}
         </span>
       </div>
       <div className="px-[14px]">
+        {empty && (
+          <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No deals to check.</div>
+        )}
         {COMPLIANCE_ROWS.map((row, idx) => (
           <div key={idx} className="flex items-center gap-2 py-[7px]" style={{ borderBottom: idx < COMPLIANCE_ROWS.length - 1 ? `1px solid ${T.border}` : "none" }}>
             <div className="flex items-center justify-center rounded-[4px] flex-shrink-0" style={{ width: 18, height: 18, background: row.passing ? T.greenBg : T.redBg, color: row.passing ? T.green : T.red, fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 9 }}>
@@ -420,12 +435,13 @@ export default function DealsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("health");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
+  const [newDealOpen, setNewDealOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <Topbar selectedCount={selectedDeals.length} />
+        <Topbar selectedCount={selectedDeals.length} onNewDeal={() => setNewDealOpen(true)} />
         <div className="flex-1 flex flex-col gap-[10px] overflow-x-hidden" style={{ padding: "14px 20px" }}>
           <KpiStrip />
           <PipelineStrip />
@@ -446,6 +462,7 @@ export default function DealsPage() {
           </div>
         </div>
       </div>
+      <AddDealDrawer open={newDealOpen} onClose={() => setNewDealOpen(false)} />
     </div>
   );
 }

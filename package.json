@@ -8,11 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "db:up": "docker compose up -d",
-    "db:down": "docker compose down",
-    "db:migrate": "npx prisma migrate dev",
+    "db:push": "npx prisma db push",
     "db:seed": "npx prisma db seed",
-    "db:reset": "npx prisma migrate reset",
     "db:studio": "npx prisma studio",
     "db:generate": "npx prisma generate"
   },
@@ -25,6 +22,7 @@
     "jose": "^6.2.2",
     "lucide-react": "^1.7.0",
     "next": "14.2.x",
+    "playwright-core": "^1.59.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "recharts": "^3.8.1"

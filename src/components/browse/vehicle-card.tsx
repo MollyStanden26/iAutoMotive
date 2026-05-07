@@ -153,7 +153,8 @@ export function VehicleCard({
           {year} {make} {model}
         </h3>
 
-        {/* Trim + mileage */}
+        {/* Trim + mileage — truncated to a single 30-char line so cards stay
+            uniform height in the grid. */}
         <p
           style={{
             fontFamily: "var(--ac-font-body)",
@@ -161,9 +162,16 @@ export function VehicleCard({
             fontWeight: 400,
             color: "#8492A8",
             margin: "2px 0 0",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
+          title={`${trim} · ${mileage}`}
         >
-          {trim} &middot; {mileage}
+          {(() => {
+            const full = `${trim} · ${mileage}`;
+            return full.length > 30 ? `${full.slice(0, 30).trimEnd()}…` : full;
+          })()}
         </p>
 
         {/* Price */}

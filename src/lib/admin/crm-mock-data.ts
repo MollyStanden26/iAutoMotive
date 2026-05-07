@@ -56,63 +56,37 @@ export interface ScriptSection {
 export const crmDashboardData = {
 
   kpis: [
-    { label: 'Dials today',       value: 247, delta: '↑ 18% vs yesterday', deltaType: 'up'      as const },
-    { label: 'Contacted',         value: 84,  delta: '34% contact rate',    deltaType: 'neutral' as const },
-    { label: 'Offers sent',       value: 12,  delta: '14% of contacts',     deltaType: 'neutral' as const },
-    { label: 'Signed today',      value: 3,   delta: 'On target',           deltaType: 'up'      as const },
-    { label: 'Callbacks overdue', value: 3,   delta: 'Action needed',       deltaType: 'down'    as const },
+    { label: 'Dials today',       value: 0, delta: 'No data yet',  deltaType: 'neutral' as const },
+    { label: 'Contacted',         value: 0, delta: 'No data yet',  deltaType: 'neutral' as const },
+    { label: 'Offers sent',       value: 0, delta: 'No data yet',  deltaType: 'neutral' as const },
+    { label: 'Signed today',      value: 0, delta: 'No data yet',  deltaType: 'neutral' as const },
+    { label: 'Callbacks overdue', value: 0, delta: 'None overdue', deltaType: 'neutral' as const },
   ] as CrmKpi[],
 
-  leads: [
-    { id: 'AC-L-001', seller: 'James Holloway',  vehicle: '2021 BMW 3 Series 320d · £21,500 · 34k mi',     score: 87, status: 'negotiating' as const, assignee: 'Sarah K.',  lastContact: '2 hrs ago' },
-    { id: 'AC-L-002', seller: 'Priya Sharma',    vehicle: '2020 VW Golf GTI · £18,200 · 41k mi',           score: 81, status: 'offer_sent'  as const, assignee: 'Sarah K.',  lastContact: '4 hrs ago' },
-    { id: 'AC-L-003', seller: 'Michael Chen',    vehicle: '2022 Audi A4 2.0 TDi · £24,900 · 19k mi',      score: 79, status: 'contacted'   as const, assignee: 'Jordan M.', lastContact: 'Yesterday' },
-    { id: 'AC-L-004', seller: 'Rachel Davies',   vehicle: '2021 Mercedes A200 · £19,750 · 22k mi',         score: 72, status: 'new'         as const, assignee: null,         lastContact: null },
-    { id: 'AC-L-005', seller: 'Tom Barker',      vehicle: '2019 Toyota RAV4 Hybrid · £17,400 · 55k mi',    score: 68, status: 'new'         as const, assignee: null,         lastContact: null },
-    { id: 'AC-L-006', seller: 'Sophie Williams', vehicle: '2020 Ford Focus ST · £16,800 · 38k mi',         score: 65, status: 'contacted'   as const, assignee: 'James T.',  lastContact: '3 hrs ago' },
-    { id: 'AC-L-007', seller: 'David Kim',       vehicle: '2021 Hyundai Tucson 1.6T · £18,500 · 28k mi',   score: 58, status: 'new'         as const, assignee: null,         lastContact: null },
-  ] as Lead[],
+  leads: [] as Lead[],
 
-  activeDiallerLead: {
-    seller:        'James Holloway',
-    vehicle:       '2021 BMW 3 Series 320d M Sport',
-    askingPrice:   '£21,500',
-    mileage:       '34k mi',
-    score:         87,
-    phone:         '07914 442 881',
-    activeCaller:  'Sarah K.',
-    priorContacts: 2,
-    queuePosition: 1,
-    queueTotal:    14,
+  activeDiallerLead: null as null | {
+    seller: string; vehicle: string; askingPrice: string; mileage: string;
+    score: number; phone: string; activeCaller: string;
+    priorContacts: number; queuePosition: number; queueTotal: number;
   },
 
-  callbacks: [
-    { time: 'NOW',   seller: 'Rachel Davies',   vehicle: 'BMW 3',    caller: 'Sarah K.',  status: 'overdue'  as const },
-    { time: 'NOW',   seller: 'Andrew Park',      vehicle: 'Audi A3',  caller: 'James T.',  status: 'overdue'  as const },
-    { time: 'NOW',   seller: 'Tom Barker',       vehicle: 'RAV4',     caller: 'Jordan M.', status: 'due_now'  as const },
-    { time: '14:30', seller: 'Sophie Williams',  vehicle: 'Focus ST', caller: 'James T.',  status: 'upcoming' as const },
-    { time: '16:00', seller: 'Priya Sharma',     vehicle: 'Golf GTI', caller: 'Sarah K.',  status: 'upcoming' as const },
-  ] as Callback[],
+  callbacks: [] as Callback[],
 
-  callers: [
-    { name: 'Sarah K.',  initials: 'SK', avatarBg: '#008C7C', dials: 82, contactRate: 41, signedWeek: 3, rank: 1, flag: false },
-    { name: 'Jordan M.', initials: 'JM', avatarBg: '#3B6D11', dials: 74, contactRate: 36, signedWeek: 1, rank: 2, flag: false },
-    { name: 'Aisha T.',  initials: 'AT', avatarBg: '#854F0B', dials: 61, contactRate: 31, signedWeek: 1, rank: 3, flag: false },
-    { name: 'James T.',  initials: 'JT', avatarBg: '#534AB7', dials: 30, contactRate: 18, signedWeek: 0, rank: 4, flag: true  },
-  ] as Caller[],
+  callers: [] as Caller[],
 
   targets: [
-    { label: 'Daily dials',       target: 300, actual: 247, unit: 'count'   as const },
-    { label: 'Contact rate',      target: 30,  actual: 34,  unit: 'percent' as const },
-    { label: 'Offers sent',       target: 10,  actual: 12,  unit: 'count'   as const },
-    { label: 'Signed deals',      target: 3,   actual: 3,   unit: 'count'   as const },
-    { label: 'Callbacks cleared', target: 100, actual: 62,  unit: 'percent' as const },
+    { label: 'Daily dials',       target: 0, actual: 0, unit: 'count'   as const },
+    { label: 'Contact rate',      target: 0, actual: 0, unit: 'percent' as const },
+    { label: 'Offers sent',       target: 0, actual: 0, unit: 'count'   as const },
+    { label: 'Signed deals',      target: 0, actual: 0, unit: 'count'   as const },
+    { label: 'Callbacks cleared', target: 0, actual: 0, unit: 'percent' as const },
   ] as Target[],
 
   paceForecast: {
-    projectedDials:   '~298',
-    projectedSigned:  '3–4',
-    interventionFlag: 'James T.',
+    projectedDials:   '—',
+    projectedSigned:  '—',
+    interventionFlag: '—',
   },
 
   scriptSections: [
@@ -134,6 +108,6 @@ export const crmDashboardData = {
     },
   ] as ScriptSection[],
 
-  avgCallDuration: '3m 42s',
-  aiOutreachToday: 18,
+  avgCallDuration: '—',
+  aiOutreachToday: 0,
 };

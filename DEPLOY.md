@@ -8,14 +8,16 @@ git commit -m "Production-ready scaffolding"
 gh repo create iautomotive --private --source=. --push   # or push to an existing remote
 ```
 
-## 2 — Provision the database (Neon)
+## 2 — Provision the database (MongoDB Atlas)
 
-1. Sign in at https://neon.tech and create a project (region: London / `eu-west-2`).
-2. Copy the **pooled** connection string. It looks like:
-   `postgresql://USER:PASS@ep-xxx-pooler.eu-west-2.aws.neon.tech/iautomotive?sslmode=require`
-3. From your local machine, push the schema once:
+1. Sign in at https://cloud.mongodb.com and create a project + cluster (region: London / `eu-west-2`, M0 free tier is fine to start).
+2. **Network access**: add `0.0.0.0/0` (Atlas → Network Access → Add IP Address → Allow access from anywhere). Vercel's serverless IPs aren't fixed, so a CIDR allowlist is required.
+3. **Database user**: Atlas → Database Access → Add new user. Use a long random password and grant `Atlas admin` (or `readWriteAnyDatabase`).
+4. Atlas → Database → **Connect** → Drivers → Node.js. Copy the SRV URL:
+   `mongodb+srv://USER:PASS@cluster0.xxxx.mongodb.net/iautomotive?retryWrites=true&w=majority`
+5. From your local machine, push the schema once:
    ```bash
-   DATABASE_URL="<pooled-url>" npx prisma db push
+   DATABASE_URL="<atlas-srv-url>" npx prisma db push
    ```
    Do NOT run `npm run db:seed` — the seed creates demo users with password `demo`.
 
@@ -25,7 +27,7 @@ gh repo create iautomotive --private --source=. --push   # or push to an existin
 2. Framework: **Next.js** (auto-detected).
 3. Build & install commands: leave default (the repo's `package.json` already runs `prisma generate`).
 4. Add **Environment Variables** (Production scope) — see [.env.production.example](.env.production.example) for the full list. At minimum to boot:
-   - `DATABASE_URL` — the Neon pooled URL from step 2.
+   - `DATABASE_URL` — the Atlas SRV URL from step 2.
    - `JWT_SECRET` — generate with `openssl rand -base64 32`.
    - `NEXT_PUBLIC_BASE_URL=https://iautomotive.co.uk`
 5. Click **Deploy**. First deploy will live at `iautomotive.vercel.app`.

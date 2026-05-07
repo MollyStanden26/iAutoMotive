@@ -132,70 +132,45 @@ export function Footer() {
           }}
         />
 
-        {/* Bottom row */}
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          {/* Left: Logo + copyright */}
-          <div className="flex flex-col gap-2">
-            <div className="font-heading" style={{ fontSize: "20px" }}>
-              <span style={{ fontWeight: 300, color: "#8492A8" }}>iAuto</span>
-              <span style={{ fontWeight: 900, color: "#4DD9C7" }}>Motive</span>
-            </div>
-            <p
-              className="font-body"
-              style={{ fontSize: "13px", fontWeight: 400, color: "#8492A8", margin: 0 }}
-            >
-              &copy; {new Date().getFullYear()} iAutoMotive Ltd. All rights reserved.
-            </p>
+        {/* Bottom row — logo + copyright */}
+        <div className="flex flex-col gap-2">
+          <div className="font-heading" style={{ fontSize: "20px" }}>
+            <span style={{ fontWeight: 300, color: "#8492A8" }}>iAuto</span>
+            <span style={{ fontWeight: 900, color: "#4DD9C7" }}>Motive</span>
           </div>
-
-          {/* Right: Social icons */}
-          <div className="flex items-center gap-3">
-            {["FB", "LI", "IG", "X"].map((label) => (
-              <a
-                key={label}
-                href="#"
-                className="flex items-center justify-center transition-colors duration-150"
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  backgroundColor: "#222D3F",
-                  color: "#8492A8",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget;
-                  el.style.backgroundColor = "#2D3A4F";
-                  el.style.color = "#4DD9C7";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget;
-                  el.style.backgroundColor = "#222D3F";
-                  el.style.color = "#8492A8";
-                }}
-                aria-label={label}
-              >
-                {label}
-              </a>
-            ))}
-          </div>
+          <p
+            className="font-body"
+            style={{ fontSize: "13px", fontWeight: 400, color: "#8492A8", margin: 0 }}
+          >
+            &copy; {new Date().getFullYear()} I Automotive Technologies Limited. All rights reserved.
+          </p>
         </div>
 
-        {/* Legal notice */}
+        {/* Legal notice — registered company details from Companies House */}
         <p
           className="font-body"
           style={{
             fontSize: "12px",
             fontWeight: 400,
             color: "#8492A8",
-            maxWidth: "600px",
-            marginTop: "24px",
+            maxWidth: "720px",
+            marginTop: "20px",
             lineHeight: 1.6,
           }}
         >
-          iAutoMotive Ltd is registered in England and Wales. FCA authorisation pending.
+          I Automotive Technologies Limited is a private limited company registered
+          in England and Wales (company no.{" "}
+          <a
+            href="https://find-and-update.company-information.service.gov.uk/company/15388064"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#C8CDD6", textDecoration: "underline" }}
+          >
+            15388064
+          </a>
+          ). Registered office: 310 Beaumont House, Beaumont Road, Banbury,
+          Oxfordshire, OX16 1RH, United Kingdom. Trading as iAutoMotive.
+          FCA authorisation pending.
         </p>
       </div>
     </footer>

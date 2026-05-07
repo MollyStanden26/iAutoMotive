@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowDown, ArrowUp, Search } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { AddVehicleDrawer } from "@/components/admin/add-vehicle-drawer";
+import { EditVehicleDrawer } from "@/components/admin/edit-vehicle-drawer";
 import {
   INVENTORY_KPIS, LOTS, VEHICLES, RECON_STAGES, RECON_MAX,
   AGING_BUCKETS, PRICING_LOG, TRANSFER_RECS,
@@ -41,7 +43,7 @@ const T = {
 /* ================================================================== */
 /*  TOPBAR                                                             */
 /* ================================================================== */
-function Topbar({ selectedCount }: { selectedCount: number }) {
+function Topbar({ selectedCount, onAddVehicle }: { selectedCount: number; onAddVehicle: () => void }) {
   const router = useRouter();
   return (
     <div className="flex items-center justify-between px-5 flex-shrink-0" style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}` }}>
@@ -53,7 +55,7 @@ function Topbar({ selectedCount }: { selectedCount: number }) {
       <div className="flex items-center gap-2">
         <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("export inventory CSV")}>Export CSV</button>
         <button className="px-3 py-[6px] rounded-[8px]" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary, opacity: selectedCount === 0 ? 0.4 : 1, cursor: selectedCount === 0 ? "default" : "pointer", pointerEvents: selectedCount === 0 ? "none" : "auto" }} onClick={() => console.log("bulk reprice", selectedCount)}>Bulk reprice</button>
-        <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: `1px solid ${T.indigo}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={() => router.push("/admin/inventory/intake")}>+ Add vehicle</button>
+        <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: `1px solid ${T.indigo}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={onAddVehicle}>+ Add vehicle</button>
       </div>
     </div>
   );
@@ -64,12 +66,13 @@ function Topbar({ selectedCount }: { selectedCount: number }) {
 /* ================================================================== */
 function KpiStrip() {
   const K = INVENTORY_KPIS;
+  const empty = K.totalStock === 0;
   const cards = [
-    { label: "TOTAL STOCK", value: K.totalStock.toString(), valueColor: T.textPrimary, delta: "Across 3 lots", deltaColor: T.textMuted },
-    { label: "FRONT-LINE LIVE", value: K.frontLineLive.toString(), valueColor: T.teal200, delta: `${K.frontLinePct}% of stock`, deltaColor: T.green },
-    { label: "IN RECON", value: K.inRecon.toString(), valueColor: T.amber, delta: `${K.reconOverdue} overdue SLA`, deltaColor: T.amber },
-    { label: "AVG DAYS ON LOT", value: K.avgDaysOnLot.toString(), valueColor: T.green, delta: `↓ ${Math.abs(K.avgDaysDelta)}d vs last week`, deltaColor: T.green },
-    { label: "AT RISK (>45D)", value: K.atRisk.toString(), valueColor: T.red, delta: "Action needed", deltaColor: T.red },
+    { label: "TOTAL STOCK", value: K.totalStock.toString(), valueColor: empty ? T.textMuted : T.textPrimary, delta: empty ? "No vehicles yet" : `Across ${LOTS.length} lot${LOTS.length === 1 ? "" : "s"}`, deltaColor: T.textMuted },
+    { label: "FRONT-LINE LIVE", value: K.frontLineLive.toString(), valueColor: empty ? T.textMuted : T.teal200, delta: empty ? "—" : `${K.frontLinePct}% of stock`, deltaColor: empty ? T.textMuted : T.green },
+    { label: "IN RECON", value: K.inRecon.toString(), valueColor: empty ? T.textMuted : T.amber, delta: empty ? "—" : `${K.reconOverdue} overdue SLA`, deltaColor: empty ? T.textMuted : T.amber },
+    { label: "AVG DAYS ON LOT", value: empty ? "—" : K.avgDaysOnLot.toString(), valueColor: empty ? T.textMuted : T.green, delta: empty ? "—" : `↓ ${Math.abs(K.avgDaysDelta)}d vs last week`, deltaColor: empty ? T.textMuted : T.green },
+    { label: "AT RISK (>45D)", value: K.atRisk.toString(), valueColor: empty || K.atRisk === 0 ? T.textMuted : T.red, delta: empty || K.atRisk === 0 ? "None flagged" : "Action needed", deltaColor: empty || K.atRisk === 0 ? T.textMuted : T.red },
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
@@ -94,7 +97,10 @@ function LotHealthPanel() {
       <div className="px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
         <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Lot health</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, padding: "10px 14px" }}>
+      {LOTS.length === 0 && (
+        <div className="text-center" style={{ padding: "20px 14px", fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No lots configured.</div>
+      )}
+      <div style={{ display: LOTS.length === 0 ? "none" : "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, padding: "10px 14px" }}>
         {LOTS.map(lot => (
           <div key={lot.name} className="px-3 py-[10px] rounded-[10px]" style={{ background: T.bgSidebar, border: `1px solid ${T.border}` }}>
             <div className="flex items-center gap-1">
@@ -182,17 +188,33 @@ function VehicleTable({
   searchQuery, setSearchQuery,
   sortDir, setSortDir,
   selectedVehicles, setSelectedVehicles,
+  refreshKey, onRowClick,
 }: {
   activeFilter: VehicleFilter; setActiveFilter: (f: VehicleFilter) => void;
   searchQuery: string; setSearchQuery: (s: string) => void;
   sortDir: SortDir; setSortDir: (d: SortDir) => void;
   selectedVehicles: string[]; setSelectedVehicles: (ids: string[]) => void;
+  refreshKey: number;
+  onRowClick: (id: string) => void;
 }) {
   const router = useRouter();
   const selectAllRef = useRef<HTMLInputElement>(null);
+  const [vehicles, setVehicles] = useState<InventoryVehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch("/api/admin/vehicles")
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(data => { if (!cancelled) setVehicles(data.vehicles ?? []); })
+      .catch(err => { if (!cancelled) console.error("[VehicleTable] fetch failed:", err); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
 
   // Filter
-  let filtered = VEHICLES;
+  let filtered = vehicles;
   if (activeFilter === "live") filtered = filtered.filter(v => v.stage === "live");
   else if (activeFilter === "recon") filtered = filtered.filter(v => ["recon", "arrived", "mech", "photo", "ready"].includes(v.stage));
   else if (activeFilter === "risk") filtered = filtered.filter(v => v.days > 30 || v.risk === "high");
@@ -276,7 +298,7 @@ function VehicleTable({
               <tr key={v.id} className="cursor-pointer transition-colors duration-150"
                 onMouseEnter={e => e.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = T.bgHover))}
                 onMouseLeave={e => e.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = "transparent"))}
-                onClick={() => { console.log("navigate", v.vin); router.push(`/admin/inventory/${v.vin}`); }}
+                onClick={() => onRowClick(v.id)}
               >
                 <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: idx < sorted.length - 1 ? `1px solid ${T.border2}` : "none" }} onClick={e => e.stopPropagation()}>
                   <input type="checkbox" checked={selectedVehicles.includes(v.id)} onChange={() => toggleOne(v.id)} style={{ accentColor: T.teal }} />
@@ -325,6 +347,9 @@ function ReconPipelinePanel() {
         )}
       </div>
       <div className="px-[14px]">
+        {RECON_STAGES.length === 0 && (
+          <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No vehicles in recon.</div>
+        )}
         {RECON_STAGES.map((stage, idx) => {
           const pct = Math.round((stage.count / RECON_MAX) * 100);
           return (
@@ -355,6 +380,9 @@ function AgingPanel() {
         <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Aging at risk</span>
       </div>
       <div className="px-[14px]">
+        {AGING_BUCKETS.length === 0 && (
+          <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No stock to age.</div>
+        )}
         {AGING_BUCKETS.map((b, idx) => (
           <div key={b.label} className="flex items-center gap-2 py-[6px]" style={{ borderBottom: idx < AGING_BUCKETS.length - 1 ? `1px solid ${T.border}` : "none" }}>
             <span className="flex-1" style={{ fontFamily: "var(--font-body)", fontSize: 11, color: b.labelColor }}>{b.label}</span>
@@ -379,6 +407,9 @@ function PricingLogPanel() {
         <span className="ml-auto" style={{ fontFamily: "var(--font-body)", fontSize: 11, color: T.textMuted }}>Today</span>
       </div>
       <div className="px-[14px]">
+        {PRICING_LOG.length === 0 && (
+          <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No price changes today.</div>
+        )}
         {PRICING_LOG.map((row, idx) => (
           <div key={idx} className="flex items-start gap-2 py-[6px]" style={{ borderBottom: idx < PRICING_LOG.length - 1 ? `1px solid ${T.border}` : "none" }}>
             <div className="w-[6px] h-[6px] rounded-full flex-shrink-0 mt-[4px]" style={{ background: dotColors[row.dotColor] }} />
@@ -405,6 +436,9 @@ function TransferPanel({ approvedIds, onApprove }: { approvedIds: string[]; onAp
         <span className="ml-2 rounded-full px-[7px] py-[2px]" style={{ background: T.amberBg, color: T.amber, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{TRANSFER_RECS.length} pending</span>
       </div>
       <div className="px-[14px]">
+        {TRANSFER_RECS.length === 0 && (
+          <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No transfers recommended.</div>
+        )}
         {TRANSFER_RECS.map((rec, idx) => {
           const approved = approvedIds.includes(rec.id);
           return (
@@ -452,12 +486,15 @@ export default function InventoryPage() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
   const [approvedIds, setApprovedIds] = useState<string[]>([]);
+  const [addOpen, setAddOpen] = useState(false);
+  const [vehiclesRefreshKey, setVehiclesRefreshKey] = useState(0);
+  const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
 
   return (
     <div className="flex min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <Topbar selectedCount={selectedVehicles.length} />
+        <Topbar selectedCount={selectedVehicles.length} onAddVehicle={() => setAddOpen(true)} />
         <div className="flex-1 flex flex-col gap-[10px] overflow-x-hidden" style={{ padding: "14px 20px" }}>
           <KpiStrip />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 292px", gap: 10 }}>
@@ -469,6 +506,8 @@ export default function InventoryPage() {
                 searchQuery={searchQuery} setSearchQuery={setSearchQuery}
                 sortDir={sortDir} setSortDir={setSortDir}
                 selectedVehicles={selectedVehicles} setSelectedVehicles={setSelectedVehicles}
+                refreshKey={vehiclesRefreshKey}
+                onRowClick={id => setEditingVehicleId(id)}
               />
             </div>
             {/* Right column */}
@@ -481,6 +520,17 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+      <AddVehicleDrawer
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onCreated={() => setVehiclesRefreshKey(k => k + 1)}
+      />
+      <EditVehicleDrawer
+        open={!!editingVehicleId}
+        vehicleId={editingVehicleId}
+        onClose={() => setEditingVehicleId(null)}
+        onSaved={() => setVehiclesRefreshKey(k => k + 1)}
+      />
     </div>
   );
 }

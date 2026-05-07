@@ -12,7 +12,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
@@ -475,7 +475,7 @@ enum OptInVia {
 /// Master identity record for every person in the system.
 /// Role is the single source of truth for access control.
 model User {
-  id               String    @id @default(cuid())
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
   email            String    @unique
   phone            String?
   passwordHash     String?   @map("password_hash")
@@ -551,8 +551,8 @@ model User {
 /// Seller-specific profile data. Linked 1:1 to users.
 /// Bank details are encrypted at rest — never store plain text.
 model SellerProfile {
-  id                String           @id @default(cuid())
-  userId            String           @unique @map("user_id")
+  id                String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String           @unique @map("user_id") @db.ObjectId
   firstName         String           @map("first_name")
   lastName          String           @map("last_name")
   addressLine1      String?          @map("address_line1")
@@ -568,6 +568,11 @@ model SellerProfile {
   bankAccountNumber String?          @map("bank_account_number")
   preferredContact  PreferredContact? @map("preferred_contact")
   source            SellerSource?
+  /// Path/URL of the signed consignment agreement PDF uploaded at conversion.
+  /// Required for lead → seller conversion; absent = conversion incomplete.
+  consignmentAgreementUrl  String?      @map("consignment_agreement_url")
+  consignmentAgreementName String?      @map("consignment_agreement_name")
+  consignmentAgreementUploadedAt DateTime? @map("consignment_agreement_uploaded_at")
   createdAt         DateTime         @default(now()) @map("created_at")
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
@@ -580,8 +585,8 @@ model SellerProfile {
 /// Buyer-specific profile. Identity verification via Stripe Identity.
 /// Pre-qualification status drives finance product surfacing on the VDP.
 model BuyerProfile {
-  id                 String              @id @default(cuid())
-  userId             String              @unique @map("user_id")
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String              @unique @map("user_id") @db.ObjectId
   firstName          String?             @map("first_name")
   lastName           String?             @map("last_name")
   addressLine1       String?             @map("address_line1")
@@ -609,11 +614,11 @@ model BuyerProfile {
 
 /// Staff-specific profile. KPIs set per rep for CRM performance tracking.
 model StaffProfile {
-  id                     String    @id @default(cuid())
-  userId                 String    @unique @map("user_id")
+  id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId                 String    @unique @map("user_id") @db.ObjectId
   firstName              String    @map("first_name")
   lastName               String    @map("last_name")
-  lotId                  String?   @map("lot_id")
+  lotId                  String?   @map("lot_id") @db.ObjectId
   hireDate               DateTime? @map("hire_date")
   isRemote               Boolean   @default(false) @map("is_remote")
   /// Sales reps only. Tracked daily in dialler_sessions.
@@ -636,7 +641,7 @@ model StaffProfile {
 /// Physical lot/site. Each vehicle is assigned to a lot.
 /// lat/lng used for storefront map display.
 model Lot {
-  id               String    @id @default(cuid())
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
   name             String
   addressLine1     String?   @map("address_line1")
   addressLine2     String?   @map("address_line2")
@@ -644,7 +649,7 @@ model Lot {
   postcode         String?
   phone            String?
   capacityVehicles Int       @map("capacity_vehicles")
-  managerId        String?   @map("manager_id")
+  managerId        String?   @map("manager_id") @db.ObjectId
   status           LotStatus @default(active)
   lat              Float?
   lng              Float?
@@ -664,10 +669,10 @@ model Lot {
 /// Individual parking bays within a lot.
 /// is_available computed from vehicle_id IS NULL — no manual toggle needed.
 model LotSlot {
-  id             String   @id @default(cuid())
-  lotId          String   @map("lot_id")
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  lotId          String   @map("lot_id") @db.ObjectId
   slotReference  String   @map("slot_reference")
-  vehicleId      String?  @map("vehicle_id")
+  vehicleId      String?  @map("vehicle_id") @db.ObjectId
   createdAt      DateTime @default(now()) @map("created_at")
 
   lot            Lot      @relation(fields: [lotId], references: [id])
@@ -684,7 +689,7 @@ model LotSlot {
 /// Core asset record. One row per physical vehicle in the system.
 /// All monetary values stored in pence (integer) — no floats.
 model Vehicle {
-  id                  String         @id @default(cuid())
+  id                  String         @id @default(auto()) @map("_id") @db.ObjectId
   vin                 String?
   /// UK registration, uppercase, no spaces. e.g. AB21XYZ
   registration        String         @unique
@@ -710,7 +715,7 @@ model Vehicle {
   ownersCountAtIntake Int?           @map("owners_count_at_intake")
   conditionGrade      ConditionGrade? @map("condition_grade")
   currentStage        VehicleStage   @default(offer_accepted) @map("current_stage")
-  lotId               String?        @map("lot_id")
+  lotId               String?        @map("lot_id") @db.ObjectId
   /// Current active listing price in pence
   listingPriceGbp     Int?           @map("listing_price_gbp")
   /// Minimum acceptable price — never exposed publicly
@@ -747,8 +752,8 @@ model Vehicle {
 /// Detailed technical specifications. Separate from vehicles to keep
 /// the main vehicles table lean for list/search queries.
 model VehicleSpec {
-  id                    String   @id @default(cuid())
-  vehicleId             String   @unique @map("vehicle_id")
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId             String   @unique @map("vehicle_id") @db.ObjectId
   acceleration0To60     Float?   @map("acceleration_0_to_60")
   topSpeedMph           Int?     @map("top_speed_mph")
   fuelEconomyUrban      Float?   @map("fuel_economy_urban")
@@ -768,8 +773,8 @@ model VehicleSpec {
 
 /// Individual features/options. Supports multi-value filter queries.
 model VehicleFeature {
-  id          String          @id @default(cuid())
-  vehicleId   String          @map("vehicle_id")
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId   String          @map("vehicle_id") @db.ObjectId
   category    FeatureCategory
   featureName String          @map("feature_name")
 
@@ -783,12 +788,12 @@ model VehicleFeature {
 /// Append-only price change log. Never UPDATE — only INSERT.
 /// Source of truth for seller portal price history chart.
 model VehiclePriceHistory {
-  id               String            @id @default(cuid())
-  vehicleId        String            @map("vehicle_id")
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId        String            @map("vehicle_id") @db.ObjectId
   priceGbp         Int               @map("price_gbp")
   previousPriceGbp Int?              @map("previous_price_gbp")
   changeReason     PriceChangeReason @map("change_reason")
-  changedBy        String?           @map("changed_by")
+  changedBy        String?           @map("changed_by") @db.ObjectId
   changedAt        DateTime          @default(now()) @map("changed_at")
 
   vehicle          Vehicle           @relation(fields: [vehicleId], references: [id])
@@ -801,11 +806,11 @@ model VehiclePriceHistory {
 /// Append-only stage change log. Never UPDATE — only INSERT.
 /// Source of truth for the seller portal recon tracker timestamps.
 model VehicleStatusHistory {
-  id         String   @id @default(cuid())
-  vehicleId  String   @map("vehicle_id")
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId  String   @map("vehicle_id") @db.ObjectId
   fromStage  String?  @map("from_stage")
   toStage    String   @map("to_stage")
-  changedBy  String?  @map("changed_by")
+  changedBy  String?  @map("changed_by") @db.ObjectId
   notes      String?
   changedAt  DateTime @default(now()) @map("changed_at")
 
@@ -819,8 +824,8 @@ model VehicleStatusHistory {
 /// Condition issues identified at inspection.
 /// is_disclosed_to_buyer defaults true — all damage disclosed unless overridden.
 model VehicleDamageItem {
-  id                    String   @id @default(cuid())
-  vehicleId             String   @map("vehicle_id")
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId             String   @map("vehicle_id") @db.ObjectId
   location              String
   severity              String
   description           String?
@@ -845,9 +850,9 @@ model VehicleDamageItem {
 /// 360 spin: 24 rows per vehicle with is_360_frame=true, frame_index 0-23.
 /// Primary photo: one is_primary=true per vehicle.
 model MediaFile {
-  id            String          @id @default(cuid())
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
   entityType    MediaEntityType @map("entity_type")
-  entityId      String          @map("entity_id")
+  entityId      String          @map("entity_id") @db.ObjectId
   category      MediaCategory
   /// Cloudflare R2 CDN URL — public-facing. Default: 960px WebP variant.
   cdnUrl        String          @map("cdn_url")
@@ -863,7 +868,7 @@ model MediaFile {
   is360Frame    Boolean         @default(false) @map("is_360_frame")
   /// 0-23 for 360 spin frames. Null for all other types.
   frameIndex    Int?            @map("frame_index")
-  uploadedBy    String?         @map("uploaded_by")
+  uploadedBy    String?         @map("uploaded_by") @db.ObjectId
   createdAt     DateTime        @default(now()) @map("created_at")
 
   uploader      User?           @relation("MediaUploadedBy", fields: [uploadedBy], references: [id])
@@ -879,9 +884,9 @@ model MediaFile {
 /// version incremented when a document is superseded.
 /// is_current=false on old versions; only one current per type per entity.
 model Document {
-  id               String             @id @default(cuid())
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
   entityType       DocumentEntityType @map("entity_type")
-  entityId         String             @map("entity_id")
+  entityId         String             @map("entity_id") @db.ObjectId
   documentType     DocumentType       @map("document_type")
   title            String
   cdnUrl           String?            @map("cdn_url")
@@ -892,7 +897,7 @@ model Document {
   signedBySellerAt DateTime?          @map("signed_by_seller_at")
   signedByBuyerAt  DateTime?          @map("signed_by_buyer_at")
   signedByIautoAt  DateTime?          @map("signed_by_iauto_at")
-  uploadedBy       String?            @map("uploaded_by")
+  uploadedBy       String?            @map("uploaded_by") @db.ObjectId
   createdAt        DateTime           @default(now()) @map("created_at")
 
   uploader         User?              @relation("DocumentUploadedBy", fields: [uploadedBy], references: [id])
@@ -908,9 +913,11 @@ model Document {
 
 /// Source of truth for the outbound sales CRM pipeline.
 model Lead {
-  id                       String      @id @default(cuid())
-  /// Telnyx listing ID. ON CONFLICT DO UPDATE on re-scrape.
-  autotraderListingId      String?     @unique @map("autotrader_listing_id")
+  id                       String      @id @default(auto()) @map("_id") @db.ObjectId
+  /// Telnyx listing ID. Indexed for upsert lookups during scrapes; uniqueness
+  /// is enforced at the application layer (an unique index on a nullable
+  /// MongoDB field rejects every doc that omits the field after the first).
+  autotraderListingId      String?     @map("autotrader_listing_id")
   listingUrl               String?     @map("listing_url")
   /// Full scrape payload stored verbatim — never discard.
   rawScrapedData           Json?       @map("raw_scraped_data")
@@ -941,15 +948,15 @@ model Lead {
   scoutScore               Int?        @map("scout_score")
   scoutTier                ScoutTier?  @map("scout_tier")
   status                   LeadStatus  @default(new)
-  assignedTo               String?     @map("assigned_to")
+  assignedTo               String?     @map("assigned_to") @db.ObjectId
   /// Set at conversion. Links lead to the vehicle record created.
-  convertedToVehicleId     String?     @map("converted_to_vehicle_id")
-  convertedToConsignmentId String?     @map("converted_to_consignment_id")
+  convertedToVehicleId     String?     @map("converted_to_vehicle_id") @db.ObjectId
+  convertedToConsignmentId String?     @map("converted_to_consignment_id") @db.ObjectId
   /// Denormalised from communication_opt_outs for fast CRM filtering.
   doNotCall                Boolean     @default(false) @map("do_not_call")
   doNotSms                 Boolean     @default(false) @map("do_not_sms")
   /// Shortcut to last call — avoids subquery in CRM list view.
-  lastCallSessionId        String?     @map("last_call_session_id")
+  lastCallSessionId        String?     @map("last_call_session_id") @db.ObjectId
   scrapedAt                DateTime?   @map("scraped_at")
   importedAt               DateTime    @default(now()) @map("imported_at")
   updatedAt                DateTime    @updatedAt @map("updated_at")
@@ -967,15 +974,16 @@ model Lead {
   @@index([status, scoutTier])
   @@index([assignedTo, status])
   @@index([sellerPhone])
+  @@index([autotraderListingId])
   @@map("leads")
 }
 
 /// Every contact attempt against a lead, in or out.
 /// call_session_id and sms_message_id link to the Telnyx records.
 model LeadOutreachLog {
-  id              String           @id @default(cuid())
-  leadId          String           @map("lead_id")
-  staffId         String           @map("staff_id")
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  leadId          String           @map("lead_id") @db.ObjectId
+  staffId         String           @map("staff_id") @db.ObjectId
   contactMethod   ContactMethod    @map("contact_method")
   direction       ContactDirection
   outcome         OutreachOutcome
@@ -983,9 +991,9 @@ model LeadOutreachLog {
   notes           String?
   nextContactAt   DateTime?        @map("next_contact_at")
   /// Set when contact method was phone_call — links to full Telnyx record.
-  callSessionId   String?          @map("call_session_id")
+  callSessionId   String?          @map("call_session_id") @db.ObjectId
   /// Set when contact method was sms — links to full Telnyx SMS record.
-  smsMessageId    String?          @map("sms_message_id")
+  smsMessageId    String?          @map("sms_message_id") @db.ObjectId
   contactedAt     DateTime         @default(now()) @map("contacted_at")
 
   lead            Lead             @relation(fields: [leadId], references: [id])
@@ -1000,9 +1008,9 @@ model LeadOutreachLog {
 
 /// Negotiation history for a lead — every offer made in either direction.
 model LeadOffer {
-  id              String      @id @default(cuid())
-  leadId          String      @map("lead_id")
-  staffId         String?     @map("staff_id")
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  leadId          String      @map("lead_id") @db.ObjectId
+  staffId         String?     @map("staff_id") @db.ObjectId
   offerType       OfferType   @map("offer_type")
   /// In pence
   offeredPriceGbp Int         @map("offered_price_gbp")
@@ -1025,12 +1033,12 @@ model LeadOffer {
 /// The formal agreement between seller and iAutoMotive for a specific vehicle.
 /// One active consignment per vehicle enforced by unique on vehicle_id.
 model Consignment {
-  id                    String            @id @default(cuid())
+  id                    String            @id @default(auto()) @map("_id") @db.ObjectId
   /// Null for direct consignments with no AutoTrader lead.
-  leadId                String?           @map("lead_id")
-  vehicleId             String            @unique @map("vehicle_id")
-  sellerId              String            @map("seller_id")
-  lotId                 String            @map("lot_id")
+  leadId                String?           @map("lead_id") @db.ObjectId
+  vehicleId             String            @unique @map("vehicle_id") @db.ObjectId
+  sellerId              String            @map("seller_id") @db.ObjectId
+  lotId                 String            @map("lot_id") @db.ObjectId
   /// Agreed retail listing price in pence
   agreedListingPriceGbp Int               @map("agreed_listing_price_gbp")
   /// Minimum acceptable — never shown to seller or buyer
@@ -1041,7 +1049,7 @@ model Consignment {
   listedAt              DateTime?         @map("listed_at")
   soldAt                DateTime?         @map("sold_at")
   agreementSignedAt     DateTime?         @map("agreement_signed_at")
-  agreementDocumentId   String?           @map("agreement_document_id")
+  agreementDocumentId   String?           @map("agreement_document_id") @db.ObjectId
   /// Pre-authorised recon spend ceiling in pence
   maxReconSpendGbp      Int?              @map("max_recon_spend_gbp")
   /// Notes from seller at intake — visible to seller
@@ -1066,8 +1074,8 @@ model Consignment {
 /// HPI check result at vehicle intake. One per vehicle.
 /// If has_outstanding_finance=true the vehicle cannot list until resolved.
 model HpiCheck {
-  id                    String   @id @default(cuid())
-  vehicleId             String   @unique @map("vehicle_id")
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId             String   @unique @map("vehicle_id") @db.ObjectId
   checkReference        String?  @map("check_reference")
   isClear               Boolean  @map("is_clear")
   hasOutstandingFinance Boolean  @map("has_outstanding_finance")
@@ -1083,7 +1091,7 @@ model HpiCheck {
   motHistory            Json?    @map("mot_history")
   /// Full API response — never discard
   rawResponse           Json?    @map("raw_response")
-  performedBy           String?  @map("performed_by")
+  performedBy           String?  @map("performed_by") @db.ObjectId
   checkedAt             DateTime @default(now()) @map("checked_at")
 
   vehicle               Vehicle  @relation(fields: [vehicleId], references: [id])
@@ -1095,21 +1103,21 @@ model HpiCheck {
 /// One row per reconditioning stage per consignment (up to 7 per vehicle).
 /// Unique on (consignment_id, stage_name) — each stage appears once.
 model ReconStage {
-  id               String           @id @default(cuid())
-  vehicleId        String           @map("vehicle_id")
-  consignmentId    String           @map("consignment_id")
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId        String           @map("vehicle_id") @db.ObjectId
+  consignmentId    String           @map("consignment_id") @db.ObjectId
   stageName        ReconStageName   @map("stage_name")
   status           ReconStageStatus @default(pending)
   assignedVendor   String?          @map("assigned_vendor")
   estimatedCostGbp Int?             @map("estimated_cost_gbp")
   actualCostGbp    Int?             @map("actual_cost_gbp")
   preAuthorisedAt  DateTime?        @map("pre_authorised_at")
-  preAuthorisedBy  String?          @map("pre_authorised_by")
+  preAuthorisedBy  String?          @map("pre_authorised_by") @db.ObjectId
   startedAt        DateTime?        @map("started_at")
   completedAt      DateTime?        @map("completed_at")
   notes            String?
-  createdBy        String?          @map("created_by")
-  updatedBy        String?          @map("updated_by")
+  createdBy        String?          @map("created_by") @db.ObjectId
+  updatedBy        String?          @map("updated_by") @db.ObjectId
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
 
@@ -1128,14 +1136,14 @@ model ReconStage {
 /// Every item must be approved before work begins.
 /// actual_cost_gbp feeds the payout deductions calculation.
 model ReconWorkItem {
-  id               String            @id @default(cuid())
-  reconStageId     String            @map("recon_stage_id")
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  reconStageId     String            @map("recon_stage_id") @db.ObjectId
   description      String
   category         ReconWorkCategory
   estimatedCostGbp Int?              @map("estimated_cost_gbp")
   actualCostGbp    Int?              @map("actual_cost_gbp")
   isApproved       Boolean           @default(false) @map("is_approved")
-  approvedBy       String?           @map("approved_by")
+  approvedBy       String?           @map("approved_by") @db.ObjectId
   approvedAt       DateTime?         @map("approved_at")
   isCompleted      Boolean           @default(false) @map("is_completed")
   completedAt      DateTime?         @map("completed_at")
@@ -1154,10 +1162,10 @@ model ReconWorkItem {
 /// Buyer transaction for a vehicle. One deal per consignment at a time.
 /// return_window_expires_at = funded_at + 7 days.
 model Deal {
-  id                    String     @id @default(cuid())
-  vehicleId             String     @map("vehicle_id")
-  consignmentId         String     @map("consignment_id")
-  buyerId               String     @map("buyer_id")
+  id                    String     @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId             String     @map("vehicle_id") @db.ObjectId
+  consignmentId         String     @map("consignment_id") @db.ObjectId
+  buyerId               String     @map("buyer_id") @db.ObjectId
   /// Final agreed sale price in pence
   salePriceGbp          Int        @map("sale_price_gbp")
   status                DealStatus @default(reserved)
@@ -1172,7 +1180,7 @@ model Deal {
   returnWindowExpiresAt DateTime?  @map("return_window_expires_at")
   returnInitiatedAt     DateTime?  @map("return_initiated_at")
   closedAt              DateTime?  @map("closed_at")
-  assignedTo            String?    @map("assigned_to")
+  assignedTo            String?    @map("assigned_to") @db.ObjectId
   createdAt             DateTime   @default(now()) @map("created_at")
   updatedAt             DateTime   @updatedAt @map("updated_at")
 
@@ -1193,9 +1201,9 @@ model Deal {
 /// Buyer finance application for a deal. One application per deal.
 /// commission_gbp is iAutoMotive's primary revenue field — feeds Finance P&L.
 model FinanceApplication {
-  id                   String                   @id @default(cuid())
-  dealId               String                   @unique @map("deal_id")
-  buyerId              String                   @map("buyer_id")
+  id                   String                   @id @default(auto()) @map("_id") @db.ObjectId
+  dealId               String                   @unique @map("deal_id") @db.ObjectId
+  buyerId              String                   @map("buyer_id") @db.ObjectId
   lenderName           String?                  @map("lender_name")
   applicationReference String?                  @map("application_reference")
   requestedAmountGbp   Int?                     @map("requested_amount_gbp")
@@ -1223,12 +1231,12 @@ model FinanceApplication {
 /// Five conditions that must all be met before payout releases.
 /// Unique on (deal_id, condition_type) — one row per condition per deal.
 model EscrowCondition {
-  id            String              @id @default(cuid())
-  dealId        String              @map("deal_id")
+  id            String              @id @default(auto()) @map("_id") @db.ObjectId
+  dealId        String              @map("deal_id") @db.ObjectId
   conditionType EscrowConditionType @map("condition_type")
   isMet         Boolean             @default(false) @map("is_met")
   metAt         DateTime?           @map("met_at")
-  metBy         String?             @map("met_by")
+  metBy         String?             @map("met_by") @db.ObjectId
   notes         String?
 
   deal          Deal                @relation(fields: [dealId], references: [id])
@@ -1242,10 +1250,10 @@ model EscrowCondition {
 /// net_payout_gbp should be computed in application as:
 ///   gross_sale_price - recon_costs - transport_costs - finance_payoff - other_deductions
 model Payout {
-  id                 String       @id @default(cuid())
-  consignmentId      String       @unique @map("consignment_id")
-  dealId             String       @unique @map("deal_id")
-  sellerId           String       @map("seller_id")
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  consignmentId      String       @unique @map("consignment_id") @db.ObjectId
+  dealId             String       @unique @map("deal_id") @db.ObjectId
+  sellerId           String       @map("seller_id") @db.ObjectId
   grossSalePriceGbp  Int          @map("gross_sale_price_gbp")
   reconCostsGbp      Int          @default(0) @map("recon_costs_gbp")
   transportCostsGbp  Int          @default(0) @map("transport_costs_gbp")
@@ -1258,7 +1266,7 @@ model Payout {
   bankAccountName    String?      @map("bank_account_name")
   paymentReference   String?      @map("payment_reference")
   status             PayoutStatus @default(pending)
-  approvedBy         String?      @map("approved_by")
+  approvedBy         String?      @map("approved_by") @db.ObjectId
   approvedAt         DateTime?    @map("approved_at")
   sentAt             DateTime?    @map("sent_at")
   confirmedAt        DateTime?    @map("confirmed_at")
@@ -1280,8 +1288,8 @@ model Payout {
 /// Saved search with alert-on-match capability.
 /// filters stored as JSON — full filter state for re-running the query.
 model SavedSearch {
-  id              String       @id @default(cuid())
-  buyerId         String       @map("buyer_id")
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId         String       @map("buyer_id") @db.ObjectId
   searchName      String       @map("search_name")
   /// Full filter state. See schema in documentation.
   filters         Json
@@ -1297,9 +1305,9 @@ model SavedSearch {
 
 /// Buyer wishlist. Drives "X saves" count on admin inventory view.
 model VehicleWishlist {
-  id        String       @id @default(cuid())
-  buyerId   String       @map("buyer_id")
-  vehicleId String       @map("vehicle_id")
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId   String       @map("buyer_id") @db.ObjectId
+  vehicleId String       @map("vehicle_id") @db.ObjectId
   createdAt DateTime     @default(now()) @map("created_at")
 
   buyer     BuyerProfile @relation(fields: [buyerId], references: [id])
@@ -1313,9 +1321,9 @@ model VehicleWishlist {
 /// session_id used to track anonymous sessions.
 /// Drives "X views (7 days)" on seller portal and admin inventory.
 model VehicleView {
-  id                  String        @id @default(cuid())
-  vehicleId           String        @map("vehicle_id")
-  viewerId            String?       @map("viewer_id")
+  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId           String        @map("vehicle_id") @db.ObjectId
+  viewerId            String?       @map("viewer_id") @db.ObjectId
   sessionId           String        @map("session_id")
   source              String?
   viewDurationSeconds Int?          @map("view_duration_seconds")
@@ -1331,15 +1339,15 @@ model VehicleView {
 /// Buyer enquiry on a specific vehicle.
 /// Anonymous enquiries allowed — buyerId nullable.
 model BuyerEnquiry {
-  id          String        @id @default(cuid())
-  vehicleId   String        @map("vehicle_id")
-  buyerId     String?       @map("buyer_id")
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId   String        @map("vehicle_id") @db.ObjectId
+  buyerId     String?       @map("buyer_id") @db.ObjectId
   name        String?
   email       String?
   phone       String?
   message     String?
   status      String        @default("open")
-  assignedTo  String?       @map("assigned_to")
+  assignedTo  String?       @map("assigned_to") @db.ObjectId
   createdAt   DateTime      @default(now()) @map("created_at")
 
   vehicle     Vehicle       @relation("VehicleEnquiry", fields: [vehicleId], references: [id])
@@ -1357,10 +1365,10 @@ model BuyerEnquiry {
 /// Thread context linked to a specific entity (consignment, deal, lead).
 /// updated_at advances on each new message — drives newest-first sort.
 model Conversation {
-  id               String                 @id @default(cuid())
+  id               String                 @id @default(auto()) @map("_id") @db.ObjectId
   conversationType ConversationType       @map("conversation_type")
   entityType       ConversationEntityType @map("entity_type")
-  entityId         String                 @map("entity_id")
+  entityId         String                 @map("entity_id") @db.ObjectId
   subject          String?
   createdAt        DateTime               @default(now()) @map("created_at")
   updatedAt        DateTime               @updatedAt @map("updated_at")
@@ -1375,9 +1383,9 @@ model Conversation {
 /// Participants in a conversation thread.
 /// last_read_at drives unread badge count on nav.
 model ConversationParticipant {
-  id             String       @id @default(cuid())
-  conversationId String       @map("conversation_id")
-  userId         String       @map("user_id")
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String       @map("conversation_id") @db.ObjectId
+  userId         String       @map("user_id") @db.ObjectId
   lastReadAt     DateTime?    @map("last_read_at")
   joinedAt       DateTime     @default(now()) @map("joined_at")
 
@@ -1391,9 +1399,9 @@ model ConversationParticipant {
 /// Individual messages within a conversation.
 /// system_event type used for automated stage-change notifications.
 model Message {
-  id             String      @id @default(cuid())
-  conversationId String      @map("conversation_id")
-  senderId       String      @map("sender_id")
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String      @map("conversation_id") @db.ObjectId
+  senderId       String      @map("sender_id") @db.ObjectId
   body           String
   messageType    MessageType @default(text) @map("message_type")
   isDeleted      Boolean     @default(false) @map("is_deleted")
@@ -1407,8 +1415,8 @@ model Message {
 }
 
 model Notification {
-  id         String    @id @default(cuid())
-  userId     String    @map("user_id")
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String    @map("user_id") @db.ObjectId
   type       String
   title      String
   body       String?
@@ -1425,8 +1433,8 @@ model Notification {
 }
 
 model NotificationPreference {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @map("user_id") @db.ObjectId
   eventType    String   @map("event_type")
   channelEmail Boolean  @default(true) @map("channel_email")
   channelSms   Boolean  @default(false) @map("channel_sms")
@@ -1446,7 +1454,7 @@ model NotificationPreference {
 /// Append-only, immutable change log across all key tables.
 /// Source of truth for admin compliance page and dispute resolution.
 model AuditLog {
-  id         String         @id @default(cuid())
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
   tableName  String         @map("table_name")
   recordId   String         @map("record_id")
   operation  AuditOperation
@@ -1454,7 +1462,7 @@ model AuditLog {
   oldValues  Json?          @map("old_values")
   /// Full new row state — null on DELETE
   newValues  Json?          @map("new_values")
-  changedBy  String?        @map("changed_by")
+  changedBy  String?        @map("changed_by") @db.ObjectId
   changedAt  DateTime       @default(now()) @map("changed_at")
   ipAddress  String?        @map("ip_address")
   sessionId  String?        @map("session_id")
@@ -1468,8 +1476,8 @@ model AuditLog {
 }
 
 model ApiKey {
-  id         String    @id @default(cuid())
-  userId     String    @map("user_id")
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String    @map("user_id") @db.ObjectId
   name       String
   keyHash    String    @unique @map("key_hash")
   lastUsedAt DateTime? @map("last_used_at")
@@ -1483,7 +1491,7 @@ model ApiKey {
 }
 
 model Webhook {
-  id          String    @id @default(cuid())
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   url         String
   events      Json
@@ -1502,15 +1510,15 @@ model Webhook {
 /// Every phone number iAutoMotive owns in Telnyx.
 /// number_type drives inbound routing logic.
 model TelnyxPhoneNumber {
-  id               String           @id @default(cuid())
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
   /// Telnyx internal ID — used for API operations
   telnyxNumberId   String           @unique @map("telnyx_number_id")
   /// E.164 format: +441212345678
   phoneNumber      String           @unique @map("phone_number")
   friendlyName     String?          @map("friendly_name")
   numberType       TelnyxNumberType @map("number_type")
-  assignedTo       String?          @map("assigned_to")
-  lotId            String?          @map("lot_id")
+  assignedTo       String?          @map("assigned_to") @db.ObjectId
+  lotId            String?          @map("lot_id") @db.ObjectId
   /// {"voice": true, "sms": true, "mms": false}
   capabilities     Json?
   isActive         Boolean          @default(true) @map("is_active")
@@ -1529,7 +1537,7 @@ model TelnyxPhoneNumber {
 /// Master record for every call leg, inbound or outbound.
 /// telnyx_call_control_id is the webhook routing key — unique, indexed.
 model CallSession {
-  id                  String        @id @default(cuid())
+  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
   /// Telnyx Call Control ID — used to send mid-call commands.
   telnyxCallControlId String        @unique @map("telnyx_call_control_id")
   telnyxCallLegId     String?       @map("telnyx_call_leg_id")
@@ -1538,18 +1546,18 @@ model CallSession {
   fromNumber          String        @map("from_number")
   /// E.164
   toNumber            String        @map("to_number")
-  telnyxNumberId      String?       @map("telnyx_number_id")
-  repId               String?       @map("rep_id")
+  telnyxNumberId      String?       @map("telnyx_number_id") @db.ObjectId
+  repId               String?       @map("rep_id") @db.ObjectId
   /// 'lead' | 'seller' | 'buyer' | 'unknown'
   entityType          String?       @map("entity_type")
   entityId            String?       @map("entity_id")
   /// Denormalised from entity for fast CRM queries
-  leadId              String?       @map("lead_id")
+  leadId              String?       @map("lead_id") @db.ObjectId
   diallerQueueId      String?       @map("dialler_queue_id")
   status              CallStatus    @default(initiated)
   outcome             CallOutcome?
   outcomeNotes        String?       @map("outcome_notes")
-  dispositionSetBy    String?       @map("disposition_set_by")
+  dispositionSetBy    String?       @map("disposition_set_by") @db.ObjectId
   dispositionSetAt    DateTime?     @map("disposition_set_at")
   /// answered_at - ringing_at in seconds
   durationSeconds     Int?          @map("duration_seconds")
@@ -1582,8 +1590,8 @@ model CallSession {
 /// Raw Telnyx webhook events — full audit trail per call.
 /// Write-only in normal operation. Used for debugging and billing reconciliation.
 model CallEvent {
-  id              String      @id @default(cuid())
-  callSessionId   String      @map("call_session_id")
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  callSessionId   String      @map("call_session_id") @db.ObjectId
   /// e.g. call.initiated, call.answered, call.hangup, call.recording.saved
   telnyxEventType String      @map("telnyx_event_type")
   eventPayload    Json        @map("event_payload")
@@ -1597,8 +1605,8 @@ model CallEvent {
 
 /// Processed call recordings stored in Cloudflare R2.
 model CallRecording {
-  id                String               @id @default(cuid())
-  callSessionId     String               @unique @map("call_session_id")
+  id                String               @id @default(auto()) @map("_id") @db.ObjectId
+  callSessionId     String               @unique @map("call_session_id") @db.ObjectId
   telnyxRecordingId String?              @map("telnyx_recording_id")
   /// Telnyx hosted URL — used for initial download only
   telnyxSourceUrl   String?              @map("telnyx_source_url")
@@ -1623,15 +1631,15 @@ model CallRecording {
 /// SMS conversation context between one iAutoMotive number and one contact.
 /// Unique on (iautomotive_number, contact_number) — one thread per pair.
 model SmsThread {
-  id                   String        @id @default(cuid())
+  id                   String        @id @default(auto()) @map("_id") @db.ObjectId
   /// The iAutoMotive E.164 number used in this thread
   iautoSaleNumber      String        @map("iautomotive_number")
   /// The external contact E.164 number
   contactNumber        String        @map("contact_number")
-  repId                String?       @map("rep_id")
+  repId                String?       @map("rep_id") @db.ObjectId
   entityType           String?       @map("entity_type")
   entityId             String?       @map("entity_id")
-  leadId               String?       @map("lead_id")
+  leadId               String?       @map("lead_id") @db.ObjectId
   lastMessageAt        DateTime?     @map("last_message_at")
   lastMessageDirection SmsDirection? @map("last_message_direction")
   /// First 100 chars of last message — avoids subquery in inbox
@@ -1655,8 +1663,8 @@ model SmsThread {
 
 /// Individual SMS/MMS messages sent or received.
 model SmsMessage {
-  id              String       @id @default(cuid())
-  threadId        String       @map("thread_id")
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  threadId        String       @map("thread_id") @db.ObjectId
   /// Telnyx message ID — null until sent confirmation received
   telnyxMessageId String?      @unique @map("telnyx_message_id")
   direction       SmsDirection
@@ -1669,8 +1677,8 @@ model SmsMessage {
   telnyxStatus    String?      @map("telnyx_status")
   errorCode       String?      @map("error_code")
   errorMessage    String?      @map("error_message")
-  sentBy          String?      @map("sent_by")
-  templateId      String?      @map("template_id")
+  sentBy          String?      @map("sent_by") @db.ObjectId
+  templateId      String?      @map("template_id") @db.ObjectId
   costPence       Int?         @map("cost_pence")
   sentAt          DateTime?    @map("sent_at")
   deliveredAt     DateTime?    @map("delivered_at")
@@ -1687,7 +1695,7 @@ model SmsMessage {
 
 /// Pre-approved message templates. Reps select from approved templates only.
 model SmsTemplate {
-  id             String              @id @default(cuid())
+  id             String              @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   /// Body with {{variable}} placeholders
   body           String
@@ -1696,8 +1704,8 @@ model SmsTemplate {
   variables      Json?
   characterCount Int?                @map("character_count")
   isActive       Boolean             @default(true) @map("is_active")
-  createdBy      String?             @map("created_by")
-  approvedBy     String?             @map("approved_by")
+  createdBy      String?             @map("created_by") @db.ObjectId
+  approvedBy     String?             @map("approved_by") @db.ObjectId
   approvedAt     DateTime?           @map("approved_at")
   createdAt      DateTime            @default(now()) @map("created_at")
   updatedAt      DateTime            @updatedAt @map("updated_at")
@@ -1712,8 +1720,8 @@ model SmsTemplate {
 /// A rep's active power dialling session.
 /// One active session per rep at a time.
 model DiallerSession {
-  id                     String               @id @default(cuid())
-  repId                  String               @map("rep_id")
+  id                     String               @id @default(auto()) @map("_id") @db.ObjectId
+  repId                  String               @map("rep_id") @db.ObjectId
   status                 DiallerSessionStatus @default(active)
   /// Lead filter used to build this queue
   filterCriteria         Json?                @map("filter_criteria")
@@ -1738,13 +1746,13 @@ model DiallerSession {
 
 /// Ordered list of leads for a dialling session.
 model DiallerQueueItem {
-  id            String                 @id @default(cuid())
-  sessionId     String                 @map("session_id")
-  leadId        String                 @map("lead_id")
+  id            String                 @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId     String                 @map("session_id") @db.ObjectId
+  leadId        String                 @map("lead_id") @db.ObjectId
   position      Int
   status        DiallerQueueItemStatus @default(pending)
   /// Set when the dialler initiates the call for this item
-  callSessionId String?                @map("call_session_id")
+  callSessionId String?                @map("call_session_id") @db.ObjectId
   skipReason    String?                @map("skip_reason")
   createdAt     DateTime               @default(now()) @map("created_at")
   updatedAt     DateTime               @updatedAt @map("updated_at")
@@ -1762,13 +1770,13 @@ model DiallerQueueItem {
 /// PECR compliance opt-out registry.
 /// Checked before every outbound call and SMS — never skip this check.
 model CommunicationOptOut {
-  id             String     @id @default(cuid())
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
   /// E.164 format. Indexed for fast pre-send lookup.
   phoneNumber    String     @map("phone_number")
   optOutType     OptOutType @map("opt_out_type")
   optedOutAt     DateTime   @default(now()) @map("opted_out_at")
   optedOutVia    OptOutVia  @map("opted_out_via")
-  optedOutBy     String?    @map("opted_out_by")
+  optedOutBy     String?    @map("opted_out_by") @db.ObjectId
   /// Set when contact re-opts in
   optedInAgainAt DateTime?  @map("opted_in_again_at")
   optedInVia     OptInVia?  @map("opted_in_via")

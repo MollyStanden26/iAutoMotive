@@ -7,6 +7,26 @@ import {
   LayoutGrid, BarChart3, Phone, Clock, CalendarCheck, Home,
   CreditCard, Shield, FileText, Users, Settings,
 } from "lucide-react";
+import { crmDashboardData } from "@/lib/admin/crm-mock-data";
+import { PAYOUT_QUEUE } from "@/lib/admin/payouts-mock-data";
+import { ACTIVE_FLAGS } from "@/lib/admin/compliance-mock-data";
+
+/**
+ * Computes the badge count for a given admin route from live data.
+ * Returns 0 (no badge) when nothing in that section needs attention.
+ */
+function getBadgeCount(href: string): number {
+  switch (href) {
+    case "/admin/crm":
+      return crmDashboardData.callbacks.filter(c => c.status === "overdue").length;
+    case "/admin/payouts":
+      return PAYOUT_QUEUE.filter(p => p.status === "overdue").length;
+    case "/admin/compliance":
+      return ACTIVE_FLAGS.length;
+    default:
+      return 0;
+  }
+}
 
 /* ── Tokens ── */
 const S = {
@@ -22,13 +42,13 @@ const SIDEBAR_ITEMS = [
   { type: "item" as const, icon: LayoutGrid, label: "Command centre", href: "/admin", exact: true },
   { type: "item" as const, icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
   { type: "divider" as const },
-  { type: "item" as const, icon: Phone, label: "CRM", href: "/admin/crm", badge: 12 },
-  { type: "item" as const, icon: Clock, label: "Acquisition", href: "/admin/acquisition" },
+  { type: "item" as const, icon: Phone, label: "CRM", href: "/admin/crm" },
+  { type: "item" as const, icon: Clock, label: "Sellers Mgmt", href: "/admin/sellers-management" },
   { type: "item" as const, icon: CalendarCheck, label: "Inventory", href: "/admin/inventory" },
   { type: "item" as const, icon: Home, label: "Deals", href: "/admin/deals" },
   { type: "divider" as const },
-  { type: "item" as const, icon: CreditCard, label: "Payouts", href: "/admin/payouts", badge: 3 },
-  { type: "item" as const, icon: Shield, label: "Compliance", href: "/admin/compliance", badge: 2 },
+  { type: "item" as const, icon: CreditCard, label: "Payouts", href: "/admin/payouts" },
+  { type: "item" as const, icon: Shield, label: "Compliance", href: "/admin/compliance" },
   { type: "item" as const, icon: FileText, label: "Finance", href: "/admin/finance" },
   { type: "divider" as const },
   { type: "item" as const, icon: Users, label: "Staff", href: "/admin/staff" },
@@ -125,25 +145,29 @@ export function IconSidebar() {
             >
               {item.label}
             </span>
-            {/* Badge dot (collapsed) / Badge count (expanded) */}
-            {item.badge != null && !expanded && (
-              <span
-                className="absolute"
-                style={{ top: 8, right: 8, width: 6, height: 6, borderRadius: 999, background: S.red }}
-              />
-            )}
-            {item.badge != null && expanded && (
-              <span
-                className="ml-auto flex-shrink-0 flex items-center justify-center"
-                style={{
-                  minWidth: 18, height: 18, borderRadius: 999, padding: "0 5px",
-                  background: S.red, fontFamily: "var(--font-body)", fontWeight: 700,
-                  fontSize: 9, color: "#fff",
-                }}
-              >
-                {item.badge}
-              </span>
-            )}
+            {/* Badge dot (collapsed) / Badge count (expanded). Computed live —
+                only renders when the page actually has overdue/flagged items. */}
+            {(() => {
+              const badgeCount = getBadgeCount(item.href!);
+              if (badgeCount === 0) return null;
+              return !expanded ? (
+                <span
+                  className="absolute"
+                  style={{ top: 8, right: 8, width: 6, height: 6, borderRadius: 999, background: S.red }}
+                />
+              ) : (
+                <span
+                  className="ml-auto flex-shrink-0 flex items-center justify-center"
+                  style={{
+                    minWidth: 18, height: 18, borderRadius: 999, padding: "0 5px",
+                    background: S.red, fontFamily: "var(--font-body)", fontWeight: 700,
+                    fontSize: 9, color: "#fff",
+                  }}
+                >
+                  {badgeCount}
+                </span>
+              );
+            })()}
           </button>
         );
       })}

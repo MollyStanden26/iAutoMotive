@@ -8,3 +8,13 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 .claude/worktrees/
+
+# Stray Next tmp build dir produced when TMPDIR is short-circuited into the worktree
+var/
+
+# Signed consignment agreements should never be in git — they're per-seller
+# private documents persisted via filesystem in dev only. Move to S3/R2 for prod.
+public/uploads/contracts/
+
+# Vercel artifacts
+.vercel/

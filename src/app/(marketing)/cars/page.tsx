@@ -1,26 +1,140 @@
 "use client";
 
-import { useState } from "react";
-import { FilterSidebar } from "@/components/browse/filter-sidebar";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { FilterSidebar, DEFAULT_FILTERS, type Filters } from "@/components/browse/filter-sidebar";
 import { SearchBar } from "@/components/browse/search-bar";
 import { FilterChips } from "@/components/browse/filter-chips";
 import { VehicleCard } from "@/components/browse/vehicle-card";
 
-const MOCK_CARS = [
-  { id: "car-001", year: 2024, make: "BMW", model: "3 Series", trim: "320i Sport", mileage: "12k", price: 28990, monthlyEstimate: 459, badge: "Just Listed", deliveryDate: "Thursday" },
-  { id: "car-002", year: 2023, make: "Mercedes-Benz", model: "A-Class", trim: "A200 AMG Line", mileage: "18k", price: 24500, monthlyEstimate: 389, deliveryDate: "Friday" },
-  { id: "car-003", year: 2024, make: "Audi", model: "A3", trim: "35 TFSI S Line", mileage: "8k", price: 26750, monthlyEstimate: 425, badge: "Price Drop", deliveryDate: "Thursday" },
-  { id: "car-004", year: 2022, make: "Volkswagen", model: "Golf", trim: "R-Line 1.5 TSI", mileage: "24k", price: 21990, monthlyEstimate: 349, deliveryDate: "Wednesday" },
-  { id: "car-005", year: 2023, make: "Ford", model: "Puma", trim: "ST-Line X 1.0", mileage: "15k", price: 19750, monthlyEstimate: 315, badge: "Just Listed", deliveryDate: "Friday" },
-  { id: "car-006", year: 2024, make: "Toyota", model: "Corolla", trim: "Design 1.8 Hybrid", mileage: "5k", price: 23490, monthlyEstimate: 373, deliveryDate: "Thursday" },
-  { id: "car-007", year: 2023, make: "Hyundai", model: "Tucson", trim: "Premium 1.6T", mileage: "20k", price: 27500, monthlyEstimate: 437, deliveryDate: "Wednesday" },
-  { id: "car-008", year: 2022, make: "Nissan", model: "Qashqai", trim: "Tekna+ 1.3 DIG-T", mileage: "28k", price: 22990, monthlyEstimate: 365, badge: "Price Drop", deliveryDate: "Friday" },
-  { id: "car-009", year: 2024, make: "Kia", model: "Sportage", trim: "GT-Line S 1.6T", mileage: "3k", price: 31500, monthlyEstimate: 499, badge: "Just Listed", deliveryDate: "Thursday" },
-];
+interface ApiCar {
+  id: string;
+  slug: string;
+  year: number;
+  make: string;
+  model: string;
+  trim: string;
+  mileage: string;
+  mileageNumeric: number;
+  price: number;
+  monthlyEstimate: number;
+  imageUrl?: string;
+  bodyType?: string | null;
+  fuelType?: string | null;
+  transmission?: string | null;
+  exteriorColour?: string | null;
+}
+
+type SortKey = "recommended" | "price-asc" | "price-desc" | "year-desc" | "mileage-asc";
+
+const SORT_LABELS: Record<SortKey, string> = {
+  "recommended": "Recommended",
+  "price-asc":   "Price: Low to High",
+  "price-desc":  "Price: High to Low",
+  "year-desc":   "Newest first",
+  "mileage-asc": "Lowest mileage",
+};
 
 export default function CarsPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cars, setCars] = useState<ApiCar[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [sort, setSort] = useState<SortKey>("recommended");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch("/api/vehicles")
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(data => { if (!cancelled) setCars(data.cars ?? []); })
+      .catch(err => { if (!cancelled) console.error("[/cars] fetch failed:", err); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Distinct lowercased colours for the sidebar's colour pill list. Pulled
+  // from the full unfiltered set so the operator can re-add a filter they
+  // just cleared without losing options.
+  const availableColours = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of cars) {
+      if (c.exteriorColour) set.add(c.exteriorColour.toLowerCase());
+    }
+    return Array.from(set).sort();
+  }, [cars]);
+
+  // Make/model/trim cascade — models scoped to selected makes, trims scoped
+  // to selected makes+models. Pulled from the unfiltered dataset so changing
+  // an unrelated filter (price, body) doesn't make options vanish.
+  const availableMakes = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of cars) if (c.make) set.add(c.make);
+    return Array.from(set).sort();
+  }, [cars]);
+
+  const availableModels = useMemo(() => {
+    const set = new Set<string>();
+    const makeFilter = filters.makes.length ? new Set(filters.makes) : null;
+    for (const c of cars) {
+      if (makeFilter && (!c.make || !makeFilter.has(c.make))) continue;
+      if (c.model) set.add(c.model);
+    }
+    return Array.from(set).sort();
+  }, [cars, filters.makes]);
+
+  const availableTrims = useMemo(() => {
+    const set = new Set<string>();
+    const makeFilter = filters.makes.length ? new Set(filters.makes) : null;
+    const modelFilter = filters.models.length ? new Set(filters.models) : null;
+    for (const c of cars) {
+      if (makeFilter && (!c.make || !makeFilter.has(c.make))) continue;
+      if (modelFilter && (!c.model || !modelFilter.has(c.model))) continue;
+      if (c.trim) set.add(c.trim);
+    }
+    return Array.from(set).sort();
+  }, [cars, filters.makes, filters.models]);
+
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const minP = filters.minPrice ? parseInt(filters.minPrice, 10) : 0;
+    const maxP = filters.maxPrice ? parseInt(filters.maxPrice, 10) : Infinity;
+    const minY = filters.minYear ? parseInt(filters.minYear, 10) : 0;
+    const maxM = filters.maxMileage ? parseInt(filters.maxMileage, 10) : Infinity;
+
+    return cars.filter(c => {
+      if (q && !`${c.year} ${c.make} ${c.model} ${c.trim}`.toLowerCase().includes(q)) return false;
+      if (c.price < minP) return false;
+      if (c.price > maxP) return false;
+      if (c.year < minY) return false;
+      if (c.mileageNumeric > maxM) return false;
+      if (filters.makes.length        && (!c.make         || !filters.makes.includes(c.make))) return false;
+      if (filters.models.length       && (!c.model        || !filters.models.includes(c.model))) return false;
+      if (filters.trims.length        && (!c.trim         || !filters.trims.includes(c.trim))) return false;
+      if (filters.bodyTypes.length    && (!c.bodyType     || !filters.bodyTypes.includes(c.bodyType))) return false;
+      if (filters.fuelTypes.length    && (!c.fuelType     || !filters.fuelTypes.includes(c.fuelType))) return false;
+      if (filters.transmissions.length && (!c.transmission || !filters.transmissions.includes(c.transmission))) return false;
+      if (filters.colours.length) {
+        const colour = c.exteriorColour?.toLowerCase();
+        if (!colour || !filters.colours.includes(colour)) return false;
+      }
+      return true;
+    });
+  }, [cars, searchQuery, filters]);
+
+  const sorted = useMemo(() => {
+    const copy = [...filtered];
+    switch (sort) {
+      case "price-asc":   copy.sort((a, b) => a.price - b.price); break;
+      case "price-desc":  copy.sort((a, b) => b.price - a.price); break;
+      case "year-desc":   copy.sort((a, b) => b.year - a.year); break;
+      case "mileage-asc": copy.sort((a, b) => a.mileageNumeric - b.mileageNumeric); break;
+      default: break; // "recommended" — keep API order (newest createdAt first)
+    }
+    return copy;
+  }, [filtered, sort]);
 
   return (
     <>
@@ -28,7 +142,14 @@ export default function CarsPage() {
         <div className="flex flex-row gap-ac-6">
           {/* ── Left column: filter sidebar (desktop only) ── */}
           <div className="hidden w-[280px] flex-shrink-0 md:block">
-            <FilterSidebar />
+            <FilterSidebar
+              filters={filters}
+              onChange={setFilters}
+              availableColours={availableColours}
+              availableMakes={availableMakes}
+              availableModels={availableModels}
+              availableTrims={availableTrims}
+            />
           </div>
 
           {/* ── Right column: main content ── */}
@@ -40,13 +161,13 @@ export default function CarsPage() {
 
             {/* Filter chips */}
             <div className="mb-ac-4">
-              <FilterChips />
+              <FilterChips filters={filters} onChange={setFilters} />
             </div>
 
             {/* Results bar */}
             <div className="mb-ac-5 flex flex-wrap items-center justify-between gap-ac-3">
               <span className="font-body text-sm font-medium text-slate-600">
-                2,847 cars
+                {loading ? "Loading…" : `${sorted.length} car${sorted.length === 1 ? "" : "s"}`}
               </span>
 
               <div className="flex items-center gap-ac-4">
@@ -68,41 +189,55 @@ export default function CarsPage() {
                 </button>
 
                 {/* Sort dropdown */}
-                <div className="flex items-center gap-ac-2">
+                <div className="relative flex items-center gap-ac-2">
                   <span className="font-body text-[13px] text-slate-400">
                     Sort by
                   </span>
-                  <button className="flex items-center gap-1 font-body text-sm font-semibold text-slate-900 transition-colors duration-150 hover:text-teal-600">
-                    Recommended
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
+                  <button
+                    type="button"
+                    onClick={() => setSortMenuOpen(o => !o)}
+                    className="flex items-center gap-1 font-body text-sm font-semibold text-slate-900 transition-colors duration-150 hover:text-teal-600"
+                  >
+                    {SORT_LABELS[sort]}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
                   </button>
+                  {sortMenuOpen && (
+                    <div
+                      className="absolute right-0 top-full z-10 mt-2 w-[200px] rounded-[12px] border border-slate-200 bg-white py-1 shadow-lg"
+                    >
+                      {(Object.keys(SORT_LABELS) as SortKey[]).map(key => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => { setSort(key); setSortMenuOpen(false); }}
+                          className="flex w-full items-center justify-between px-4 py-2 text-left font-body text-[13px] text-slate-900 transition-colors hover:bg-slate-50"
+                        >
+                          <span>{SORT_LABELS[key]}</span>
+                          {sort === key && <span className="text-teal-600">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Vehicle cards grid */}
+            {!loading && sorted.length === 0 && (
+              <div className="rounded-[12px] border border-slate-200 bg-white px-ac-6 py-ac-8 text-center font-body text-sm text-slate-500">
+                {cars.length === 0
+                  ? "No cars listed yet. New listings appear here automatically."
+                  : "No cars match your filters."}
+              </div>
+            )}
             <div className="grid grid-cols-1 gap-ac-4 md:grid-cols-2 lg:grid-cols-3">
-              {MOCK_CARS.map((car) => (
-                <VehicleCard key={car.id} {...car} />
+              {sorted.map((car) => (
+                <Link key={car.id} href={`/cars/${car.id}/${car.slug}`} className="block">
+                  <VehicleCard {...car} />
+                </Link>
               ))}
-            </div>
-
-            {/* Load more button */}
-            <div className="mt-ac-8">
-              <button className="w-full rounded-pill border-[1.5px] border-teal-600 bg-white px-ac-4 py-[14px] font-body text-sm font-semibold text-teal-600 transition-colors duration-150 hover:bg-teal-50">
-                Show more cars
-              </button>
             </div>
           </div>
         </div>
@@ -165,7 +300,14 @@ export default function CarsPage() {
                 </svg>
               </button>
             </div>
-            <FilterSidebar />
+            <FilterSidebar
+              filters={filters}
+              onChange={setFilters}
+              availableColours={availableColours}
+              availableMakes={availableMakes}
+              availableModels={availableModels}
+              availableTrims={availableTrims}
+            />
           </div>
         </div>
       )}

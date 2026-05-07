@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { crmDashboardData as D } from "@/lib/admin/crm-mock-data";
 import type { Lead, LeadStatus } from "@/lib/admin/crm-mock-data";
 import { Phone, SkipForward } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { AddLeadDrawer } from "@/components/admin/add-lead-drawer";
+import { ScraperDrawer } from "@/components/admin/scraper-drawer";
 
 /* ================================================================== */
 /*  DESIGN TOKENS (inline — matches Command Centre dark admin theme)  */
@@ -47,7 +49,7 @@ const crmTabs = [
   { label: "Scripts",     href: "/admin/crm/scripts",     active: false },
 ];
 
-function CrmTopbar() {
+function CrmTopbar({ onAddLead, onOpenScraper }: { onAddLead: () => void; onOpenScraper: () => void }) {
   const router = useRouter();
   const overdueCount = D.callbacks.filter(c => c.status === "overdue").length;
 
@@ -106,6 +108,25 @@ function CrmTopbar() {
           ))}
         </div>
       </div>
+
+      {/* Scrape AT button — bulk import listings */}
+      <button
+        onClick={onOpenScraper}
+        className="px-[14px] py-[6px] rounded-[8px] transition-colors hover:opacity-80"
+        style={{ background: "#101A2E", color: T.textPrimary, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }}
+        title="Bulk-import listings from AutoTrader URLs"
+      >
+        ⤓ Scrape AT
+      </button>
+
+      {/* Add lead button */}
+      <button
+        onClick={onAddLead}
+        className="px-[14px] py-[6px] rounded-[8px] transition-colors hover:opacity-80"
+        style={{ background: "#0A2A26", color: T.teal200, border: "1px solid #0A1A2E", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }}
+      >
+        + Add lead
+      </button>
 
       {/* Open dialler button */}
       <button
@@ -181,13 +202,28 @@ const statusConfig: Record<LeadStatus, { label: string; bg: string; color: strin
   signed:      { label: "Signed",      bg: "#0A1A0D",  color: "#34D399" },
 };
 
-function LeadQueue() {
+const LEADS_PER_PAGE = 10;
+
+function LeadQueue({ refreshKey }: { refreshKey: number }) {
   const router = useRouter();
   const [selectedCaller, setSelectedCaller] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [leads, setLeads] = useState<Lead[]>(D.leads);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
   const [assignModal, setAssignModal] = useState<Lead | null>(null);
   const [assignCaller, setAssignCaller] = useState("Sarah K.");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch("/api/admin/leads")
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(data => { if (!cancelled) setLeads(data.leads ?? []); })
+      .catch(err => { if (!cancelled) console.error("[LeadQueue] fetch failed:", err); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
 
   const callerOptions = ["All callers", "Sarah K.", "James T.", "Jordan M.", "Aisha T."];
   const statusOptions = ["All statuses", "New", "Contacted", "Negotiating", "Offer sent"];
@@ -197,6 +233,16 @@ function LeadQueue() {
     const statusMatch = selectedStatus === "all" || l.status === selectedStatus;
     return callerMatch && statusMatch;
   });
+
+  // Reset to page 1 whenever filters trim the list shorter than the current page
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / LEADS_PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  if (safePage !== page) {
+    // schedule state update without triggering during render
+    setTimeout(() => setPage(safePage), 0);
+  }
+  const pageStart = (safePage - 1) * LEADS_PER_PAGE;
+  const pagedLeads = filteredLeads.slice(pageStart, pageStart + LEADS_PER_PAGE);
 
   const handleAssign = () => {
     if (!assignModal) return;
@@ -230,7 +276,7 @@ function LeadQueue() {
           <select
             style={selectStyle}
             value={selectedCaller}
-            onChange={e => setSelectedCaller(e.target.value)}
+            onChange={e => { setSelectedCaller(e.target.value); setPage(1); }}
           >
             {callerOptions.map(opt => (
               <option key={opt} value={opt === "All callers" ? "all" : opt}>{opt}</option>
@@ -239,7 +285,7 @@ function LeadQueue() {
           <select
             style={selectStyle}
             value={selectedStatus}
-            onChange={e => setSelectedStatus(e.target.value)}
+            onChange={e => { setSelectedStatus(e.target.value); setPage(1); }}
           >
             {statusOptions.map(opt => (
               <option key={opt} value={opt === "All statuses" ? "all" : opt.toLowerCase().replace(" ", "_")}>{opt}</option>
@@ -283,12 +329,12 @@ function LeadQueue() {
               <tr>
                 <td colSpan={6} className="text-center py-8">
                   <span className="font-body text-[13px]" style={{ color: T.textDim }}>
-                    No leads match this filter
+                    {loading ? "Loading…" : leads.length === 0 ? "No leads yet" : "No leads match this filter"}
                   </span>
                 </td>
               </tr>
             ) : (
-              filteredLeads.map((lead, i) => {
+              pagedLeads.map((lead, i) => {
                 const st = statusConfig[lead.status];
                 const scoreColor = lead.score >= 75 ? T.green : lead.score >= 60 ? T.amber : T.red;
                 const scoreBg = lead.score >= 75 ? T.greenBg : lead.score >= 60 ? T.amberBg : T.redBg;
@@ -296,7 +342,7 @@ function LeadQueue() {
                   <tr
                     key={lead.id}
                     className="cursor-pointer transition-colors duration-150"
-                    style={{ borderBottom: i < filteredLeads.length - 1 ? `1px solid ${T.border2}` : "none" }}
+                    style={{ borderBottom: i < pagedLeads.length - 1 ? `1px solid ${T.border2}` : "none" }}
                     onClick={() => router.push(`/admin/crm/leads/${lead.id}`)}
                     onMouseEnter={e => (e.currentTarget.style.background = T.bgHover)}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
@@ -356,6 +402,53 @@ function LeadQueue() {
           </tbody>
         </table>
         </div>
+
+        {/* Pagination footer */}
+        {filteredLeads.length > 0 && (
+          <div
+            className="flex items-center justify-between px-[15px] py-[10px]"
+            style={{ borderTop: `1px solid ${T.border}` }}
+          >
+            <span className="font-body text-[12px]" style={{ color: T.textMuted }}>
+              {`${pageStart + 1}–${Math.min(pageStart + LEADS_PER_PAGE, filteredLeads.length)} of ${filteredLeads.length}`}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={safePage <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className="rounded-[6px] px-2.5 py-1 font-body font-semibold text-[11px]"
+                style={{
+                  background: T.bgRow,
+                  border: `1px solid ${T.border}`,
+                  color: safePage <= 1 ? T.textDim : T.textSecondary,
+                  cursor: safePage <= 1 ? "not-allowed" : "pointer",
+                  opacity: safePage <= 1 ? 0.5 : 1,
+                }}
+              >
+                ← Prev
+              </button>
+              <span className="font-body text-[12px]" style={{ color: T.textSecondary }}>
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={safePage >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                className="rounded-[6px] px-2.5 py-1 font-body font-semibold text-[11px]"
+                style={{
+                  background: T.bgRow,
+                  border: `1px solid ${T.border}`,
+                  color: safePage >= totalPages ? T.textDim : T.textSecondary,
+                  cursor: safePage >= totalPages ? "not-allowed" : "pointer",
+                  opacity: safePage >= totalPages ? 0.5 : 1,
+                }}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Assign Modal (slide-in sheet) */}
@@ -414,6 +507,27 @@ function LeadQueue() {
 function DiallerSnapshot() {
   const router = useRouter();
   const lead = D.activeDiallerLead;
+
+  if (!lead) {
+    return (
+      <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
+        <div className="flex items-center px-[15px] py-[11px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+          <span className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: T.textDim }} />
+          <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>Live dialler — idle</span>
+          <button
+            className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer"
+            style={{ color: T.teal200 }}
+            onClick={() => router.push("/admin/crm/dialler")}
+          >
+            Open dialler →
+          </button>
+        </div>
+        <div className="px-[15px] py-8 text-center font-body text-[12px]" style={{ color: T.textMuted }}>
+          No active call. Open the dialler to start working the queue.
+        </div>
+      </div>
+    );
+  }
 
   const tagPills = [
     { label: `Score ${lead.score}`, bg: T.greenBg, color: T.green },
@@ -533,6 +647,9 @@ function CallbackQueue() {
         </span>
       </div>
       <div className="px-[15px] py-[8px]">
+        {D.callbacks.length === 0 && (
+          <div className="font-body text-[12px] text-center py-6" style={{ color: T.textMuted }}>No callbacks scheduled.</div>
+        )}
         {D.callbacks.map((cb, i) => {
           const timeColor = cb.status === "overdue" ? T.red : cb.status === "due_now" ? T.amber : T.textSecondary;
           return (
@@ -586,6 +703,9 @@ function CallerLeaderboard() {
         </button>
       </div>
       <div className="px-[15px] py-[6px]">
+        {D.callers.length === 0 && (
+          <div className="font-body text-[12px] text-center py-6" style={{ color: T.textMuted }}>No callers tracked yet.</div>
+        )}
         {D.callers.map((caller, i) => {
           const rateColor = caller.contactRate >= 35 ? T.green : caller.contactRate >= 25 ? T.amber : T.red;
           return (
@@ -665,9 +785,10 @@ function CallerLeaderboard() {
 /*  TEAM TARGETS                                                       */
 /* ================================================================== */
 function TeamTargets() {
+  const hasTargets = D.targets.some(t => t.target > 0);
   const onTrackCount = D.targets.filter(t => {
     if (t.label === "Callbacks cleared") return false; // ops hygiene, not counted
-    return t.actual >= t.target;
+    return t.target > 0 && t.actual >= t.target;
   }).length;
 
   return (
@@ -676,12 +797,15 @@ function TeamTargets() {
         <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
           Team targets
         </span>
-        <span className="font-body font-bold text-[11px]" style={{ color: T.green }}>
-          {onTrackCount} of 4 on track
+        <span className="font-body font-bold text-[11px]" style={{ color: hasTargets ? T.green : T.textMuted }}>
+          {hasTargets ? `${onTrackCount} of 4 on track` : "No targets set"}
         </span>
       </div>
       <div className="px-[15px] py-[10px]">
-        {D.targets.map((t, i) => {
+        {!hasTargets && (
+          <div className="font-body text-[12px] text-center py-6" style={{ color: T.textMuted }}>No targets set yet.</div>
+        )}
+        {hasTargets && D.targets.map((t, i) => {
           const pct = Math.min((t.actual / t.target) * 100, 100);
           const isCallbacks = t.label === "Callbacks cleared";
           const isFailing = t.actual < t.target;
@@ -726,23 +850,27 @@ function TeamTargets() {
         })}
 
         {/* Pace forecast */}
-        <div className="mt-3 pt-[10px]" style={{ borderTop: `1px solid ${T.border}` }}>
-          <div className="font-body font-bold text-[10px] uppercase tracking-widest mb-2" style={{ color: T.textDim }}>
-            Pace forecast
+        {hasTargets && (
+          <div className="mt-3 pt-[10px]" style={{ borderTop: `1px solid ${T.border}` }}>
+            <div className="font-body font-bold text-[10px] uppercase tracking-widest mb-2" style={{ color: T.textDim }}>
+              Pace forecast
+            </div>
+            <div className="flex justify-between mb-[5px]">
+              <span className="font-body text-[12px]" style={{ color: T.textMuted }}>Projected end-of-day dials</span>
+              <span className="font-body font-bold text-[12px]" style={{ color: T.teal200 }}>{D.paceForecast.projectedDials}</span>
+            </div>
+            <div className="flex justify-between mb-[5px]">
+              <span className="font-body text-[12px]" style={{ color: T.textMuted }}>Projected signed deals</span>
+              <span className="font-body font-bold text-[12px]" style={{ color: T.green }}>{D.paceForecast.projectedSigned}</span>
+            </div>
+            {D.paceForecast.interventionFlag !== "—" && (
+              <div className="flex justify-between">
+                <span className="font-body text-[12px]" style={{ color: T.textMuted }}>{D.paceForecast.interventionFlag} intervention needed</span>
+                <span className="font-body font-bold text-[12px]" style={{ color: T.red }}>Yes</span>
+              </div>
+            )}
           </div>
-          <div className="flex justify-between mb-[5px]">
-            <span className="font-body text-[12px]" style={{ color: T.textMuted }}>Projected end-of-day dials</span>
-            <span className="font-body font-bold text-[12px]" style={{ color: T.teal200 }}>{D.paceForecast.projectedDials}</span>
-          </div>
-          <div className="flex justify-between mb-[5px]">
-            <span className="font-body text-[12px]" style={{ color: T.textMuted }}>Projected signed deals</span>
-            <span className="font-body font-bold text-[12px]" style={{ color: T.green }}>{D.paceForecast.projectedSigned}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-body text-[12px]" style={{ color: T.textMuted }}>{D.paceForecast.interventionFlag} intervention needed</span>
-            <span className="font-body font-bold text-[12px]" style={{ color: T.red }}>Yes</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -806,11 +934,14 @@ function CallScript() {
 /*  PAGE ASSEMBLY                                                      */
 /* ================================================================== */
 export default function CrmPage() {
+  const [addLeadOpen, setAddLeadOpen] = useState(false);
+  const [scraperOpen, setScraperOpen] = useState(false);
+  const [leadsRefreshKey, setLeadsRefreshKey] = useState(0);
   return (
     <div className="flex min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-      <CrmTopbar />
+      <CrmTopbar onAddLead={() => setAddLeadOpen(true)} onOpenScraper={() => setScraperOpen(true)} />
       <div className="flex-1 flex flex-col gap-3 p-[18px_22px] overflow-y-auto overflow-x-hidden">
         {/* KPI Strip */}
         <CrmKpiRow />
@@ -818,7 +949,7 @@ export default function CrmPage() {
         {/* Main row: Lead queue (wide) + Right column (dialler + callbacks) */}
         <div className="grid gap-3" style={{ gridTemplateColumns: "1fr 280px" }}>
           <div className="min-w-0">
-            <LeadQueue />
+            <LeadQueue refreshKey={leadsRefreshKey} />
           </div>
           <div className="flex flex-col gap-3 min-w-0">
             <DiallerSnapshot />
@@ -834,6 +965,16 @@ export default function CrmPage() {
         </div>
       </div>
       </div>
+      <AddLeadDrawer
+        open={addLeadOpen}
+        onClose={() => setAddLeadOpen(false)}
+        onCreated={() => setLeadsRefreshKey(k => k + 1)}
+      />
+      <ScraperDrawer
+        open={scraperOpen}
+        onClose={() => setScraperOpen(false)}
+        onCreated={() => setLeadsRefreshKey(k => k + 1)}
+      />
     </div>
   );
 }

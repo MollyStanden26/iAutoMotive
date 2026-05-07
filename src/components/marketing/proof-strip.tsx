@@ -12,7 +12,7 @@ export function ProofStrip() {
     <section className="w-full" style={{ backgroundColor: "#0F1724" }}>
       <div className="mx-auto max-w-[1400px] px-6 sm:px-8">
         <div
-          className="grid grid-cols-2 gap-6 py-6 md:flex md:flex-row md:items-center md:justify-between md:gap-0"
+          className="grid grid-cols-2 gap-4 py-[18px] md:flex md:flex-row md:items-center md:justify-between md:gap-0"
         >
           {stats.map((stat, i) => (
             <div
@@ -27,7 +27,7 @@ export function ProofStrip() {
               <span
                 className="font-heading"
                 style={{
-                  fontSize: "32px",
+                  fontSize: "24px",
                   fontWeight: 800,
                   color: "#4DD9C7",
                 }}

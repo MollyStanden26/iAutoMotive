@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 
 // Admin sidebar -- 220px, Slate 900 bg, section labels, active item highlight
-// Sections: Command Centre, CRM, Acquisition, Inventory, Deals, Payouts, Compliance, Finance, Settings
+// Sections: Command Centre, CRM, Sellers Management, Inventory, Deals, Payouts, Compliance, Finance, Settings
 
 const sections = [
   { label: "Command Centre", href: "/admin" },
   { label: "CRM", href: "/admin/crm" },
-  { label: "Acquisition", href: "/admin/acquisition" },
+  { label: "Sellers Management", href: "/admin/sellers-management" },
   { label: "Inventory", href: "/admin/inventory" },
   { label: "Deals", href: "/admin/deals" },
   { label: "Payouts", href: "/admin/payouts" },
