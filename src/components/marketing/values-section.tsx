@@ -2,7 +2,7 @@
 
 const values = [
   {
-    src: "/images/More-money-guaranteed%20.png",
+    src: "/images/more-money-guaranteed.png",
     alt: "More money, guaranteed — sellers earn £1,800 more than instant-cash buyers",
   },
   {
