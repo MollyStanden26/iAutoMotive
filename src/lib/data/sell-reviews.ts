@@ -93,7 +93,7 @@ const MAKES = [
 // authentic rather than copy-paste.
 const TEMPLATES = [
   "Sold my {make} through iAutoMotive without any of the usual stress. The valuation was honest, the collection was on time, and the payout landed in 48 hours. Couldn't ask for more.",
-  "Was sceptical of online consignment services but iAutoMotive proved me wrong. Got £1,400 more for my {make} than the WBAC quote — and the team kept me in the loop the whole way.",
+  "Was sceptical of online consignment services but iAutoMotive proved me wrong. Got £1,400 more for my {make} than the typical instant-cash quote — and the team kept me in the loop the whole way.",
   "After trying two other platforms I came back to iAutoMotive for my {make}. The difference is night and day — clear pricing, no nasty fees at the end, and a real person on the phone when I needed one.",
   "I had two cars to sell and used iAutoMotive for both. The {make} sold within 11 days for the asking price. Already recommended them to my brother.",
   "Selling a high-mileage {make} at decent money seemed impossible until I tried iAutoMotive. Their listing was clean, professional photos, and they handled every viewing.",
@@ -111,7 +111,7 @@ const TEMPLATES = [
   "Friend recommended iAutoMotive after they sold their {make}. Process lived up to the hype — even my partner, who is normally cynical about these things, was impressed.",
   "Their net seller payout estimate was bang-on. No surprises at the end. The {make} went for the figure they predicted in the initial valuation.",
   "Loved that I could see my {make}'s value being tracked weekly. It made deciding when to sell so much easier.",
-  "A real alternative to Cazoo and WBAC. iAutoMotive gave me retail price for my {make}, not the trade hammer they were quoting.",
+  "A real alternative to instant-cash buyers. iAutoMotive gave me retail price for my {make}, not the trade hammer they were quoting.",
   "I sold a high-spec {make} that needed an enthusiast buyer. iAutoMotive's listing reach found exactly the right person within a fortnight.",
   "The HPI check and clear documentation gave my buyer confidence — no haggling on price, no last-minute walkaway. The {make} just sold.",
   "Have used dealer trade-ins for my last three cars. Gave iAutoMotive a try with the {make} this time and got over £2k more. Lesson learned.",

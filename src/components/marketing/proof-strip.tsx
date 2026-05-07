@@ -1,10 +1,10 @@
 "use client";
 
 const stats = [
-  { value: "\u00A31,800+", label: "AVG MORE THAN CAZOO" },
-  { value: "38", label: "AVG DAYS TO SELL" },
+  { value: "Retail", label: "FULL PRICE FOR YOUR CAR" },
+  { value: "12", label: "AVG DAYS TO SELL" },
   { value: "£0", label: "COMMISSION FEE" },
-  { value: "48hrs", label: "PAYOUT AFTER SALE" },
+  { value: "Immediate", label: "PAYOUT AFTER SALE" },
 ];
 
 export function ProofStrip() {

@@ -194,7 +194,7 @@ const team = [
   {
     name: "Sarah Mitchell",
     role: "Chief Commercial Officer",
-    bio: "15 years at Auto Trader and Cazoo. Expert in automotive marketplace growth and dealer partnerships.",
+    bio: "15 years in the UK automotive marketplace. Expert in marketplace growth and dealer partnerships.",
     initials: "SM",
     colour: "#F5A623",
   },

@@ -4,31 +4,15 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  LayoutGrid, BarChart3, Phone, Clock, CalendarCheck, Home,
-  CreditCard, Shield, FileText, Users, Settings, Headphones,
+  Headphones, MessageSquare, Inbox, BookOpen, Users, Settings, ArrowLeftRight,
 } from "lucide-react";
-import { crmDashboardData } from "@/lib/admin/crm-mock-data";
-import { PAYOUT_QUEUE } from "@/lib/admin/payouts-mock-data";
-import { ACTIVE_FLAGS } from "@/lib/admin/compliance-mock-data";
+import { SUPPORT_TICKETS } from "@/lib/support/mock-data";
 
 /**
- * Computes the badge count for a given admin route from live data.
- * Returns 0 (no badge) when nothing in that section needs attention.
+ * Same look & feel as the admin IconSidebar — different navigation set focused
+ * on support workflows. Icon-only collapsed (56px), label-revealing on hover.
  */
-function getBadgeCount(href: string): number {
-  switch (href) {
-    case "/admin/crm":
-      return crmDashboardData.callbacks.filter(c => c.status === "overdue").length;
-    case "/admin/payouts":
-      return PAYOUT_QUEUE.filter(p => p.status === "overdue").length;
-    case "/admin/compliance":
-      return ACTIVE_FLAGS.length;
-    default:
-      return 0;
-  }
-}
 
-/* ── Tokens ── */
 const S = {
   bgSidebar: "#070D18", border: "#1A2640",
   teal: "#008C7C", teal200: "#4DD9C7",
@@ -38,21 +22,30 @@ const S = {
   indigo: "#0A1A2E",
 };
 
+function getBadgeCount(href: string): number {
+  switch (href) {
+    case "/support/tickets":
+      // Open + escalated tickets that need a human
+      return SUPPORT_TICKETS.filter(t => t.status === "open" || t.status === "escalated").length;
+    case "/support/conversations":
+      // Threads with at least one unread message
+      return SUPPORT_TICKETS.filter(t => t.unreadCount > 0).length;
+    default:
+      return 0;
+  }
+}
+
 const SIDEBAR_ITEMS = [
-  { type: "item" as const, icon: LayoutGrid, label: "Command centre", href: "/admin", exact: true },
-  { type: "item" as const, icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
+  { type: "item" as const, icon: Headphones,    label: "Overview",      href: "/support", exact: true },
   { type: "divider" as const },
-  { type: "item" as const, icon: Phone, label: "CRM", href: "/admin/crm" },
-  { type: "item" as const, icon: Clock, label: "Sellers Mgmt", href: "/admin/sellers-management" },
-  { type: "item" as const, icon: CalendarCheck, label: "Inventory", href: "/admin/inventory" },
-  { type: "item" as const, icon: Home, label: "Deals", href: "/admin/deals" },
-  { type: "item" as const, icon: Headphones, label: "Support", href: "/support" },
+  { type: "item" as const, icon: MessageSquare, label: "Tickets",       href: "/support/tickets" },
+  { type: "item" as const, icon: Inbox,         label: "Conversations", href: "/support/conversations" },
+  { type: "item" as const, icon: Users,         label: "Sellers",       href: "/support/sellers" },
+  { type: "item" as const, icon: BookOpen,      label: "Knowledge base", href: "/support/kb" },
   { type: "divider" as const },
-  { type: "item" as const, icon: CreditCard, label: "Payouts", href: "/admin/payouts" },
-  { type: "item" as const, icon: Shield, label: "Compliance", href: "/admin/compliance" },
-  { type: "item" as const, icon: FileText, label: "Finance", href: "/admin/finance" },
-  { type: "divider" as const },
-  { type: "item" as const, icon: Users, label: "Staff", href: "/admin/staff" },
+  // Quick switch back to admin so an operator who toggles between roles can
+  // jump there without going through the URL bar.
+  { type: "item" as const, icon: ArrowLeftRight, label: "Switch to Admin", href: "/admin" },
 ];
 
 function isActive(pathname: string, href: string, exact?: boolean): boolean {
@@ -60,11 +53,10 @@ function isActive(pathname: string, href: string, exact?: boolean): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-export function IconSidebar() {
+export function SupportIconSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
-  const settingsActive = pathname.startsWith("/admin/settings");
   const collapsedW = 56;
   const expandedW = 210;
 
@@ -90,13 +82,13 @@ export function IconSidebar() {
       <div
         className="flex items-center gap-2.5 cursor-pointer mb-3"
         style={{ padding: "0 8px", minHeight: 36 }}
-        onClick={() => router.push("/admin")}
+        onClick={() => router.push("/support")}
       >
         <div
           className="flex items-center justify-center flex-shrink-0"
           style={{ width: 36, height: 36, borderRadius: 10, background: S.teal }}
         >
-          <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 14, color: "#fff" }}>AC</span>
+          <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 14, color: "#fff" }}>SP</span>
         </div>
         <span
           style={{
@@ -104,16 +96,14 @@ export function IconSidebar() {
             whiteSpace: "nowrap", opacity: expanded ? 1 : 0, transition: "opacity 150ms ease",
           }}
         >
-          iAutoMotive
+          Support
         </span>
       </div>
 
       {/* Nav items */}
       {SIDEBAR_ITEMS.map((item, i) => {
         if (item.type === "divider") {
-          return (
-            <div key={`d${i}`} style={{ height: 1, background: S.border, margin: "4px 12px" }} />
-          );
+          return <div key={`d${i}`} style={{ height: 1, background: S.border, margin: "4px 12px" }} />;
         }
         const Icon = item.icon!;
         const active = isActive(pathname, item.href!, item.exact);
@@ -146,8 +136,6 @@ export function IconSidebar() {
             >
               {item.label}
             </span>
-            {/* Badge dot (collapsed) / Badge count (expanded). Computed live —
-                only renders when the page actually has overdue/flagged items. */}
             {(() => {
               const badgeCount = getBadgeCount(item.href!);
               if (badgeCount === 0) return null;
@@ -173,7 +161,6 @@ export function IconSidebar() {
         );
       })}
 
-      {/* Spacer */}
       <div className="flex-1" />
 
       {/* Settings */}
@@ -182,20 +169,20 @@ export function IconSidebar() {
         className="flex items-center gap-2.5 transition-colors"
         style={{
           padding: "0 8px", height: 40, borderRadius: 10, margin: "0 4px",
-          background: settingsActive ? S.indigo : "transparent",
+          background: "transparent",
           cursor: "pointer", border: "none", outline: "none", textAlign: "left",
         }}
         title={!expanded ? "Settings" : undefined}
-        onMouseEnter={e => { if (!settingsActive) e.currentTarget.style.background = S.hoverBg; }}
-        onMouseLeave={e => { if (!settingsActive) e.currentTarget.style.background = settingsActive ? S.indigo : "transparent"; }}
+        onMouseEnter={e => { e.currentTarget.style.background = S.hoverBg; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
       >
         <div className="flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40 }}>
-          <Settings size={18} style={{ color: settingsActive ? S.teal200 : S.textSecondary }} />
+          <Settings size={18} style={{ color: S.textSecondary }} />
         </div>
         <span
           style={{
             fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12,
-            color: settingsActive ? S.teal200 : S.textSecondary,
+            color: S.textSecondary,
             whiteSpace: "nowrap", opacity: expanded ? 1 : 0, transition: "opacity 150ms ease",
           }}
         >
@@ -203,10 +190,9 @@ export function IconSidebar() {
         </span>
       </button>
 
-      {/* Avatar */}
       <div className="flex items-center gap-2.5" style={{ padding: "0 8px", marginTop: 8 }}>
         <Link
-          href="/admin"
+          href="/support"
           className="flex items-center justify-center flex-shrink-0"
           style={{
             width: 36, height: 36, borderRadius: 999,
@@ -214,7 +200,7 @@ export function IconSidebar() {
             fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: S.green,
           }}
         >
-          MA
+          ST
         </Link>
         <div
           style={{
@@ -222,8 +208,8 @@ export function IconSidebar() {
             opacity: expanded ? 1 : 0, transition: "opacity 150ms ease",
           }}
         >
-          <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: S.teal200 }}>Muhammad A.</div>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: 9, color: S.textDim }}>Super Admin</div>
+          <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: S.teal200 }}>Support team</div>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: 9, color: S.textDim }}>Agent</div>
         </div>
       </div>
     </aside>

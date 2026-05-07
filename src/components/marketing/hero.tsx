@@ -93,8 +93,8 @@ export function Hero() {
           <div className="mt-6 flex flex-wrap gap-3">
             {[
               "No commission fee",
-              "Avg. £1,800 more than Cazoo",
-              "Sold in 38 days avg.",
+              "Full retail price for your car",
+              "Sold in 12 days avg.",
             ].map((chip) => (
               <span
                 key={chip}
