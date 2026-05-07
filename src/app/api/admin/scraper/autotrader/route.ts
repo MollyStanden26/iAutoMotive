@@ -110,7 +110,7 @@ async function persistListing(scraped: ScrapedListing) {
     });
     return {
       leadId: priorLead.id,
-      sellerId: priorConsignment?.sellerId ?? null,
+      sellerId: priorConsignment?.sellerId ?? undefined,
       vehicleId: priorLead.convertedToVehicleId,
       duplicate: true,
       title: `${scraped.year} ${scraped.make} ${scraped.model}`,

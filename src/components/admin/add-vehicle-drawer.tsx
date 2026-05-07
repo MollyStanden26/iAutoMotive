@@ -685,7 +685,7 @@ function PdfDocRow({ label, description, file, onPick, onRemove }: {
       />
       <span style={{
         width: 28, height: 28, borderRadius: 6,
-        background: file ? T.tealBg : T.bgRow,
+        background: file ? T.tealBg : T.bgInput,
         color: file ? T.teal200 : T.textDim,
         fontFamily: "var(--font-body)", fontWeight: 800, fontSize: 9,
         display: "flex", alignItems: "center", justifyContent: "center",

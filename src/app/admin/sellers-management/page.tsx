@@ -248,6 +248,7 @@ function LeadTable({
     offerPrice: 0,
     status: l.rawStatus,
     aiAction: "",
+    ageLabel: l.ageLabel ?? "—",
   })), [apiLeads]);
 
   // Filter

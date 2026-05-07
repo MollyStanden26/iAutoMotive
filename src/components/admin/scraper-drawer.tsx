@@ -95,9 +95,9 @@ export function ScraperDrawer({ open, onClose, onCreated }: ScraperDrawerProps) 
       }
       const serverResults: PerUrlResult[] = (body.results ?? []).map((r: PerUrlResult) => r);
       // Map server results back onto our seeded order
-      const merged = seeded.map(s => {
+      const merged: PerUrlResult[] = seeded.map(s => {
         const match = serverResults.find(r => r.url === s.url);
-        return match ?? { ...s, status: "failed", error: "No result returned" };
+        return match ?? { ...s, status: "failed" as const, error: "No result returned" };
       });
       setResults(merged);
       onCreated?.();

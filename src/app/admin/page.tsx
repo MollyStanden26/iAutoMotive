@@ -142,7 +142,6 @@ function RevenueChart() {
             radius={[4, 4, 0, 0]}
             name="Current"
             fill="#008C7C"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             shape={(props: any) => {
               const { x, y, width, height, payload } = props;
               return <rect x={x} y={y} width={width} height={height} rx={4} fill={payload.isToday ? "#4DD9C7" : "#008C7C"} />;
