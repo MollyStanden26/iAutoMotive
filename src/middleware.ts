@@ -105,6 +105,7 @@ export async function middleware(request: NextRequest) {
     "/dealer",
     "/account",
     "/checkout",
+    "/purchase",
   ];
   const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
 
@@ -183,6 +184,7 @@ export const config = {
     "/dealer/:path*",
     "/account/:path*",
     "/checkout/:path*",
+    "/purchase/:path*",
     "/auth/:path*",
   ],
 };

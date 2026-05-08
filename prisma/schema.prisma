@@ -591,7 +591,15 @@ model BuyerProfile {
   id                 String              @id @default(auto()) @map("_id") @db.ObjectId
   userId             String              @unique @map("user_id") @db.ObjectId
   firstName          String?             @map("first_name")
+  middleName         String?             @map("middle_name")
   lastName           String?             @map("last_name")
+  /// Optional suffix on the driver's licence ("Jr.", "Sr.", "II", "III", etc.).
+  nameSuffix         String?             @map("name_suffix")
+  /// Captured on /purchase/steps/personal-details. Free-form strings to
+  /// sidestep enum migrations; UI restricts the values it sends.
+  militaryStatus     String?             @map("military_status")
+  maritalStatus      String?             @map("marital_status")
+  homeownershipStatus String?            @map("homeownership_status")
   addressLine1       String?             @map("address_line1")
   postcode           String?
   identityVerified   Boolean             @default(false) @map("identity_verified")

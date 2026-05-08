@@ -45,12 +45,13 @@ export default function VehicleDetailPage() {
   const router = useRouter();
   const { user, loading: userLoading } = useCurrentUser();
 
-  // What "Get started" does: signed-in buyers go straight to the first
-  // checkout step (reserve); everyone else gets the sign-in/sign-up modal
-  // first, then we resume the same path on success via `onAuthed`.
+  // What "Get started" does: drop the user into the multi-step purchase
+  // flow with this vehicle pre-attached. Signed-in users go straight there;
+  // everyone else gets the sign-in/sign-up modal first, then we resume on
+  // success via `onAuthed`.
   const startCheckout = () => {
     if (!params?.id) return;
-    router.push(`/checkout/${params.id}/reserve`);
+    router.push(`/purchase/steps/personal-details?vehicleId=${params.id}`);
   };
   const handleGetStarted = () => {
     if (userLoading) return;
