@@ -62,7 +62,6 @@ export default function PhotoEditorPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
-  const [bgColor, setBgColor] = useState("#0D1525");
 
   // Initial vehicle load
   useEffect(() => {
@@ -129,13 +128,12 @@ export default function PhotoEditorPage() {
     setBusy(true);
     setFlash(null);
     try {
+      // No `background` override — the server reads the iAutoMotive backdrop
+      // from public/images/iautomotive-backdrop.jpg by default.
       const res = await fetch("/api/admin/photos/replace-background", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mediaIds: Array.from(selected),
-          background: { color: bgColor },
-        }),
+        body: JSON.stringify({ mediaIds: Array.from(selected) }),
       });
       const body = await res.json();
       if (!res.ok && !body.processed) throw new Error(body.error || `HTTP ${res.status}`);
@@ -278,37 +276,34 @@ export default function PhotoEditorPage() {
               </div>
             </div>
 
-            {/* Action bar */}
+            {/* Action bar — every photo gets composited onto the iAutoMotive
+                showroom backdrop served from public/images. Designers can
+                swap the file there without code changes. */}
             <div style={{
-              display: "grid", gridTemplateColumns: "1fr auto auto", gap: 12,
+              display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 14,
               padding: "12px 14px", marginBottom: 18,
               background: T.panel, border: `1px solid ${T.border}`, borderRadius: 12,
               alignItems: "center",
             }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/iautomotive-backdrop.jpg"
+                alt="iAutoMotive Studio backdrop"
+                onError={e => { e.currentTarget.style.display = "none"; }}
+                style={{
+                  width: 60, height: 44, objectFit: "cover", borderRadius: 8,
+                  border: `1px solid ${T.border}`,
+                }}
+              />
               <div>
-                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                  Background
+                <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Replacing with
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <input
-                    type="color"
-                    value={bgColor}
-                    onChange={e => setBgColor(e.target.value)}
-                    style={{ width: 36, height: 32, border: `1px solid ${T.border}`, borderRadius: 6, background: "transparent", padding: 0, cursor: "pointer" }}
-                  />
-                  <input
-                    type="text"
-                    value={bgColor}
-                    onChange={e => setBgColor(e.target.value)}
-                    style={{
-                      width: 110, height: 32, padding: "0 10px",
-                      background: T.section, border: `1px solid ${T.border}`, borderRadius: 6,
-                      color: T.text, fontFamily: "var(--font-body)", fontSize: 12, outline: "none",
-                    }}
-                  />
-                  <span style={{ fontSize: 11, color: T.textMuted }}>
-                    Replaced with this colour. PHOTOROOM_BACKDROP_URL env var overrides if set.
-                  </span>
+                <div style={{ fontSize: 13, color: T.text, fontWeight: 600, marginTop: 2 }}>
+                  iAutoMotive Studio backdrop
+                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>
+                  Edit at <code style={{ color: T.teal200 }}>public/images/iautomotive-backdrop.jpg</code>
                 </div>
               </div>
               <PrimaryButton onClick={processSelected} disabled={busy || selected.size === 0}>

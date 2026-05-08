@@ -6,25 +6,34 @@
  * Docs: https://docs.photoroom.com/image-editing-api/
  *
  * Auth: a single env var, PHOTOROOM_API_KEY. Throws clearly if it's missing
- * so the admin endpoint can surface a 503 with a useful message instead of
- * leaking the raw 401 from PhotoRoom.
+ * so the admin endpoint can surface a useful message instead of leaking the
+ * raw 401 from PhotoRoom.
  */
+
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 const ENDPOINT = "https://image-api.photoroom.com/v2/edit";
 
-/** Brand backdrop. iAutoMotive teal — overridden via env if/when we host a
- *  bitmap showroom asset on Vercel Blob and want PhotoRoom to composite onto
- *  that instead. The leading "#" is required by PhotoRoom's `background.color`. */
-const DEFAULT_BACKDROP_COLOR = "#0D1525";
+/** Default brand backdrop image, served from Next.js's public/ tree. The
+ *  bytes are read from disk and POSTed as a multipart `background.imageFile`
+ *  so PhotoRoom doesn't need the URL to be publicly reachable — works the
+ *  same in dev as it does in prod. */
+const DEFAULT_BACKDROP_PATH = path.join(process.cwd(), "public", "images", "iautomotive-backdrop.jpg");
+
+/** Fallback colour when no backdrop file is present on disk. Brand-dark navy
+ *  so the photo doesn't look broken if someone forgets to drop the asset in. */
+const FALLBACK_BACKDROP_COLOR = "#0D1525";
 
 export interface ReplaceBackgroundOptions {
   /** The raw photo to process. Either a URL we fetch, or a Buffer we POST. */
   sourceUrl?: string;
   sourceBuffer?: Buffer;
-  /** Optional: hex colour like "#0D1525" or a public URL pointing at a
-   *  background image. Defaults to env PHOTOROOM_BACKDROP_URL or the brand
-   *  colour above. */
-  background?: { color?: string; url?: string };
+  /** Override the default backdrop. Either a hex colour, a public URL, or a
+   *  Buffer of the actual image bytes. If unset, falls back to the file at
+   *  public/images/iautomotive-backdrop.jpg, then PHOTOROOM_BACKDROP_URL,
+   *  then FALLBACK_BACKDROP_COLOR. */
+  background?: { color?: string; url?: string; buffer?: Buffer };
 }
 
 export interface ReplaceBackgroundResult {
@@ -39,7 +48,7 @@ export interface ReplaceBackgroundResult {
 export async function replaceBackground(opts: ReplaceBackgroundOptions): Promise<ReplaceBackgroundResult> {
   const apiKey = process.env.PHOTOROOM_API_KEY;
   if (!apiKey) {
-    throw new Error("PHOTOROOM_API_KEY is not set — add it in Vercel → project → Environment Variables");
+    throw new Error("PHOTOROOM_API_KEY is not set — add it in Vercel → project → Environment Variables (and your local .env)");
   }
 
   const form = new FormData();
@@ -49,19 +58,30 @@ export async function replaceBackground(opts: ReplaceBackgroundOptions): Promise
   if (opts.sourceBuffer) {
     form.append("imageFile", new Blob([new Uint8Array(opts.sourceBuffer)]), "source.jpg");
   } else if (opts.sourceUrl) {
-    // PhotoRoom v2 accepts `imageUrl` in lieu of `imageFile`.
     form.append("imageUrl", opts.sourceUrl);
   } else {
     throw new Error("replaceBackground: pass sourceBuffer or sourceUrl");
   }
 
-  // Background: image takes precedence over colour when both set.
-  const bgUrl = opts.background?.url ?? process.env.PHOTOROOM_BACKDROP_URL;
-  const bgColor = opts.background?.color ?? DEFAULT_BACKDROP_COLOR;
-  if (bgUrl) {
-    form.append("background.imageUrl", bgUrl);
+  // Background priority: explicit buffer > explicit URL > explicit colour
+  // > default backdrop file > env URL > fallback colour. The default
+  // backdrop file path lives in public/images so designers can swap it
+  // without code changes.
+  let backdropBuffer: Buffer | undefined = opts.background?.buffer;
+  if (!backdropBuffer && !opts.background?.url && !opts.background?.color) {
+    try {
+      backdropBuffer = await readFile(DEFAULT_BACKDROP_PATH);
+    } catch {
+      // Asset missing; fall through to the env URL / colour fallback.
+    }
+  }
+
+  if (backdropBuffer) {
+    form.append("background.imageFile", new Blob([new Uint8Array(backdropBuffer)]), "backdrop.jpg");
+  } else if (opts.background?.url ?? process.env.PHOTOROOM_BACKDROP_URL) {
+    form.append("background.imageUrl", (opts.background?.url ?? process.env.PHOTOROOM_BACKDROP_URL)!);
   } else {
-    form.append("background.color", bgColor);
+    form.append("background.color", opts.background?.color ?? FALLBACK_BACKDROP_COLOR);
   }
 
   // Lock output to the same aspect as the source so vehicle gallery thumbs
