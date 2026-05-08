@@ -303,7 +303,7 @@ export default function SupportConversationsPage() {
                 >
                   {messages.length === 0 && (
                     <div className="font-body text-[12px] text-center" style={{ color: T.textDim, padding: "24px 0" }}>
-                      No messages yet — the seller hasn't sent anything to this thread.
+                      No messages yet — the seller hasn&apos;t sent anything to this thread.
                     </div>
                   )}
                   {messages.map((m, i) => {
