@@ -17,8 +17,9 @@ const PAYOUT_METHODS = ["faster_payments", "bacs", "chaps"] as const;
  *
  * Returns the User (email, role, isActive) + SellerProfile + the seller's
  * latest Consignment (with the live Vehicle and the cost-breakdown fields the
- * admin can tweak). Photos are included as a flat array of CDN URLs so the
- * drawer can render thumbnails.
+ * admin can tweak), photos as `{ id, url, isPrimary }` so the drawer can
+ * manage primaries, the buyer-offer history (when the consignment came from a
+ * Lead), and the per-consignment escrow flags.
  *
  * `[id]` is the User id (matches what /api/admin/sellers GET returns).
  */
@@ -41,14 +42,32 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       },
     });
 
-    let photos: string[] = [];
+    let photos: { id: string; url: string; isPrimary: boolean; sortOrder: number }[] = [];
+    let offers: { id: string; offerType: string; offeredPriceGbp: number; status: string; offeredAt: string; notes: string | null }[] = [];
+
     if (consignment?.vehicle) {
       const media = await prisma.mediaFile.findMany({
         where: { entityType: "vehicle", entityId: consignment.vehicle.id },
         orderBy: { sortOrder: "asc" },
-        select: { cdnUrl: true },
+        select: { id: true, cdnUrl: true, isPrimary: true, sortOrder: true },
       });
-      photos = media.map(m => m.cdnUrl);
+      photos = media.map(m => ({ id: m.id, url: m.cdnUrl, isPrimary: m.isPrimary, sortOrder: m.sortOrder ?? 0 }));
+    }
+
+    if (consignment?.leadId) {
+      const offerRows = await prisma.leadOffer.findMany({
+        where: { leadId: consignment.leadId },
+        orderBy: { offeredAt: "asc" },
+        select: { id: true, offerType: true, offeredPriceGbp: true, status: true, offeredAt: true, notes: true },
+      });
+      offers = offerRows.map(o => ({
+        id: o.id,
+        offerType: o.offerType,
+        offeredPriceGbp: o.offeredPriceGbp,
+        status: o.status,
+        offeredAt: o.offeredAt.toISOString(),
+        notes: o.notes,
+      }));
     }
 
     return NextResponse.json({
@@ -74,6 +93,10 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
         reconDetailGbp:        consignment.reconDetailGbp ?? 0,
         transportGbp:          consignment.transportGbp ?? 0,
         lot: consignment.lot ? `${consignment.lot.name}, ${consignment.lot.city ?? ""}`.trim() : null,
+        agreementSignedAt: consignment.agreementSignedAt?.toISOString() ?? null,
+        v5cNotifiedAt: consignment.v5cNotifiedAt?.toISOString() ?? null,
+        returnWindowExpiresAt: consignment.returnWindowExpiresAt?.toISOString() ?? null,
+        disputesOpen: consignment.disputesOpen,
       } : null,
       vehicle: consignment?.vehicle ? {
         id: consignment.vehicle.id,
@@ -88,6 +111,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
         exteriorColour: consignment.vehicle.exteriorColour,
       } : null,
       photos,
+      offers,
     });
   } catch (error) {
     console.error("[GET /api/admin/sellers/:id]", error);
@@ -99,10 +123,10 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
  * PATCH /api/admin/sellers/[id] — apply edits made in the drawer.
  *
  * Accepts a sparse JSON body — only fields present in the request are touched.
- * Splits into 3 update buckets: User (email/password/isActive), SellerProfile
+ * Splits into update buckets: User (email/password/isActive), SellerProfile
  * (address/payoutMethod), Vehicle (stage/listingPriceGbp), Consignment (cost
- * breakdown). Each bucket is its own update so partial saves stay atomic per
- * domain.
+ * breakdown + escrow flags). Each bucket is its own update so partial saves
+ * stay atomic per domain.
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -154,13 +178,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       await prisma.sellerProfile.update({ where: { id: user.sellerProfile.id }, data: profilePatch });
     }
 
-    // ── Consignment updates (cost breakdown + status) ────────────────────
+    // ── Consignment updates (cost breakdown + escrow flags) ──────────────
     const consignment = await prisma.consignment.findFirst({
       where: { sellerId: user.sellerProfile.id },
       orderBy: { createdAt: "desc" },
     });
     if (consignment) {
-      const consPatch: Record<string, number> = {};
+      const consPatch: Record<string, unknown> = {};
       for (const key of ["platformFeeGbp", "reconMechanicalGbp", "reconDetailGbp", "transportGbp"] as const) {
         if (key in body) {
           const v = Number(body[key]);
@@ -169,6 +193,22 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           }
           consPatch[key] = Math.round(v);
         }
+      }
+      // Escrow toggles. Each accepts a bool from the drawer; persisted as
+      // either a timestamp (for "happened at" fields) or a plain bool.
+      if ("agreementSigned" in body) {
+        consPatch.agreementSignedAt = body.agreementSigned ? (consignment.agreementSignedAt ?? new Date()) : null;
+      }
+      if ("v5cNotified" in body) {
+        consPatch.v5cNotifiedAt = body.v5cNotified ? (consignment.v5cNotifiedAt ?? new Date()) : null;
+      }
+      if ("returnWindowExpired" in body) {
+        // Storing the boolean as a past timestamp lets /api/seller/me reuse the
+        // same `<= now()` derivation it does for the natural expiry case.
+        consPatch.returnWindowExpiresAt = body.returnWindowExpired ? new Date(Date.now() - 1000) : null;
+      }
+      if ("disputesOpen" in body && typeof body.disputesOpen === "boolean") {
+        consPatch.disputesOpen = body.disputesOpen;
       }
       if (Object.keys(consPatch).length > 0) {
         await prisma.consignment.update({ where: { id: consignment.id }, data: consPatch });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const T = {
   bgPanel:       "#0D1525",
@@ -71,6 +71,10 @@ interface SellerData {
     reconDetailGbp: number;
     transportGbp: number;
     lot: string | null;
+    agreementSignedAt: string | null;
+    v5cNotifiedAt: string | null;
+    returnWindowExpiresAt: string | null;
+    disputesOpen: boolean;
   } | null;
   vehicle: {
     id: string;
@@ -84,7 +88,8 @@ interface SellerData {
     mileageAtIntake: number;
     exteriorColour: string | null;
   } | null;
-  photos: string[];
+  photos: { id: string; url: string; isPrimary: boolean; sortOrder: number }[];
+  offers: { id: string; offerType: string; offeredPriceGbp: number; status: string; offeredAt: string; notes: string | null }[];
 }
 
 export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEditDrawerProps) {
@@ -94,6 +99,8 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
   const [data, setData] = useState<SellerData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Edit-buffer state — populated from `data` when fetched, then submitted.
   const [stage, setStage] = useState("");
@@ -106,17 +113,20 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isActive, setIsActive] = useState(true);
+  // Escrow toggles
+  const [agreementSigned, setAgreementSigned] = useState(false);
+  const [v5cNotified, setV5cNotified] = useState(false);
+  const [returnWindowExpired, setReturnWindowExpired] = useState(false);
+  const [disputesOpen, setDisputesOpen] = useState(false);
 
   const cancel = () => {
     if (saving) return;
     onClose();
-    // Reset on next open
     setData(null);
     setError(null);
     setSavedFlash(false);
   };
 
-  // Slide-in animation + escape-to-close
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") cancel(); };
@@ -129,7 +139,12 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Fetch on open + sellerId change
+  const refetch = async () => {
+    if (!sellerId) return;
+    const fresh = await fetch(`/api/admin/sellers/${sellerId}`).then(r => r.json());
+    setData(fresh);
+  };
+
   useEffect(() => {
     if (!open || !sellerId) return;
     let cancelled = false;
@@ -140,7 +155,6 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
       .then((d: SellerData) => {
         if (cancelled) return;
         setData(d);
-        // Hydrate edit buffer with current values (pence → pounds for inputs)
         setStage(d.vehicle?.currentStage ?? "offer_accepted");
         setListingPricePounds(d.vehicle?.listingPriceGbp ? Math.round(d.vehicle.listingPriceGbp / 100).toString() : "");
         setPlatformFeePounds(d.consignment ? Math.round(d.consignment.platformFeeGbp / 100).toString() : "0");
@@ -151,6 +165,10 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
         setEmail(d.seller.email);
         setNewPassword("");
         setIsActive(d.seller.isActive);
+        setAgreementSigned(!!d.consignment?.agreementSignedAt);
+        setV5cNotified(!!d.consignment?.v5cNotifiedAt);
+        setReturnWindowExpired(!!d.consignment?.returnWindowExpiresAt && new Date(d.consignment.returnWindowExpiresAt).getTime() <= Date.now());
+        setDisputesOpen(!!d.consignment?.disputesOpen);
       })
       .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load"); })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -172,6 +190,10 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
         transportGbp:       Math.round(Number(transportPounds || 0) * 100),
         payoutMethod:       payoutMethod || null,
         isActive,
+        agreementSigned,
+        v5cNotified,
+        returnWindowExpired,
+        disputesOpen,
       };
       if (data && email !== data.seller.email) patch.email = email;
       if (newPassword) patch.password = newPassword;
@@ -185,15 +207,72 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 2000);
-      // Re-fetch to pull canonical values back
-      const fresh = await fetch(`/api/admin/sellers/${sellerId}`).then(r => r.json());
-      setData(fresh);
+      await refetch();
       setNewPassword("");
       onSaved?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePhotoUpload = async (files: FileList | null) => {
+    if (!sellerId || !files || files.length === 0 || photoBusy) return;
+    setPhotoBusy(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      for (const f of Array.from(files)) fd.append("photos", f);
+      const res = await fetch(`/api/admin/sellers/${sellerId}/photos`, { method: "POST", body: fd });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      await refetch();
+      onSaved?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setPhotoBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handlePhotoDelete = async (mediaId: string) => {
+    if (!sellerId || photoBusy) return;
+    if (!confirm("Delete this photo? This can't be undone.")) return;
+    setPhotoBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/sellers/${sellerId}/photos?mediaId=${mediaId}`, { method: "DELETE" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      await refetch();
+      onSaved?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const handlePhotoSetPrimary = async (mediaId: string) => {
+    if (!sellerId || photoBusy) return;
+    setPhotoBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/sellers/${sellerId}/photos`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mediaId }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      await refetch();
+      onSaved?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setPhotoBusy(false);
     }
   };
 
@@ -278,6 +357,34 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
                 />
               </Section>
 
+              <Section title="Escrow & release conditions · seen on the seller's Financials tab">
+                <Toggle
+                  label="Consignment agreement signed"
+                  checked={agreementSigned}
+                  onChange={setAgreementSigned}
+                  disabled={!data.consignment}
+                />
+                <Toggle
+                  label="V5C transfer notified to DVLA"
+                  checked={v5cNotified}
+                  onChange={setV5cNotified}
+                  disabled={!data.consignment}
+                />
+                <Toggle
+                  label="7-day buyer return window expired"
+                  checked={returnWindowExpired}
+                  onChange={setReturnWindowExpired}
+                  disabled={!data.consignment}
+                />
+                <Toggle
+                  label="Disputes open on the deal"
+                  checked={disputesOpen}
+                  onChange={setDisputesOpen}
+                  disabled={!data.consignment}
+                  warn
+                />
+              </Section>
+
               <Section title="Payout">
                 <Field label="Method">
                   <Select value={payoutMethod} onChange={setPayoutMethod} options={PAYOUT_METHODS} />
@@ -304,18 +411,110 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
                   </div>
                 ) : (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
-                    {data.photos.slice(0, 8).map((url, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={i} src={url} alt="" style={{
-                        width: "100%", aspectRatio: "1 / 1", objectFit: "cover",
-                        borderRadius: 6, border: `1px solid ${T.border}`,
-                      }} />
+                    {data.photos.map(p => (
+                      <div key={p.id} style={{ position: "relative" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.url} alt="" style={{
+                          width: "100%", aspectRatio: "1 / 1", objectFit: "cover",
+                          borderRadius: 6, border: `1px solid ${p.isPrimary ? T.teal : T.border}`,
+                        }} />
+                        {p.isPrimary && (
+                          <span style={{
+                            position: "absolute", top: 4, left: 4,
+                            background: T.tealBg, color: T.teal200,
+                            fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9,
+                            borderRadius: 4, padding: "2px 5px", border: `1px solid ${T.teal}`,
+                          }}>HERO</span>
+                        )}
+                        <div style={{ display: "flex", gap: 2, marginTop: 3 }}>
+                          {!p.isPrimary && (
+                            <button
+                              type="button"
+                              onClick={() => handlePhotoSetPrimary(p.id)}
+                              disabled={photoBusy}
+                              style={{
+                                flex: 1, fontFamily: "var(--font-body)", fontSize: 9, fontWeight: 600,
+                                background: T.bgInput, color: T.textSecondary,
+                                border: `1px solid ${T.border}`, borderRadius: 4, padding: "3px 4px",
+                                cursor: photoBusy ? "not-allowed" : "pointer", opacity: photoBusy ? 0.5 : 1,
+                              }}
+                            >Set hero</button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handlePhotoDelete(p.id)}
+                            disabled={photoBusy}
+                            style={{
+                              flex: p.isPrimary ? 1 : 0.4, fontFamily: "var(--font-body)", fontSize: 9, fontWeight: 600,
+                              background: T.bgInput, color: T.red,
+                              border: `1px solid ${T.border}`, borderRadius: 4, padding: "3px 4px",
+                              cursor: photoBusy ? "not-allowed" : "pointer", opacity: photoBusy ? 0.5 : 1,
+                            }}
+                          >×</button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
-                <div style={{ fontFamily: "var(--font-body)", fontSize: 11, color: T.textDim, marginTop: 8 }}>
-                  Upload of new photos via this drawer will land in Phase 2 — for now use the inventory edit drawer.
-                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={e => handlePhotoUpload(e.target.files)}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!data.vehicle || photoBusy}
+                  style={{
+                    marginTop: 10, width: "100%",
+                    fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 12,
+                    background: T.bgInput, color: T.teal200,
+                    border: `1px dashed ${T.teal}`, borderRadius: 8, padding: "10px",
+                    cursor: !data.vehicle || photoBusy ? "not-allowed" : "pointer",
+                    opacity: !data.vehicle || photoBusy ? 0.5 : 1,
+                  }}
+                >
+                  {photoBusy ? "Uploading…" : "+ Add photos"}
+                </button>
+              </Section>
+
+              <Section title="Buyer offers & negotiation · seen on the seller's Vehicle tab">
+                {data.offers.length === 0 ? (
+                  <div style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textDim }}>
+                    No buyer offers logged yet. Offers added in the CRM Leads workspace will appear here.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {data.offers.map(o => (
+                      <div key={o.id} style={{
+                        background: T.bgSection, border: `1px solid ${T.border}`,
+                        borderRadius: 8, padding: "8px 10px",
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 700, color: T.textPrimary }}>
+                            £{(o.offeredPriceGbp / 100).toLocaleString("en-GB")}
+                          </span>
+                          <span style={{
+                            fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 600,
+                            color: o.status === "accepted" ? T.green : o.status === "rejected" ? T.red : T.textSecondary,
+                            textTransform: "uppercase", letterSpacing: "0.06em",
+                          }}>{o.status}</span>
+                        </div>
+                        <div style={{ fontFamily: "var(--font-body)", fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                          {o.offerType.replace(/_/g, " ")} · {new Date(o.offeredAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        </div>
+                        {o.notes && (
+                          <div style={{ fontFamily: "var(--font-body)", fontSize: 11, color: T.textSecondary, marginTop: 4 }}>
+                            {o.notes}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Section>
             </>
           )}
@@ -419,6 +618,31 @@ function Select({ value, onChange, options, disabled }: {
     >
       {options.map(o => <option key={o.value} value={o.value} style={{ background: T.bgInput }}>{o.label}</option>)}
     </select>
+  );
+}
+
+function Toggle({ label, checked, onChange, disabled, warn }: {
+  label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; warn?: boolean;
+}) {
+  return (
+    <label style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      gap: 10, padding: "8px 12px",
+      background: T.bgInput, border: `1px solid ${T.border}`, borderRadius: 8,
+      cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1,
+    }}>
+      <span style={{
+        fontFamily: "var(--font-body)", fontSize: 12,
+        color: warn && checked ? T.red : T.textSecondary,
+      }}>{label}</span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+        disabled={disabled}
+        style={{ accentColor: warn ? T.red : T.teal, cursor: disabled ? "not-allowed" : "pointer" }}
+      />
+    </label>
   );
 }
 

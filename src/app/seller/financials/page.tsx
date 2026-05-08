@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  MOCK_ESCROW_CONDITIONS,
-  formatSellerGBP,
-} from "@/lib/seller/seller-mock-data";
+import { formatSellerGBP } from "@/lib/seller/seller-mock-data";
 
 const PAYOUT_LABELS: Record<string, string> = {
   faster_payments: "Faster Payments (bank transfer)",
   bacs:            "BACS",
   chaps:           "CHAPS",
 };
+
+interface EscrowCond { id: string; label: string; isMet: boolean; metAt: string | null }
 
 interface SellerData {
   vehicle: { listingPriceGbp: number | null } | null;
@@ -21,6 +20,7 @@ interface SellerData {
     transportGbp: number;
   } | null;
   seller: { payoutMethod: string | null };
+  escrow: EscrowCond[];
 }
 
 export default function SellerFinancialsPage() {
@@ -61,9 +61,9 @@ export default function SellerFinancialsPage() {
     { label: "Transport & collection", value: `−${formatSellerGBP(transportGbp)}`, color: "#F87171" },
   ];
 
-  // Escrow conditions still mock for Phase 1 — schema for these lands later.
-  const completeCount = MOCK_ESCROW_CONDITIONS.filter(c => c.status === "complete").length;
-  const totalCount = MOCK_ESCROW_CONDITIONS.length;
+  const escrow: EscrowCond[] = data?.escrow ?? [];
+  const completeCount = escrow.filter(c => c.isMet).length;
+  const totalCount = escrow.length;
 
   const payoutSpecRows = [
     { key: "Method", value: data?.seller.payoutMethod
@@ -244,13 +244,13 @@ export default function SellerFinancialsPage() {
             marginBottom: 12,
           }}
         >
-          Your money releases when all five conditions are met. Currently{" "}
+          Your money releases when all conditions are met. Currently{" "}
           {completeCount} of {totalCount} complete.
         </div>
 
-        {MOCK_ESCROW_CONDITIONS.map((cond, i) => {
-          const done = cond.status === "complete";
-          const isLast = i === MOCK_ESCROW_CONDITIONS.length - 1;
+        {escrow.map((cond, i) => {
+          const done = cond.isMet;
+          const isLast = i === escrow.length - 1;
           return (
             <div
               key={cond.id}

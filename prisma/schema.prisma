@@ -1050,6 +1050,12 @@ model Consignment {
   reconMechanicalGbp Int? @default(0) @map("recon_mechanical_gbp")
   reconDetailGbp     Int? @default(0) @map("recon_detail_gbp")
   transportGbp       Int? @default(0) @map("transport_gbp")
+  /// Pre-deal escrow / release-condition tracking shown on /seller/financials.
+  /// Admin toggles these from the SellerEditDrawer; values flow through
+  /// /api/seller/me into the seller's "what we need to release your money" list.
+  v5cNotifiedAt        DateTime? @map("v5c_notified_at")
+  returnWindowExpiresAt DateTime? @map("return_window_expires_at")
+  disputesOpen         Boolean   @default(false) @map("disputes_open")
   /// Minimum acceptable — never shown to seller or buyer
   agreedFloorPriceGbp   Int?              @map("agreed_floor_price_gbp")
   status                ConsignmentStatus @default(pending_collection)
