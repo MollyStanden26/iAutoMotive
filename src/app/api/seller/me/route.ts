@@ -4,6 +4,20 @@ import { verifySessionToken, COOKIE_NAME } from "@/lib/auth/jwt";
 
 export const dynamic = "force-dynamic";
 
+/** Friendly "X days ago" / "today" / "just now" — used in the Latest updates feed. */
+function relativeTime(d: Date): string {
+  const ms = Date.now() - d.getTime();
+  const m = Math.round(ms / 60_000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min${m === 1 ? "" : "s"} ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  const days = Math.round(h / 24);
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  const months = Math.round(days / 30);
+  return `${months} month${months === 1 ? "" : "s"} ago`;
+}
+
 /**
  * GET /api/seller/me — everything the seller portal needs to render.
  *
@@ -49,6 +63,9 @@ export async function GET(request: NextRequest) {
     let documents: { id: string; documentType: string; title: string; cdnUrl: string | null; signedAt: string | null; createdAt: string }[] = [];
     let offers: { id: string; offerType: string; offeredPriceGbp: number; status: string; offeredAt: string; respondedAt: string | null; notes: string | null }[] = [];
     let hpiClear = false;
+    let activity = { views7d: 0, saves: 0, enquiries7d: 0 };
+    let lastPriceChangeAt: string | null = null;
+    let stageHistory: { fromStage: string | null; toStage: string; changedAt: string }[] = [];
 
     if (consignment?.vehicle) {
       const media = await prisma.mediaFile.findMany({
@@ -95,6 +112,37 @@ export async function GET(request: NextRequest) {
         select: { isClear: true },
       });
       hpiClear = !!hpi?.isClear;
+
+      // Buyer-activity counts. Views/enquiries are 7-day windows; saves are
+      // a running total because wishlist saves don't expire — that matches
+      // what other marketplaces show their sellers ("12 saves").
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000);
+      const [views7d, saves, enquiries7d] = await Promise.all([
+        prisma.vehicleView.count({
+          where: { vehicleId: consignment.vehicle.id, viewedAt: { gte: sevenDaysAgo } },
+        }),
+        prisma.vehicleWishlist.count({ where: { vehicleId: consignment.vehicle.id } }),
+        prisma.buyerEnquiry.count({
+          where: { vehicleId: consignment.vehicle.id, createdAt: { gte: sevenDaysAgo } },
+        }),
+      ]);
+      activity = { views7d, saves, enquiries7d };
+
+      if (priceHistory.length > 0) {
+        lastPriceChangeAt = priceHistory[priceHistory.length - 1].changedAt;
+      }
+
+      const stageRows = await prisma.vehicleStatusHistory.findMany({
+        where: { vehicleId: consignment.vehicle.id },
+        orderBy: { changedAt: "desc" },
+        take: 10,
+        select: { fromStage: true, toStage: true, changedAt: true },
+      });
+      stageHistory = stageRows.map(s => ({
+        fromStage: s.fromStage,
+        toStage: s.toStage,
+        changedAt: s.changedAt.toISOString(),
+      }));
     }
 
     if (consignment?.leadId) {
@@ -123,6 +171,48 @@ export async function GET(request: NextRequest) {
       { id: "return_window",     label: "7-day buyer return window expired", isMet: consignment.returnWindowExpiresAt ? consignment.returnWindowExpiresAt.getTime() <= Date.now() : false, metAt: consignment.returnWindowExpiresAt?.toISOString() ?? null },
       { id: "no_disputes",       label: "No open disputes on the deal", isMet: !consignment.disputesOpen, metAt: null },
     ] : [];
+
+    // Derive a unified "Latest updates" feed: price changes, stage transitions,
+    // offers received, and the listing-went-live event. Most recent first,
+    // capped at 6 entries — enough to feel alive without scrolling pressure.
+    type Update = { id: string; dotColor: "teal" | "green" | "amber"; text: string; at: Date };
+    const updates: Update[] = [];
+    for (const h of priceHistory) {
+      const prev = h.previousPriceGbp;
+      const next = h.priceGbp;
+      const dir = prev != null && next < prev ? "reduced" : prev != null ? "raised" : null;
+      const text = dir
+        ? `Price ${dir} from £${Math.round((prev ?? 0) / 100).toLocaleString("en-GB")} to £${Math.round(next / 100).toLocaleString("en-GB")}${h.reason ? ` — ${h.reason}` : ""}`
+        : `Price set to £${Math.round(next / 100).toLocaleString("en-GB")}`;
+      updates.push({ id: `p-${h.changedAt}`, dotColor: dir === "reduced" ? "amber" : "teal", text, at: new Date(h.changedAt) });
+    }
+    for (const s of stageHistory) {
+      const label = s.toStage.replace(/_/g, " ");
+      updates.push({ id: `s-${s.changedAt}`, dotColor: "teal", text: `Stage updated to ${label}`, at: new Date(s.changedAt) });
+    }
+    for (const o of offers) {
+      updates.push({
+        id: `o-${o.id}`,
+        dotColor: o.status === "accepted" ? "green" : "teal",
+        text: `Buyer offer ${o.status}: £${Math.round(o.offeredPriceGbp / 100).toLocaleString("en-GB")}${o.notes ? ` — ${o.notes}` : ""}`,
+        at: new Date(o.offeredAt),
+      });
+    }
+    if (consignment?.listedAt) {
+      updates.push({
+        id: "listed",
+        dotColor: "green",
+        text: `Your vehicle is live on AutoTrader and the iAutoMotive storefront. ${activity.views7d} views in the last 7 days.`,
+        at: consignment.listedAt,
+      });
+    }
+    updates.sort((a, b) => b.at.getTime() - a.at.getTime());
+    const updatesPayload = updates.slice(0, 6).map(u => ({
+      id: u.id,
+      dotColor: u.dotColor,
+      text: u.text,
+      timestamp: relativeTime(u.at),
+    }));
 
     return NextResponse.json({
       seller: {
@@ -167,6 +257,9 @@ export async function GET(request: NextRequest) {
       offers,
       documents,
       escrow,
+      activity,
+      lastPriceChangeAt,
+      updates: updatesPayload,
     });
   } catch (error) {
     console.error("[GET /api/seller/me]", error);

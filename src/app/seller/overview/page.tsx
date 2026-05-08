@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  MOCK_UPDATES,
   RECON_STAGES,
   formatSellerGBP,
 } from "@/lib/seller/seller-mock-data";
@@ -52,6 +51,9 @@ interface SellerData {
     listedAt: string | null;
   } | null;
   photos: { url: string; isPrimary: boolean }[];
+  activity: { views7d: number; saves: number; enquiries7d: number };
+  lastPriceChangeAt: string | null;
+  updates: { id: string; dotColor: "teal" | "green" | "amber"; text: string; timestamp: string }[];
 }
 
 function daysSince(iso: string | null): number | null {
@@ -408,8 +410,18 @@ export default function SellerOverviewPage() {
               marginTop: 4,
             }}
           >
-            Market price &middot;{" "}
-            <span style={{ color: "#B87209" }}>Last reduced 4 days ago</span>
+            Market price{(() => {
+              if (!data.lastPriceChangeAt) return null;
+              const d = Math.max(0, Math.floor((Date.now() - new Date(data.lastPriceChangeAt).getTime()) / 86_400_000));
+              return (
+                <>
+                  {" "}&middot;{" "}
+                  <span style={{ color: "#B87209" }}>
+                    Last reduced {d === 0 ? "today" : `${d} day${d === 1 ? "" : "s"} ago`}
+                  </span>
+                </>
+              );
+            })()}
           </div>
         </div>
 
@@ -443,7 +455,7 @@ export default function SellerOverviewPage() {
               marginTop: 4,
             }}
           >
-            84 views
+            {data.activity.views7d.toLocaleString("en-GB")} view{data.activity.views7d === 1 ? "" : "s"}
           </div>
           <div
             style={{
@@ -454,7 +466,7 @@ export default function SellerOverviewPage() {
               marginTop: 4,
             }}
           >
-            12 saves &middot; 3 enquiries
+            {data.activity.saves} save{data.activity.saves === 1 ? "" : "s"} &middot; {data.activity.enquiries7d} enquir{data.activity.enquiries7d === 1 ? "y" : "ies"}
           </div>
         </div>
       </div>
@@ -496,12 +508,19 @@ export default function SellerOverviewPage() {
               color: "#94A3B8",
             }}
           >
-            Today
+            {data.updates[0]?.timestamp ?? "—"}
           </div>
         </div>
 
         {/* Update items */}
-        {MOCK_UPDATES.map((update, i) => (
+        {data.updates.length === 0 ? (
+          <div style={{
+            fontFamily: "var(--font-body)", fontSize: 13, color: "#94A3B8",
+            padding: "16px 0",
+          }}>
+            We&apos;ll post updates here as your car moves through the process.
+          </div>
+        ) : data.updates.map((update, i) => (
           <div
             key={update.id}
             style={{
@@ -511,7 +530,7 @@ export default function SellerOverviewPage() {
               paddingTop: 10,
               paddingBottom: 10,
               borderBottom:
-                i < MOCK_UPDATES.length - 1
+                i < data.updates.length - 1
                   ? "1px solid #F7F8F9"
                   : "none",
             }}
