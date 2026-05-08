@@ -171,6 +171,25 @@ export function Footer() {
           ). Registered office: 310 Beaumont House, Beaumont Road, Banbury,
           Oxfordshire, OX16 1RH, United Kingdom. Trading as iAutoMotive.
         </p>
+
+        {/* Finance / FCA disclosure — authorised representative status */}
+        <p
+          className="font-body"
+          style={{
+            fontSize: "12px",
+            fontWeight: 400,
+            color: "#8492A8",
+            maxWidth: "720px",
+            marginTop: "12px",
+            lineHeight: 1.6,
+          }}
+        >
+          iAutoMotive Technologies Limited is an authorised representative on
+          behalf of various UK finance brokers with access to over 40 different
+          lenders providing credit solutions for customers with impaired credit
+          profiles to excellent, with typical rates ranging from 8.99% APR to
+          49.99% APR representative.
+        </p>
       </div>
     </footer>
   );
