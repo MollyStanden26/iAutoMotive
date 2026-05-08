@@ -89,6 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       },
       consignment: consignment ? {
         id: consignment.id,
+        leadId: consignment.leadId,
         status: consignment.status,
         agreedListingPriceGbp: consignment.agreedListingPriceGbp,
         platformFeeGbp:        consignment.platformFeeGbp ?? 0,

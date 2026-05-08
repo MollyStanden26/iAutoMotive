@@ -41,6 +41,21 @@ const PAYOUT_METHODS = [
   { value: "chaps",            label: "CHAPS" },
 ];
 
+const OFFER_TYPES = [
+  { value: "initial",        label: "Initial offer (iAutoMotive → seller)" },
+  { value: "counter_iauto",  label: "Counter from iAutoMotive" },
+  { value: "counter_seller", label: "Counter from seller" },
+  { value: "final",          label: "Final agreed offer" },
+];
+
+const OFFER_STATUSES = [
+  { value: "pending",   label: "Pending" },
+  { value: "accepted",  label: "Accepted" },
+  { value: "rejected",  label: "Rejected" },
+  { value: "countered", label: "Countered" },
+  { value: "expired",   label: "Expired" },
+];
+
 interface SellerEditDrawerProps {
   open: boolean;
   sellerId: string | null;
@@ -64,6 +79,7 @@ interface SellerData {
   };
   consignment: {
     id: string;
+    leadId: string | null;
     status: string;
     agreedListingPriceGbp: number;
     platformFeeGbp: number;
@@ -101,6 +117,12 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
   const [savedFlash, setSavedFlash] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Add-offer form state — lives at the top so the form can reset on save.
+  const [offerBusy, setOfferBusy] = useState(false);
+  const [newOfferType, setNewOfferType] = useState("initial");
+  const [newOfferPounds, setNewOfferPounds] = useState("");
+  const [newOfferStatus, setNewOfferStatus] = useState("pending");
+  const [newOfferNotes, setNewOfferNotes] = useState("");
 
   // Edit-buffer state — populated from `data` when fetched, then submitted.
   const [stage, setStage] = useState("");
@@ -252,6 +274,41 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
       setError(err instanceof Error ? err.message : "Delete failed");
     } finally {
       setPhotoBusy(false);
+    }
+  };
+
+  const handleAddOffer = async () => {
+    if (!sellerId || offerBusy) return;
+    const pounds = Number(newOfferPounds);
+    if (!Number.isFinite(pounds) || pounds <= 0) {
+      setError("Offer amount must be a positive number");
+      return;
+    }
+    setOfferBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/sellers/${sellerId}/offers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          offerType: newOfferType,
+          offeredPriceGbp: Math.round(pounds * 100),
+          status: newOfferStatus,
+          notes: newOfferNotes.trim() || undefined,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      // Reset just the volatile fields — keep type/status so back-to-back
+      // entries (e.g. logging a chain of counter-offers) stay quick.
+      setNewOfferPounds("");
+      setNewOfferNotes("");
+      await refetch();
+      onSaved?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add offer");
+    } finally {
+      setOfferBusy(false);
     }
   };
 
@@ -484,7 +541,7 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
               <Section title="Buyer offers & negotiation · seen on the seller's Vehicle tab">
                 {data.offers.length === 0 ? (
                   <div style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textDim }}>
-                    No buyer offers logged yet. Offers added in the CRM Leads workspace will appear here.
+                    No buyer offers logged yet.
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -515,6 +572,61 @@ export function SellerEditDrawer({ open, sellerId, onClose, onSaved }: SellerEdi
                     ))}
                   </div>
                 )}
+
+                {/* Add-offer form: only available when the consignment came from
+                    a lead (current schema constraint — see /api/admin/sellers/[id]/offers). */}
+                {data.consignment?.leadId ? (
+                  <div style={{
+                    marginTop: 12, padding: "10px 12px",
+                    background: T.bgInput, border: `1px dashed ${T.border}`, borderRadius: 8,
+                  }}>
+                    <div style={{
+                      fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, letterSpacing: "0.08em",
+                      textTransform: "uppercase", color: T.textDim, marginBottom: 8,
+                    }}>+ Log a new offer</div>
+                    <Row>
+                      <Field label="Type">
+                        <Select value={newOfferType} onChange={setNewOfferType} options={OFFER_TYPES} />
+                      </Field>
+                      <Field label="Amount (£)">
+                        <Input value={newOfferPounds} onChange={setNewOfferPounds} type="number" prefix="£" placeholder="0" />
+                      </Field>
+                    </Row>
+                    <Row>
+                      <Field label="Status">
+                        <Select value={newOfferStatus} onChange={setNewOfferStatus} options={OFFER_STATUSES} />
+                      </Field>
+                      <Field label="Notes (optional)">
+                        <Input value={newOfferNotes} onChange={setNewOfferNotes} placeholder="via SMS, etc." />
+                      </Field>
+                    </Row>
+                    <button
+                      type="button"
+                      onClick={handleAddOffer}
+                      disabled={offerBusy || !newOfferPounds}
+                      style={{
+                        marginTop: 8, width: "100%",
+                        fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 12,
+                        background: T.tealBg, color: T.teal200,
+                        border: `1px solid ${T.teal}`, borderRadius: 8, padding: "8px",
+                        cursor: offerBusy || !newOfferPounds ? "not-allowed" : "pointer",
+                        opacity: offerBusy || !newOfferPounds ? 0.55 : 1,
+                      }}
+                    >
+                      {offerBusy ? "Adding…" : "Add offer"}
+                    </button>
+                  </div>
+                ) : data.consignment ? (
+                  <div style={{
+                    marginTop: 12, padding: "8px 12px",
+                    background: T.bgInput, border: `1px solid ${T.border}`, borderRadius: 8,
+                    fontFamily: "var(--font-body)", fontSize: 11, color: T.textDim,
+                  }}>
+                    This consignment was created directly without a CRM lead — manual offers
+                    can&apos;t be logged here yet. Tracked under the originating lead in the CRM
+                    workspace when one exists.
+                  </div>
+                ) : null}
               </Section>
             </>
           )}

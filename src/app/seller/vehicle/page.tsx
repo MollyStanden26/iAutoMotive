@@ -9,12 +9,17 @@ const BADGE_MAP: Record<string, { bg: string; color: string; label: string }> = 
 };
 
 const PARTY_MAP: Record<string, { bg: string; color: string; icon: string }> = {
-  initial:           { bg: '#E0FAF5', color: '#006058', icon: 'AC' },
-  counter:           { bg: '#FFF8E6', color: '#92400E', icon: 'JS' },
-  final:             { bg: '#D1FAE5', color: '#064E3B', icon: '✓' },
-  buyer_offer:       { bg: '#DBEAFE', color: '#1E40AF', icon: 'B' },
-  seller_counter:    { bg: '#FFF8E6', color: '#92400E', icon: 'JS' },
-  iautomotive_offer: { bg: '#E0FAF5', color: '#006058', icon: 'AC' },
+  initial:        { bg: '#E0FAF5', color: '#006058', icon: 'AC' },
+  counter_iauto:  { bg: '#E0FAF5', color: '#006058', icon: 'AC' },
+  counter_seller: { bg: '#FFF8E6', color: '#92400E', icon: 'JS' },
+  final:          { bg: '#D1FAE5', color: '#064E3B', icon: '✓' },
+};
+
+const OFFER_TYPE_LABEL: Record<string, string> = {
+  initial:        'Initial offer from iAutoMotive',
+  counter_iauto:  'Counter from iAutoMotive',
+  counter_seller: 'Counter from you',
+  final:          'Final agreed offer',
 };
 
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> = {
@@ -234,7 +239,7 @@ export default function SellerVehiclePage() {
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontWeight: 700, fontSize: 12, color: '#1E293B', marginBottom: 2 }}>
-                  {tcase(entry.offerType)} — {fmtGBP(entry.offeredPriceGbp)}
+                  {OFFER_TYPE_LABEL[entry.offerType] ?? tcase(entry.offerType)} — {fmtGBP(entry.offeredPriceGbp)}
                 </p>
                 {entry.notes && <p style={{ fontWeight: 400, fontSize: 12, color: '#64748B' }}>{entry.notes}</p>}
                 <p style={{ fontWeight: 400, fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
