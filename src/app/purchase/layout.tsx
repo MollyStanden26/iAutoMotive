@@ -185,8 +185,12 @@ export default function PurchaseLayout({ children }: { children: React.ReactNode
                     <span style={{ display: "block", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, color: labelColor }}>
                       {step.label}
                     </span>
-                    <span style={{ display: "block", fontFamily: "var(--font-body)", fontSize: 11, color: "#94A3B8", marginTop: 2 }}>
-                      {step.duration}
+                    <span style={{
+                      display: "block", fontFamily: "var(--font-body)", fontSize: 11,
+                      color: isComplete ? "#008C7C" : "#94A3B8", marginTop: 2,
+                      fontWeight: isComplete ? 600 : 400,
+                    }}>
+                      {isComplete ? "Complete" : step.duration}
                     </span>
                   </span>
                   <span style={{ color: "#94A3B8", fontSize: 14 }}>›</span>
