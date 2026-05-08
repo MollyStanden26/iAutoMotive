@@ -170,7 +170,6 @@ export function Footer() {
           </a>
           ). Registered office: 310 Beaumont House, Beaumont Road, Banbury,
           Oxfordshire, OX16 1RH, United Kingdom. Trading as iAutoMotive.
-          FCA authorisation pending.
         </p>
       </div>
     </footer>
