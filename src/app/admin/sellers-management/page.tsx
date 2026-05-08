@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
 import { AddSellerDrawer } from "@/components/admin/add-seller-drawer";
+import { SellerEditDrawer } from "@/components/admin/seller-edit-drawer";
 import {
   SCRAPER_HEALTH,
   ACQUISITION_KPIS,
@@ -211,6 +212,7 @@ function LeadTable({
   sortDir, setSortDir,
   selectedLeads, setSelectedLeads,
   refreshKey,
+  onOpenSeller,
 }: {
   activeFilter: FilterKey; setActiveFilter: (f: FilterKey) => void;
   searchQuery: string; setSearchQuery: (s: string) => void;
@@ -218,6 +220,8 @@ function LeadTable({
   sortDir: SortDir; setSortDir: (d: SortDir) => void;
   selectedLeads: string[]; setSelectedLeads: (ids: string[]) => void;
   refreshKey: number;
+  /** Called when an admin clicks a converted-seller row. Receives the seller's email. */
+  onOpenSeller: (email: string | null) => void;
 }) {
   const router = useRouter();
   const selectAllRef = useRef<HTMLInputElement>(null);
@@ -249,6 +253,8 @@ function LeadTable({
     status: l.rawStatus,
     aiAction: "",
     ageLabel: l.ageLabel ?? "—",
+    /** Source-lead email — only populated once the lead has been converted. */
+    email: l.email ?? null,
   })), [apiLeads]);
 
   // Filter
@@ -402,7 +408,17 @@ function LeadTable({
                 style={{ background: "transparent" }}
                 onMouseEnter={e => { e.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = T.bgHover)); }}
                 onMouseLeave={e => { e.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = "transparent")); }}
-                onClick={() => { console.log("navigate", lead.id); router.push(`/admin/sellers-management/${lead.id}`); }}
+                onClick={() => {
+                  // Converted leads ("accepted" or later) have a matching seller User
+                  // we can manage in the drawer. Pre-conversion leads still navigate
+                  // to the legacy detail page since there's no portal to manage yet.
+                  const isConverted = lead.status === "accepted" || lead.status === "converted";
+                  if (isConverted && lead.email) {
+                    onOpenSeller(lead.email);
+                  } else {
+                    router.push(`/admin/sellers-management/${lead.id}`);
+                  }
+                }}
               >
                 <td className="px-[10px] py-2 align-middle" style={{ borderBottom: idx < sorted.length - 1 ? `1px solid ${T.border2}` : "none" }}
                   onClick={e => e.stopPropagation()}
@@ -615,6 +631,25 @@ export default function AcquisitionPage() {
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [addSellerOpen, setAddSellerOpen] = useState(false);
   const [leadsRefreshKey, setLeadsRefreshKey] = useState(0);
+  const [editingSellerId, setEditingSellerId] = useState<string | null>(null);
+
+  /**
+   * Resolves a lead's email to the matching seller User id, then opens the
+   * SellerEditDrawer. /api/admin/sellers returns the full list with id+email
+   * so we lean on that instead of adding another endpoint.
+   */
+  const handleOpenSeller = async (email: string | null) => {
+    if (!email) return;
+    try {
+      const res = await fetch("/api/admin/sellers", { cache: "no-store" });
+      if (!res.ok) return;
+      const data: { sellers: { id: string; email: string }[] } = await res.json();
+      const match = data.sellers.find(s => s.email.toLowerCase() === email.toLowerCase());
+      if (match) setEditingSellerId(match.id);
+    } catch (err) {
+      console.error("[sellers-mgmt resolve seller]", err);
+    }
+  };
 
   return (
     <div className="flex min-h-screen" style={{ background: T.bgPage }}>
@@ -632,6 +667,7 @@ export default function AcquisitionPage() {
               sortDir={sortDir} setSortDir={setSortDir}
               selectedLeads={selectedLeads} setSelectedLeads={setSelectedLeads}
               refreshKey={leadsRefreshKey}
+              onOpenSeller={handleOpenSeller}
             />
             <div className="flex flex-col gap-[10px]">
               <EscalationPanel />
@@ -646,6 +682,12 @@ export default function AcquisitionPage() {
         open={addSellerOpen}
         onClose={() => setAddSellerOpen(false)}
         onCreated={() => setLeadsRefreshKey(k => k + 1)}
+      />
+      <SellerEditDrawer
+        open={editingSellerId !== null}
+        sellerId={editingSellerId}
+        onClose={() => setEditingSellerId(null)}
+        onSaved={() => setLeadsRefreshKey(k => k + 1)}
       />
     </div>
   );

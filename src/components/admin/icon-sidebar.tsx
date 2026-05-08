@@ -10,6 +10,8 @@ import {
 import { crmDashboardData } from "@/lib/admin/crm-mock-data";
 import { PAYOUT_QUEUE } from "@/lib/admin/payouts-mock-data";
 import { ACTIVE_FLAGS } from "@/lib/admin/compliance-mock-data";
+import { useCurrentUser, initialsFromName, roleLabel } from "@/lib/auth/use-current-user";
+import { hasPermission, type Permission } from "@/config/rbac";
 
 /**
  * Computes the badge count for a given admin route from live data.
@@ -38,21 +40,25 @@ const S = {
   indigo: "#0A1A2E",
 };
 
-const SIDEBAR_ITEMS = [
-  { type: "item" as const, icon: LayoutGrid, label: "Command centre", href: "/admin", exact: true },
-  { type: "item" as const, icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
-  { type: "divider" as const },
-  { type: "item" as const, icon: Phone, label: "CRM", href: "/admin/crm" },
-  { type: "item" as const, icon: Clock, label: "Sellers Mgmt", href: "/admin/sellers-management" },
-  { type: "item" as const, icon: CalendarCheck, label: "Inventory", href: "/admin/inventory" },
-  { type: "item" as const, icon: Home, label: "Deals", href: "/admin/deals" },
-  { type: "item" as const, icon: Headphones, label: "Support", href: "/support" },
-  { type: "divider" as const },
-  { type: "item" as const, icon: CreditCard, label: "Payouts", href: "/admin/payouts" },
-  { type: "item" as const, icon: Shield, label: "Compliance", href: "/admin/compliance" },
-  { type: "item" as const, icon: FileText, label: "Finance", href: "/admin/finance" },
-  { type: "divider" as const },
-  { type: "item" as const, icon: Users, label: "Staff", href: "/admin/staff" },
+type SidebarItem =
+  | { type: "item"; icon: typeof LayoutGrid; label: string; href: string; exact?: boolean; permission: Permission }
+  | { type: "divider" };
+
+const SIDEBAR_ITEMS: SidebarItem[] = [
+  { type: "item", icon: LayoutGrid,    label: "Command centre", href: "/admin", exact: true, permission: "command-centre" },
+  { type: "item", icon: BarChart3,     label: "Analytics",      href: "/admin/analytics",          permission: "analytics" },
+  { type: "divider" },
+  { type: "item", icon: Phone,         label: "CRM",            href: "/admin/crm",                permission: "crm" },
+  { type: "item", icon: Clock,         label: "Sellers Mgmt",   href: "/admin/sellers-management", permission: "sellers-management" },
+  { type: "item", icon: CalendarCheck, label: "Inventory",      href: "/admin/inventory",          permission: "inventory" },
+  { type: "item", icon: Home,          label: "Deals",          href: "/admin/deals",              permission: "deals" },
+  { type: "item", icon: Headphones,    label: "Support",        href: "/support",                  permission: "support" },
+  { type: "divider" },
+  { type: "item", icon: CreditCard,    label: "Payouts",        href: "/admin/payouts",            permission: "payouts" },
+  { type: "item", icon: Shield,        label: "Compliance",     href: "/admin/compliance",         permission: "compliance" },
+  { type: "item", icon: FileText,      label: "Finance",        href: "/admin/finance",            permission: "finance-reports" },
+  { type: "divider" },
+  { type: "item", icon: Users,         label: "Staff",          href: "/admin/staff",              permission: "staff" },
 ];
 
 function isActive(pathname: string, href: string, exact?: boolean): boolean {
@@ -64,9 +70,29 @@ export function IconSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
+  const { user } = useCurrentUser();
   const settingsActive = pathname.startsWith("/admin/settings");
   const collapsedW = 56;
   const expandedW = 210;
+
+  // Hide nav entries the current role isn't allowed to see. Dividers are
+  // pruned alongside their cluster so the sidebar doesn't end up with two
+  // dividers in a row.
+  const visibleItems = (() => {
+    if (!user) return SIDEBAR_ITEMS; // before auth resolves, show full list to avoid layout flicker
+    const filtered: SidebarItem[] = [];
+    for (const item of SIDEBAR_ITEMS) {
+      if (item.type === "divider") {
+        if (filtered.length > 0 && filtered[filtered.length - 1].type !== "divider") {
+          filtered.push(item);
+        }
+        continue;
+      }
+      if (hasPermission(user.role, item.permission)) filtered.push(item);
+    }
+    while (filtered.length > 0 && filtered[filtered.length - 1].type === "divider") filtered.pop();
+    return filtered;
+  })();
 
   return (
     <aside
@@ -109,18 +135,18 @@ export function IconSidebar() {
       </div>
 
       {/* Nav items */}
-      {SIDEBAR_ITEMS.map((item, i) => {
+      {visibleItems.map((item, i) => {
         if (item.type === "divider") {
           return (
             <div key={`d${i}`} style={{ height: 1, background: S.border, margin: "4px 12px" }} />
           );
         }
-        const Icon = item.icon!;
-        const active = isActive(pathname, item.href!, item.exact);
+        const Icon = item.icon;
+        const active = isActive(pathname, item.href, item.exact);
         return (
           <button
             key={item.href}
-            onClick={() => router.push(item.href!)}
+            onClick={() => router.push(item.href)}
             className="relative flex items-center gap-2.5 transition-colors"
             style={{
               padding: "0 8px", height: 40, borderRadius: 10,
@@ -149,7 +175,7 @@ export function IconSidebar() {
             {/* Badge dot (collapsed) / Badge count (expanded). Computed live —
                 only renders when the page actually has overdue/flagged items. */}
             {(() => {
-              const badgeCount = getBadgeCount(item.href!);
+              const badgeCount = getBadgeCount(item.href);
               if (badgeCount === 0) return null;
               return !expanded ? (
                 <span
@@ -203,7 +229,7 @@ export function IconSidebar() {
         </span>
       </button>
 
-      {/* Avatar */}
+      {/* Avatar — pulled live from /api/auth/me */}
       <div className="flex items-center gap-2.5" style={{ padding: "0 8px", marginTop: 8 }}>
         <Link
           href="/admin"
@@ -213,8 +239,9 @@ export function IconSidebar() {
             background: S.greenBg, border: `1px solid ${S.green}`,
             fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: S.green,
           }}
+          title={user?.name ?? undefined}
         >
-          MA
+          {user ? initialsFromName(user.name) : "··"}
         </Link>
         <div
           style={{
@@ -222,8 +249,12 @@ export function IconSidebar() {
             opacity: expanded ? 1 : 0, transition: "opacity 150ms ease",
           }}
         >
-          <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: S.teal200 }}>Muhammad A.</div>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: 9, color: S.textDim }}>Super Admin</div>
+          <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: S.teal200 }}>
+            {user?.name ?? "Not signed in"}
+          </div>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: 9, color: S.textDim }}>
+            {roleLabel(user?.role ?? null)}
+          </div>
         </div>
       </div>
     </aside>

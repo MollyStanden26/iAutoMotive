@@ -1,20 +1,76 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   MOCK_DOCUMENTS,
   MOCK_LOT_MANAGER,
-  MOCK_MESSAGES,
-  type SellerMessage,
 } from "@/lib/seller/seller-mock-data";
+
+const POLL_INTERVAL_MS = 2_000;
+const MAX_BODY_LEN = 4000;
+
+interface ChatMessage {
+  id: string;
+  author: "seller" | "support";
+  authorName: string;
+  body: string;
+  createdAt: string;
+}
 
 export default function SellerDocumentsPage() {
   const availableDocs = MOCK_DOCUMENTS.filter((d) => !d.pending);
   const pendingDocs = MOCK_DOCUMENTS.filter((d) => d.pending);
 
-  const [messages, setMessages] = useState<SellerMessage[]>(MOCK_MESSAGES);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [sending, setSending] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  // Tracks the latest message timestamp so the poll only asks for "new since X".
+  const sinceRef = useRef<string | null>(null);
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      const url = sinceRef.current
+        ? `/api/seller/support?since=${encodeURIComponent(sinceRef.current)}`
+        : "/api/seller/support";
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.status === 401) {
+        setAuthError("Sign in to your seller account to chat with support.");
+        return;
+      }
+      if (!res.ok) return;
+      const data: { messages: ChatMessage[] } = await res.json();
+      if (data.messages.length === 0) return;
+      setMessages(prev => {
+        // De-dup by id — server can return overlapping rows on the first call.
+        const seen = new Set(prev.map(m => m.id));
+        const merged = [...prev];
+        for (const m of data.messages) if (!seen.has(m.id)) merged.push(m);
+        return merged;
+      });
+      sinceRef.current = data.messages[data.messages.length - 1].createdAt;
+      setAuthError(null);
+    } catch (err) {
+      // Network blip — next tick will retry; don't surface intermittent errors.
+      console.error("[seller chat poll]", err);
+    }
+  }, []);
+
+  // Initial fetch + 2s polling.
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    (async () => {
+      await fetchMessages();
+      if (cancelled) return;
+      timer = setInterval(fetchMessages, POLL_INTERVAL_MS);
+    })();
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [fetchMessages]);
 
   // Auto-scroll when messages change
   useEffect(() => {
@@ -24,19 +80,31 @@ export default function SellerDocumentsPage() {
     });
   }, [messages]);
 
-  // TODO: Consider auto-scrolling to the messaging panel when arriving via Support button.
-  // Use URL hash #messaging and document.getElementById('messaging').scrollIntoView() on mount.
-
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
-    const newMsg: SellerMessage = {
-      id: Date.now().toString(),
-      role: "me",
-      text: inputValue.trim(),
-    };
-    console.log("send message", inputValue);
-    setMessages((prev) => [...prev, newMsg]);
-    setInputValue("");
+  const handleSend = async () => {
+    const body = inputValue.trim();
+    if (!body || sending) return;
+    if (body.length > MAX_BODY_LEN) return;
+    setSending(true);
+    try {
+      const res = await fetch("/api/seller/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body }),
+      });
+      if (res.status === 401) {
+        setAuthError("Sign in to your seller account to chat with support.");
+        return;
+      }
+      if (!res.ok) return;
+      const data: { message: ChatMessage } = await res.json();
+      setMessages(prev => [...prev, data.message]);
+      sinceRef.current = data.message.createdAt;
+      setInputValue("");
+    } catch (err) {
+      console.error("[seller chat send]", err);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -340,9 +408,35 @@ export default function SellerDocumentsPage() {
             gap: "8px",
           }}
         >
+          {authError && messages.length === 0 && (
+            <div
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                color: "#94A3B8",
+                textAlign: "center",
+                padding: "24px 0",
+              }}
+            >
+              {authError}
+            </div>
+          )}
+          {!authError && messages.length === 0 && (
+            <div
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                color: "#94A3B8",
+                textAlign: "center",
+                padding: "24px 0",
+              }}
+            >
+              Send a message and our support team will reply here in real-time.
+            </div>
+          )}
           {messages.map((msg, i) => {
-            const showLabel = msg.role !== messages[i - 1]?.role;
-            const isMe = msg.role === "me";
+            const showLabel = msg.author !== messages[i - 1]?.author;
+            const isMe = msg.author === "seller";
 
             return (
               <div key={msg.id}>
@@ -357,7 +451,7 @@ export default function SellerDocumentsPage() {
                       textAlign: isMe ? "right" : "left",
                     }}
                   >
-                    {isMe ? "You" : msg.senderLabel || "Support"}
+                    {isMe ? "You" : msg.authorName || "Support"}
                   </div>
                 )}
                 <div
@@ -374,9 +468,10 @@ export default function SellerDocumentsPage() {
                     lineHeight: "1.625",
                     maxWidth: "85%",
                     marginLeft: isMe ? "auto" : undefined,
+                    whiteSpace: "pre-wrap",
                   }}
                 >
-                  {msg.text}
+                  {msg.body}
                 </div>
               </div>
             );
@@ -421,6 +516,7 @@ export default function SellerDocumentsPage() {
           />
           <button
             onClick={handleSend}
+            disabled={sending || !inputValue.trim()}
             style={{
               background: "#008C7C",
               color: "#FFFFFF",
@@ -429,11 +525,12 @@ export default function SellerDocumentsPage() {
               fontFamily: "var(--font-body)",
               fontWeight: 700,
               fontSize: "12px",
-              cursor: "pointer",
+              cursor: sending || !inputValue.trim() ? "not-allowed" : "pointer",
               border: "none",
+              opacity: sending || !inputValue.trim() ? 0.55 : 1,
             }}
           >
-            Send
+            {sending ? "Sending…" : "Send"}
           </button>
         </div>
       </div>

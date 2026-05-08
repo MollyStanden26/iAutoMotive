@@ -1,40 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  MOCK_PAYOUT,
   MOCK_ESCROW_CONDITIONS,
   formatSellerGBP,
 } from "@/lib/seller/seller-mock-data";
 
+const PAYOUT_LABELS: Record<string, string> = {
+  faster_payments: "Faster Payments (bank transfer)",
+  bacs:            "BACS",
+  chaps:           "CHAPS",
+};
+
+interface SellerData {
+  vehicle: { listingPriceGbp: number | null } | null;
+  consignment: {
+    platformFeeGbp: number;
+    reconMechanicalGbp: number;
+    reconDetailGbp: number;
+    transportGbp: number;
+  } | null;
+  seller: { payoutMethod: string | null };
+}
+
 export default function SellerFinancialsPage() {
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(true);
+  const [data, setData] = useState<SellerData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const p = MOCK_PAYOUT;
-  const netDerived =
-    p.listingPriceGbp -
-    p.platformFeeGbp -
-    p.reconMechanicalGbp -
-    p.reconDetailGbp -
-    p.transportGbp;
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/seller/me", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!cancelled && d) setData(d); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) {
+    return <div style={{ padding: 24, fontFamily: "var(--font-body)", color: "#94A3B8" }}>Loading…</div>;
+  }
+
+  // All values from API are in pence; the display helper formatSellerGBP
+  // expects pounds, so we divide by 100 at every boundary.
+  const listingPence = data?.vehicle?.listingPriceGbp ?? 0;
+  const c = data?.consignment ?? { platformFeeGbp: 0, reconMechanicalGbp: 0, reconDetailGbp: 0, transportGbp: 0 };
+  const listingGbp   = Math.round(listingPence / 100);
+  const platformGbp  = Math.round(c.platformFeeGbp / 100);
+  const mechGbp      = Math.round(c.reconMechanicalGbp / 100);
+  const detailGbp    = Math.round(c.reconDetailGbp / 100);
+  const transportGbp = Math.round(c.transportGbp / 100);
+  const netDerived = listingGbp - platformGbp - mechGbp - detailGbp - transportGbp;
 
   const breakdownRows = [
-    { label: "Sale price (current listing)", value: formatSellerGBP(p.listingPriceGbp), color: "#1E293B" },
-    { label: "iAutoMotive platform fee", value: `−${formatSellerGBP(p.platformFeeGbp)}`, color: "#F87171" },
-    { label: "Reconditioning — mechanical", value: `−${formatSellerGBP(p.reconMechanicalGbp)}`, color: "#F87171" },
-    { label: "Reconditioning — detail & valet", value: `−${formatSellerGBP(p.reconDetailGbp)}`, color: "#F87171" },
-    { label: "Transport & collection", value: `−${formatSellerGBP(p.transportGbp)}`, color: "#F87171" },
+    { label: "Sale price (current listing)", value: formatSellerGBP(listingGbp), color: "#1E293B" },
+    { label: "iAutoMotive platform fee", value: `−${formatSellerGBP(platformGbp)}`, color: "#F87171" },
+    { label: "Reconditioning — mechanical", value: `−${formatSellerGBP(mechGbp)}`, color: "#F87171" },
+    { label: "Reconditioning — detail & valet", value: `−${formatSellerGBP(detailGbp)}`, color: "#F87171" },
+    { label: "Transport & collection", value: `−${formatSellerGBP(transportGbp)}`, color: "#F87171" },
   ];
 
-  const completeCount = MOCK_ESCROW_CONDITIONS.filter(
-    (c) => c.status === "complete"
-  ).length;
+  // Escrow conditions still mock for Phase 1 — schema for these lands later.
+  const completeCount = MOCK_ESCROW_CONDITIONS.filter(c => c.status === "complete").length;
   const totalCount = MOCK_ESCROW_CONDITIONS.length;
 
   const payoutSpecRows = [
-    { key: "Method", value: "Faster Payments (bank transfer)" },
-    { key: "Account ending", value: "••••3721" },
-    { key: "Name on account", value: "J. Smith" },
+    { key: "Method", value: data?.seller.payoutMethod
+      ? (PAYOUT_LABELS[data.seller.payoutMethod] ?? data.seller.payoutMethod)
+      : "Not set yet — your sales rep will configure this" },
     { key: "Expected timing", value: "Within 24 hours of release" },
   ];
 
@@ -72,7 +106,7 @@ export default function SellerFinancialsPage() {
             letterSpacing: "-0.025em",
           }}
         >
-          {formatSellerGBP(MOCK_PAYOUT.netPayoutGbp)}
+          {formatSellerGBP(netDerived)}
         </div>
         <div
           style={{
@@ -82,7 +116,7 @@ export default function SellerFinancialsPage() {
             color: "#92400E",
           }}
         >
-          Based on current listing price of £21,200 — updates automatically
+          Based on current listing price of {formatSellerGBP(listingGbp)} — updates automatically
         </div>
 
         <div

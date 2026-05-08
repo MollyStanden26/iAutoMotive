@@ -1,6 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
-  MOCK_VEHICLE,
-  MOCK_PAYOUT,
   MOCK_UPDATES,
   RECON_STAGES,
   formatSellerGBP,
@@ -12,10 +13,100 @@ const DOT_COLORS: Record<string, string> = {
   amber: "#F5A623",
 };
 
+/** DB stage → seller-facing 7-step display index. */
+const STAGE_TO_DISPLAY_INDEX: Record<string, number> = {
+  offer_accepted: 0,
+  collected: 1,
+  inspecting: 2,
+  in_mechanical: 3,
+  in_body_paint: 3,
+  in_detail: 3,
+  in_photography: 3,
+  listing_ready: 3,
+  live: 4,
+  sale_agreed: 5,
+  sold: 6,
+  returned: 4,
+  withdrawn: 4,
+};
+
+interface SellerData {
+  vehicle: {
+    year: number;
+    make: string;
+    model: string;
+    trim: string | null;
+    registration: string;
+    mileageAtIntake: number;
+    exteriorColour: string | null;
+    transmission: string;
+    currentStage: string;
+    listingPriceGbp: number | null;
+  } | null;
+  consignment: {
+    status: string;
+    platformFeeGbp: number;
+    reconMechanicalGbp: number;
+    reconDetailGbp: number;
+    transportGbp: number;
+    listedAt: string | null;
+  } | null;
+  photos: { url: string; isPrimary: boolean }[];
+}
+
+function daysSince(iso: string | null): number | null {
+  if (!iso) return null;
+  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+}
+
 export default function SellerOverviewPage() {
-  const activeIndex = RECON_STAGES.findIndex(
-    (s) => s.key === MOCK_VEHICLE.currentStage
-  );
+  const [data, setData] = useState<SellerData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [unauthorized, setUnauthorized] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/seller/me", { cache: "no-store" })
+      .then(r => {
+        if (r.status === 401 || r.status === 403) { setUnauthorized(true); return null; }
+        return r.ok ? r.json() : null;
+      })
+      .then(d => { if (!cancelled && d) setData(d); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#F7F8F9", padding: 24, fontFamily: "var(--font-body)", color: "#94A3B8" }}>
+        Loading your portal…
+      </div>
+    );
+  }
+  if (unauthorized) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#F7F8F9", padding: 24, fontFamily: "var(--font-body)", color: "#1E293B" }}>
+        Please sign in to your seller account to view this page.
+      </div>
+    );
+  }
+  if (!data?.vehicle || !data?.consignment) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#F7F8F9", padding: 24, fontFamily: "var(--font-body)", color: "#1E293B" }}>
+        We don&apos;t have a vehicle linked to your account yet. Your sales rep will set this up shortly.
+      </div>
+    );
+  }
+
+  const { vehicle, consignment, photos } = data;
+  const activeIndex = STAGE_TO_DISPLAY_INDEX[vehicle.currentStage] ?? 0;
+  const listingPence = vehicle.listingPriceGbp ?? 0;
+  const totalCostsPence = consignment.platformFeeGbp + consignment.reconMechanicalGbp + consignment.reconDetailGbp + consignment.transportGbp;
+  const netPayoutGbp = Math.max(0, Math.round((listingPence - totalCostsPence) / 100));
+  const listingPriceGbp = Math.round(listingPence / 100);
+  const listedDays = daysSince(consignment.listedAt);
+  const heroPhoto = photos.find(p => p.isPrimary)?.url ?? photos[0]?.url ?? null;
 
   return (
     <div
@@ -53,18 +144,23 @@ export default function SellerOverviewPage() {
             flexShrink: 0,
           }}
         >
-          <span
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: 10,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              color: "#94A3B8",
-              letterSpacing: "0.05em",
-            }}
-          >
-            PHOTO
-          </span>
+          {heroPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={heroPhoto} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 12 }} />
+          ) : (
+            <span
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 10,
+                fontWeight: 600,
+                textTransform: "uppercase",
+                color: "#94A3B8",
+                letterSpacing: "0.05em",
+              }}
+            >
+              PHOTO
+            </span>
+          )}
         </div>
 
         {/* Middle info */}
@@ -78,8 +174,7 @@ export default function SellerOverviewPage() {
               lineHeight: 1.25,
             }}
           >
-            {MOCK_VEHICLE.year} {MOCK_VEHICLE.make} {MOCK_VEHICLE.model}{" "}
-            {MOCK_VEHICLE.trim}
+            {vehicle.year} {vehicle.make} {vehicle.model}{vehicle.trim ? ` ${vehicle.trim}` : ""}
           </div>
           <div
             style={{
@@ -90,9 +185,10 @@ export default function SellerOverviewPage() {
               marginTop: 2,
             }}
           >
-            {MOCK_VEHICLE.registration} &middot;{" "}
-            {MOCK_VEHICLE.mileage.toLocaleString("en-GB")} miles &middot;{" "}
-            {MOCK_VEHICLE.colour} &middot; {MOCK_VEHICLE.gearbox}
+            {vehicle.registration} &middot;{" "}
+            {vehicle.mileageAtIntake.toLocaleString("en-GB")} miles
+            {vehicle.exteriorColour ? ` · ${vehicle.exteriorColour}` : ""}
+            {vehicle.transmission ? ` · ${vehicle.transmission.replace("_", " ")}` : ""}
           </div>
           <div
             style={{
@@ -118,7 +214,8 @@ export default function SellerOverviewPage() {
                 flexShrink: 0,
               }}
             />
-            Front-line live &middot; Listed 6 days ago
+            {consignment.status.replace(/_/g, " ")}
+            {listedDays !== null ? ` · Listed ${listedDays} day${listedDays === 1 ? "" : "s"} ago` : ""}
           </div>
         </div>
 
@@ -146,7 +243,7 @@ export default function SellerOverviewPage() {
               lineHeight: 1.1,
             }}
           >
-            {formatSellerGBP(MOCK_PAYOUT.netPayoutGbp)}
+            {formatSellerGBP(netPayoutGbp)}
           </div>
           <div
             style={{
@@ -300,7 +397,7 @@ export default function SellerOverviewPage() {
               marginTop: 4,
             }}
           >
-            {formatSellerGBP(21200)}
+            {formatSellerGBP(listingPriceGbp)}
           </div>
           <div
             style={{

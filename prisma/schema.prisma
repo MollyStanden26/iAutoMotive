@@ -545,6 +545,9 @@ model User {
   auditLogs        AuditLog[]  @relation("AuditChangedBy")
   apiKeys          ApiKey[]    @relation("ApiKeyOwner")
 
+  // Live seller↔support chat (one conversation per seller)
+  supportConversation SupportConversation? @relation("SellerSupportConversation")
+
   @@map("users")
 }
 
@@ -1041,6 +1044,12 @@ model Consignment {
   lotId                 String            @map("lot_id") @db.ObjectId
   /// Agreed retail listing price in pence
   agreedListingPriceGbp Int               @map("agreed_listing_price_gbp")
+  /// Cost breakdown shown on the seller's Financials tab. All values in pence.
+  /// Editable by admin/support and read by /api/seller/me.
+  platformFeeGbp     Int? @default(0) @map("platform_fee_gbp")
+  reconMechanicalGbp Int? @default(0) @map("recon_mechanical_gbp")
+  reconDetailGbp     Int? @default(0) @map("recon_detail_gbp")
+  transportGbp       Int? @default(0) @map("transport_gbp")
   /// Minimum acceptable — never shown to seller or buyer
   agreedFloorPriceGbp   Int?              @map("agreed_floor_price_gbp")
   status                ConsignmentStatus @default(pending_collection)
@@ -1788,4 +1797,44 @@ model CommunicationOptOut {
 
   @@index([phoneNumber])
   @@map("communication_opt_outs")
+}
+
+/// Live chat thread between a seller and the support team. Exactly one
+/// conversation per seller — both sides poll the messages list for
+/// near-realtime delivery.
+enum SupportMessageAuthor {
+  seller
+  support
+}
+
+model SupportConversation {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  sellerId          String    @unique @map("seller_id") @db.ObjectId
+  /// Used for the seller's "unread" badge — count of support messages newer than this.
+  sellerLastSeenAt  DateTime? @map("seller_last_seen_at")
+  /// Used for the support agent's "unread" badge — count of seller messages newer than this.
+  supportLastSeenAt DateTime? @map("support_last_seen_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  seller            User                @relation("SellerSupportConversation", fields: [sellerId], references: [id])
+  messages          SupportMessage[]    @relation("ConversationMessages")
+
+  @@map("support_conversations")
+}
+
+model SupportMessage {
+  id              String                @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId  String                @map("conversation_id") @db.ObjectId
+  author          SupportMessageAuthor
+  /// Snapshot of the sender's display name at send time. Stable even if the
+  /// underlying user record is later renamed.
+  authorName      String                @map("author_name")
+  body            String
+  createdAt       DateTime              @default(now()) @map("created_at")
+
+  conversation    SupportConversation   @relation("ConversationMessages", fields: [conversationId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@map("support_messages")
 }

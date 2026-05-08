@@ -92,7 +92,7 @@ export const COACHING_FLAGS: CoachingFlag[] = [
 
 /* ── Access management (5 rows) ── */
 export const ACCESS_ROWS: AccessRow[] = [
-  { staffId: 's00', name: 'Muhammad A.', role: 'Super Admin', lots: 'All lots',   inventory: 'Full',       deals: 'Full',       finance: 'Full', payouts: 'Full', admin: 'Full' },
+  { staffId: 's00', name: 'Molly S.', role: 'Super Admin', lots: 'All lots',   inventory: 'Full',       deals: 'Full',       finance: 'Full', payouts: 'Full', admin: 'Full' },
   { staffId: 's04', name: 'Tom B.',      role: 'Lot Manager', lots: 'Lot 1 only', inventory: 'Read/write', deals: 'View',       finance: '—',    payouts: '—',    admin: '—'    },
   { staffId: 's01', name: 'Sarah K.',    role: 'Sales',       lots: 'Lot 1, 2',   inventory: 'View',       deals: 'Read/write', finance: '—',    payouts: '—',    admin: '—'    },
   { staffId: 's10', name: 'Ahmed R.',    role: 'Finance',     lots: 'All lots',   inventory: '—',          deals: 'Read/write', finance: 'Full', payouts: 'Full', admin: '—'    },

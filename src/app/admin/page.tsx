@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { Zap } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { useCurrentUser, roleLabel } from "@/lib/auth/use-current-user";
 
 /* ================================================================== */
 /*  TOPBAR                                                             */
@@ -16,6 +17,7 @@ import { IconSidebar } from "@/components/admin/icon-sidebar";
 
 function Topbar() {
   const [time, setTime] = useState("");
+  const { user } = useCurrentUser();
   useEffect(() => {
     const fmt = () => {
       const d = new Date();
@@ -33,7 +35,9 @@ function Topbar() {
       <h1 className="text-[17px] font-extrabold text-[#E2E8F4]" style={{ fontFamily: "var(--font-heading)" }}>
         Command centre
       </h1>
-      <span className="text-[13px] text-[#94A3BB]">· Super Admin</span>
+      <span className="text-[13px] text-[#94A3BB]">
+        {user ? `· ${user.name} · ${roleLabel(user.role)}` : ""}
+      </span>
 
       <div className="flex items-center gap-1.5 ml-6 rounded-full px-2.5 py-1" style={{ background: "#0D2010" }}>
         <span className="w-1.5 h-1.5 rounded-full bg-[#34D399] animate-pulse" />
