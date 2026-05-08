@@ -869,6 +869,10 @@ model MediaFile {
   cdnUrl        String          @map("cdn_url")
   /// R2 object key — used for deletion. Never expose publicly.
   storageKey    String          @map("storage_key")
+  /// Snapshot of the original raw upload before any background-replacement
+  /// pass. Set by /api/admin/photos/replace-background; lets the photo-
+  /// editor page revert a processed shot back to the raw frame.
+  originalCdnUrl String?        @map("original_cdn_url")
   mimeType      String?         @map("mime_type")
   fileSizeBytes Int?            @map("file_size_bytes")
   widthPx       Int?            @map("width_px")

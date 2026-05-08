@@ -12,6 +12,7 @@ export type Permission =
   | "crm"
   | "sellers-management"
   | "inventory"
+  | "photo-editor"
   | "deals"
   | "support"
   | "payouts"
@@ -22,10 +23,10 @@ export type Permission =
 
 export const RBAC_MATRIX: Record<NonNullable<AppRole>, readonly (Permission | "*")[]> = {
   "super-admin":  ["*"],
-  "site-manager": ["command-centre", "inventory", "support", "settings"],
+  "site-manager": ["command-centre", "inventory", "photo-editor", "support", "settings"],
   finance:        ["command-centre", "analytics", "deals", "payouts", "finance-reports", "settings"],
   sales:          ["command-centre", "crm", "sellers-management", "deals", "support", "settings"],
-  "recon-tech":   ["inventory", "settings"],
+  "recon-tech":   ["inventory", "photo-editor", "settings"],
   compliance:     ["command-centre", "deals", "compliance", "settings"],
   "read-only":    ["command-centre", "sellers-management", "inventory", "deals", "compliance", "settings"],
   // Sellers/buyers never see the admin shell — kept empty as a guard.

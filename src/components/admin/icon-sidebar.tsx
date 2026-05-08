@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutGrid, BarChart3, Phone, Clock, CalendarCheck, Home,
-  CreditCard, Shield, FileText, Users, Settings, Headphones,
+  CreditCard, Shield, FileText, Users, Settings, Headphones, Image as ImageIcon,
 } from "lucide-react";
 import { crmDashboardData } from "@/lib/admin/crm-mock-data";
 import { PAYOUT_QUEUE } from "@/lib/admin/payouts-mock-data";
@@ -51,6 +51,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { type: "item", icon: Phone,         label: "CRM",            href: "/admin/crm",                permission: "crm" },
   { type: "item", icon: Clock,         label: "Sellers Mgmt",   href: "/admin/sellers-management", permission: "sellers-management" },
   { type: "item", icon: CalendarCheck, label: "Inventory",      href: "/admin/inventory",          permission: "inventory" },
+  { type: "item", icon: ImageIcon,     label: "Photo editor",   href: "/admin/photo-editor",       permission: "photo-editor" },
   { type: "item", icon: Home,          label: "Deals",          href: "/admin/deals",              permission: "deals" },
   { type: "item", icon: Headphones,    label: "Support",        href: "/support",                  permission: "support" },
   { type: "divider" },
