@@ -25,6 +25,15 @@ const STAFF_ROLES: UserRole[] = [
   "read-only",
 ];
 
+/** Roles allowed to use the /support portal. Mirrors the "support" permission
+ *  in src/config/rbac.ts — kept inline here because middleware runs on the
+ *  edge and can't import via @/ aliases reliably. */
+const SUPPORT_ROLES: UserRole[] = [
+  "super-admin",
+  "site-manager",
+  "sales",
+];
+
 const ROLE_HOME_ROUTE: Record<UserRole, string> = {
   "super-admin": "/admin",
   "site-manager": "/admin",
@@ -90,6 +99,8 @@ export async function middleware(request: NextRequest) {
   // --- Protected routes: require authentication ---
   const protectedPrefixes = [
     "/admin",
+    "/seller",
+    "/support",
     "/portal",
     "/dealer",
     "/account",
@@ -115,7 +126,25 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // /portal → must be seller (or super-admin)
+  // /seller → must be seller (or super-admin for QA / impersonation)
+  if (pathname.startsWith("/seller")) {
+    if (user.role !== "seller" && user.role !== "super-admin") {
+      return NextResponse.redirect(
+        new URL(ROLE_HOME_ROUTE[user.role], request.url)
+      );
+    }
+  }
+
+  // /support → restricted subset of staff (super-admin, site-manager, sales)
+  if (pathname.startsWith("/support")) {
+    if (!SUPPORT_ROLES.includes(user.role)) {
+      return NextResponse.redirect(
+        new URL(ROLE_HOME_ROUTE[user.role], request.url)
+      );
+    }
+  }
+
+  // /portal → legacy alias kept as a no-op redirect to the seller portal
   if (pathname.startsWith("/portal")) {
     if (user.role !== "seller" && user.role !== "super-admin") {
       return NextResponse.redirect(
@@ -148,6 +177,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/admin/:path*",
+    "/seller/:path*",
+    "/support/:path*",
     "/portal/:path*",
     "/dealer/:path*",
     "/account/:path*",
