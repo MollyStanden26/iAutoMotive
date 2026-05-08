@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { requireStaff } from "@/lib/auth/require-role";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,9 @@ export const dynamic = "force-dynamic";
  * For each row we attach the last message preview + the support-side unread
  * count so the inbox can render the "X unread" dot without a second fetch.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
   try {
     const conversations = await prisma.supportConversation.findMany({
       orderBy: { updatedAt: "desc" },

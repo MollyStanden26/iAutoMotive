@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { requireStaff } from "@/lib/auth/require-role";
 
 const FUEL_TYPES   = ["petrol", "diesel", "hybrid", "plugin_hybrid", "electric", "mild_hybrid"] as const;
 const TRANSMISSIONS = ["manual", "automatic", "semi_automatic", "cvt"] as const;
@@ -16,7 +17,9 @@ function isAllowed<T extends readonly string[]>(value: unknown, allowed: T): val
   return typeof value === "string" && (allowed as readonly string[]).includes(value);
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
   try {
     const v = await prisma.vehicle.findUnique({
       where: { id: params.id },
@@ -70,6 +73,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
   try {
     const existing = await prisma.vehicle.findUnique({ where: { id: params.id } });
     if (!existing) return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });

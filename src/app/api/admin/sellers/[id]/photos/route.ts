@@ -3,6 +3,7 @@ import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { requireStaff } from "@/lib/auth/require-role";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ export const dynamic = "force-dynamic";
  * Multipart body: photos[] (one or many files).
  */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
   try {
     const user = await prisma.user.findUnique({
       where: { id: params.id },
@@ -90,6 +93,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
  * marked.
  */
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
   try {
     const mediaId = req.nextUrl.searchParams.get("mediaId");
     if (!mediaId) return NextResponse.json({ error: "mediaId required" }, { status: 400 });
@@ -146,6 +151,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
  * { mediaId }. Clears `isPrimary` from all other photos on the same vehicle.
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
   try {
     const body = await req.json().catch(() => ({}));
     const mediaId = typeof body.mediaId === "string" ? body.mediaId : null;

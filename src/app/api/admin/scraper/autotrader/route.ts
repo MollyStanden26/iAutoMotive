@@ -5,6 +5,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { scrapeAutotraderListing, type ScrapedListing } from "@/lib/scrapers/autotrader";
+import { requireStaff } from "@/lib/auth/require-role";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -315,6 +316,8 @@ interface PerUrlResult {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const body = await request.json();
     const urls: unknown = body?.urls;

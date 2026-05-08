@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { requireStaff } from "@/lib/auth/require-role";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,8 @@ function shape(messages: { id: string; author: string; authorName: string; body:
  * as caught up on every read.
  */
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const conv = await prisma.supportConversation.findUnique({ where: { id: params.id } });
     if (!conv) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
@@ -57,6 +60,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 /** POST — sends a support agent reply. Body: `{ body, authorName? }`. */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const conv = await prisma.supportConversation.findUnique({ where: { id: params.id } });
     if (!conv) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });

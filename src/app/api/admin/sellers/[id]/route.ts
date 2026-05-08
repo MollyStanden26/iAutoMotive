@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
+import { requireStaff } from "@/lib/auth/require-role";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,9 @@ const PAYOUT_METHODS = ["faster_payments", "bacs", "chaps"] as const;
  *
  * `[id]` is the User id (matches what /api/admin/sellers GET returns).
  */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
   try {
     const user = await prisma.user.findUnique({
       where: { id: params.id },
@@ -129,6 +132,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
  * stay atomic per domain.
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
   try {
     const body = await req.json().catch(() => ({}));
 

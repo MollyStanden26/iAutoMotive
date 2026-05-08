@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { requireStaff } from "@/lib/auth/require-role";
 
 /**
  * Shape returned to admin clients. The first six fields match the `Lead`
@@ -89,7 +90,9 @@ function ageLabelFor(date: Date | null | undefined): string {
   return `${days}d`;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const leads = await prisma.lead.findMany({
       orderBy: { importedAt: "desc" },
@@ -108,6 +111,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const body = await request.json();
     const {

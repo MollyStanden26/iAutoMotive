@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { requireStaff } from "@/lib/auth/require-role";
 
 /** 8MB cap on each file. */
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
@@ -73,7 +74,9 @@ const STAGE_TO_DISPLAY: Record<string, "live" | "recon" | "arrived" | "mech" | "
   sold: "live",
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const vehicles = await prisma.vehicle.findMany({
       orderBy: { createdAt: "desc" },
@@ -108,6 +111,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.includes("multipart/form-data")) {

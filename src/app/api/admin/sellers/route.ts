@@ -4,6 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { requireStaff } from "@/lib/auth/require-role";
 
 /**
  * List sellers for selection in admin drawers (Add vehicle, etc.).
@@ -11,7 +12,9 @@ import { prisma } from "@/lib/db/prisma";
  * Add Vehicle drawer can pre-fill the form once a seller is picked).
  * Inactive users excluded.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const users = await prisma.user.findMany({
       where: { role: "seller", isActive: true },
@@ -80,6 +83,8 @@ const MAX_AGREEMENT_BYTES = 5 * 1024 * 1024;
  * lose writes between deployments. Swap to Cloudflare R2 / S3 for prod.
  */
 export async function POST(request: NextRequest) {
+  const guard = await requireStaff(request);
+  if (!guard.ok) return guard.response;
   try {
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.includes("multipart/form-data")) {
