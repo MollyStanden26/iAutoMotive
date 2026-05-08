@@ -15,9 +15,6 @@ export default function TradeInPage() {
   const qs = vehicleId ? `?vehicleId=${vehicleId}` : "";
 
   const goNext = () => router.push(`/purchase/steps/cash-or-finance${qs}`);
-  // Same destination for now — when the offer form ships, this branch will
-  // route to /purchase/steps/trade-in/details instead.
-  const goGetOffer = () => router.push(`/purchase/steps/cash-or-finance${qs}`);
 
   return (
     <div style={{ maxWidth: 720 }}>
@@ -26,41 +23,92 @@ export default function TradeInPage() {
         color: "#0D1525", marginBottom: 28,
       }}>Add a trade-in</h1>
 
-      {/* Pitch card */}
-      <div style={{
-        background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
-        borderRadius: 16,
-        padding: 28,
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 280px) 1fr",
-        gap: 28,
-        alignItems: "center",
-      }}>
-        <TradeInIllustration />
-        <ul style={{
-          listStyle: "none", margin: 0, padding: 0,
-          display: "flex", flexDirection: "column", gap: 14,
+      {/* Pitch card with the "coming soon" overlay sitting on top of the
+          benefits + the disabled "Get trade-in offer" button. The overlay
+          isn't a modal — buyers can still skip past it via "I don't have
+          a trade-in" below — it's a passive notice. */}
+      <div style={{ position: "relative" }}>
+        <div style={{
+          background: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          borderRadius: 16,
+          padding: 28,
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 280px) 1fr",
+          gap: 28,
+          alignItems: "center",
+          opacity: 0.45,
+          filter: "saturate(0.6)",
+          pointerEvents: "none",
         }}>
-          <BenefitRow text="Get a real offer in 2 minutes" />
-          <BenefitRow text="Reduce or eliminate down and monthly payments" />
-          <BenefitRow text="Roll your trade-in value straight into the purchase price" />
-        </ul>
+          <TradeInIllustration />
+          <ul style={{
+            listStyle: "none", margin: 0, padding: 0,
+            display: "flex", flexDirection: "column", gap: 14,
+          }}>
+            <BenefitRow text="Get a real offer in 2 minutes" />
+            <BenefitRow text="Reduce or eliminate down and monthly payments" />
+            <BenefitRow text="Roll your trade-in value straight into the purchase price" />
+          </ul>
+        </div>
+
+        {/* Centred notice card */}
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 16, pointerEvents: "none",
+        }}>
+          <div style={{
+            background: "#FFFFFF",
+            border: "1px solid #E2E8F0",
+            borderRadius: 16,
+            padding: "20px 28px",
+            maxWidth: 420, textAlign: "center",
+            boxShadow: "0 16px 40px rgba(7, 13, 24, 0.12)",
+            pointerEvents: "auto",
+          }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "#FFF8E6", color: "#92400E",
+              padding: "4px 12px", borderRadius: 9999,
+              fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11,
+              letterSpacing: "0.06em", textTransform: "uppercase",
+              marginBottom: 10,
+            }}>
+              Coming soon
+            </div>
+            <div style={{
+              fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 18,
+              color: "#0D1525", marginBottom: 6,
+            }}>
+              Accepting trade-ins soon
+            </div>
+            <div style={{
+              fontFamily: "var(--font-body)", fontSize: 13, color: "#64748B",
+              lineHeight: 1.5,
+            }}>
+              Trade-ins are currently unavailable. You can continue with your
+              purchase using the option below.
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* CTAs */}
+      {/* CTAs — "Get trade-in offer" disabled while trade-ins are paused */}
       <div style={{
         marginTop: 32, display: "flex", flexDirection: "column",
         alignItems: "center", gap: 14,
       }}>
         <button
           type="button"
-          onClick={goGetOffer}
+          disabled
+          aria-disabled="true"
+          title="Trade-ins are coming soon"
           style={{
             width: "min(360px, 100%)", height: 52, borderRadius: 9999,
             background: "#008C7C", color: "#FFFFFF", border: "none",
             fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 16,
-            cursor: "pointer",
+            cursor: "not-allowed", opacity: 0.4,
           }}
         >Get trade-in offer</button>
         <button
