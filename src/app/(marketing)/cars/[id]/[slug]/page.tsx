@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useCurrentUser } from "@/lib/auth/use-current-user";
+import { SignInUpModal } from "@/components/auth/sign-in-up-modal";
 
 interface CarDetails {
   id: string;
@@ -39,6 +41,22 @@ export default function VehicleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+  const [authOpen, setAuthOpen] = useState(false);
+  const router = useRouter();
+  const { user, loading: userLoading } = useCurrentUser();
+
+  // What "Get started" does: signed-in buyers go straight to the first
+  // checkout step (reserve); everyone else gets the sign-in/sign-up modal
+  // first, then we resume the same path on success via `onAuthed`.
+  const startCheckout = () => {
+    if (!params?.id) return;
+    router.push(`/checkout/${params.id}/reserve`);
+  };
+  const handleGetStarted = () => {
+    if (userLoading) return;
+    if (user) startCheckout();
+    else setAuthOpen(true);
+  };
 
   useEffect(() => {
     if (!params?.id) return;
@@ -233,7 +251,9 @@ export default function VehicleDetailPage() {
               </p>
               <button
                 type="button"
-                className="mt-ac-4 w-full rounded-pill bg-teal-600 px-ac-4 py-3 font-heading text-base font-bold text-white transition-colors hover:bg-teal-700"
+                onClick={handleGetStarted}
+                disabled={userLoading}
+                className="mt-ac-4 w-full rounded-pill bg-teal-600 px-ac-4 py-3 font-heading text-base font-bold text-white transition-colors hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 Get started
               </button>
@@ -245,6 +265,13 @@ export default function VehicleDetailPage() {
           </aside>
         </div>
       </div>
+
+      <SignInUpModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onAuthed={() => startCheckout()}
+        heading="Welcome to iAutoMotive"
+      />
     </div>
   );
 }
