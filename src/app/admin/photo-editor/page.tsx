@@ -287,9 +287,17 @@ export default function PhotoEditorPage() {
             }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/iautomotive-backdrop.jpg"
+                src="/images/iautomotive-backdrop.png"
                 alt="iAutoMotive Studio backdrop"
-                onError={e => { e.currentTarget.style.display = "none"; }}
+                onError={e => {
+                  // Fall back to .jpg if the PNG isn't there.
+                  if (!e.currentTarget.dataset.fallback) {
+                    e.currentTarget.dataset.fallback = "jpg";
+                    e.currentTarget.src = "/images/iautomotive-backdrop.jpg";
+                  } else {
+                    e.currentTarget.style.display = "none";
+                  }
+                }}
                 style={{
                   width: 60, height: 44, objectFit: "cover", borderRadius: 8,
                   border: `1px solid ${T.border}`,
@@ -303,7 +311,7 @@ export default function PhotoEditorPage() {
                   iAutoMotive Studio backdrop
                 </div>
                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>
-                  Edit at <code style={{ color: T.teal200 }}>public/images/iautomotive-backdrop.jpg</code>
+                  Edit at <code style={{ color: T.teal200 }}>public/images/iautomotive-backdrop.png</code>
                 </div>
               </div>
               <PrimaryButton onClick={processSelected} disabled={busy || selected.size === 0}>

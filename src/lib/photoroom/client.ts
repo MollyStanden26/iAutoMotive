@@ -18,8 +18,15 @@ const ENDPOINT = "https://image-api.photoroom.com/v2/edit";
 /** Default brand backdrop image, served from Next.js's public/ tree. The
  *  bytes are read from disk and POSTed as a multipart `background.imageFile`
  *  so PhotoRoom doesn't need the URL to be publicly reachable — works the
- *  same in dev as it does in prod. */
-const DEFAULT_BACKDROP_PATH = path.join(process.cwd(), "public", "images", "iautomotive-backdrop.jpg");
+ *  same in dev as it does in prod.
+ *
+ *  Designers can drop the asset as any of these extensions; we try them in
+ *  order and use the first one that exists. PNG keeps transparency edges
+ *  clean if the backdrop has them, JPG is half the size for opaque shots,
+ *  WebP if they're feeling modern. */
+const DEFAULT_BACKDROP_CANDIDATES = ["png", "jpg", "jpeg", "webp"].map(ext =>
+  path.join(process.cwd(), "public", "images", `iautomotive-backdrop.${ext}`)
+);
 
 /** Fallback colour when no backdrop file is present on disk. Brand-dark navy
  *  so the photo doesn't look broken if someone forgets to drop the asset in. */
@@ -68,16 +75,21 @@ export async function replaceBackground(opts: ReplaceBackgroundOptions): Promise
   // backdrop file path lives in public/images so designers can swap it
   // without code changes.
   let backdropBuffer: Buffer | undefined = opts.background?.buffer;
+  let backdropFilename = "backdrop.png";
   if (!backdropBuffer && !opts.background?.url && !opts.background?.color) {
-    try {
-      backdropBuffer = await readFile(DEFAULT_BACKDROP_PATH);
-    } catch {
-      // Asset missing; fall through to the env URL / colour fallback.
+    for (const candidate of DEFAULT_BACKDROP_CANDIDATES) {
+      try {
+        backdropBuffer = await readFile(candidate);
+        backdropFilename = path.basename(candidate);
+        break;
+      } catch {
+        // try the next extension
+      }
     }
   }
 
   if (backdropBuffer) {
-    form.append("background.imageFile", new Blob([new Uint8Array(backdropBuffer)]), "backdrop.jpg");
+    form.append("background.imageFile", new Blob([new Uint8Array(backdropBuffer)]), backdropFilename);
   } else if (opts.background?.url ?? process.env.PHOTOROOM_BACKDROP_URL) {
     form.append("background.imageUrl", (opts.background?.url ?? process.env.PHOTOROOM_BACKDROP_URL)!);
   } else {
