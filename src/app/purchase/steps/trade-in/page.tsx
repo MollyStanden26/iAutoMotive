@@ -14,7 +14,7 @@ export default function TradeInPage() {
   const vehicleId = search.get("vehicleId");
   const qs = vehicleId ? `?vehicleId=${vehicleId}` : "";
 
-  const goNext = () => router.push(`/purchase/steps/cash-or-finance${qs}`);
+  const goNext = () => router.push(`/purchase/steps/finance${qs}`);
 
   return (
     <div style={{ maxWidth: 720 }}>

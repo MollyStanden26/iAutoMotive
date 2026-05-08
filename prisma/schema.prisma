@@ -1251,6 +1251,63 @@ model FinanceApplication {
   @@map("finance_applications")
 }
 
+/// Buyer's pre-qualification application captured during the /purchase
+/// flow, before any Deal exists. One row per (user, vehicle) — buyers
+/// can revise their answers and the upsert overwrites the previous
+/// snapshot. This is what the sales/finance team reviews to match the
+/// buyer to a lender on the panel; FinanceApplication (above) takes
+/// over once a Deal is opened.
+model FinancePreQual {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String   @map("user_id") @db.ObjectId
+  vehicleId           String?  @map("vehicle_id") @db.ObjectId
+  /// ISO date string (yyyy-mm-dd). DateTime would over-encode tz info we
+  /// don't need — lenders only care about the calendar date of birth.
+  dateOfBirth         String?  @map("date_of_birth")
+  dependantsCount     Int?     @map("dependants_count")
+  /// Current address — separate fields so we can validate postcode + use
+  /// the credit-check API's structured input later.
+  addressLine1        String?  @map("address_line1")
+  addressLine2        String?  @map("address_line2")
+  city                String?
+  postcode            String?
+  yearsAtAddress      Int?     @map("years_at_address")
+  /// Free-form previous address blob (line1, postcode, years, months) —
+  /// only collected when yearsAtAddress < 3. Kept as JSON so the schema
+  /// stays flat while still letting future iterations introspect it.
+  previousAddress     Json?    @map("previous_address")
+  /// employed | self_employed | retired | student | unemployed | other
+  employmentStatus    String?  @map("employment_status")
+  employerName        String?  @map("employer_name")
+  occupation          String?
+  yearsAtEmployer     Int?     @map("years_at_employer")
+  monthsAtEmployer    Int?     @map("months_at_employer")
+  /// All monetary fields in pence to stay consistent with the rest of
+  /// the schema (Vehicle.listingPriceGbp, Consignment.platformFeeGbp).
+  annualIncomeGbp     Int?     @map("annual_income_gbp")
+  monthlyHousingGbp   Int?     @map("monthly_housing_gbp")
+  monthlyDebtsGbp     Int?     @map("monthly_debts_gbp")
+  /// Loan structure preferences
+  depositGbp          Int?     @map("deposit_gbp")
+  termMonths          Int?     @map("term_months")
+  /// Bank — last4 of the account number for affordability check; the
+  /// full number lives only in the lender system, never in our DB.
+  bankSortCode        String?  @map("bank_sort_code")
+  bankAccountLast4    String?  @map("bank_account_last4")
+  /// Status mirrors FinanceApplicationStatus; reuses the same enum so
+  /// sales/finance can move a draft straight into "submitted" later.
+  status              FinanceApplicationStatus @default(draft)
+  marketingConsent    Boolean  @default(false) @map("marketing_consent")
+  hardCheckConsent    Boolean  @default(false) @map("hard_check_consent")
+  submittedAt         DateTime? @map("submitted_at")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, vehicleId])
+  @@index([status])
+  @@map("finance_prequals")
+}
+
 /// Five conditions that must all be met before payout releases.
 /// Unique on (deal_id, condition_type) — one row per condition per deal.
 model EscrowCondition {
