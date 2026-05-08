@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { scrapeAutotraderListing, type ScrapedListing } from "@/lib/scrapers/autotrader";
 import { requireStaff } from "@/lib/auth/require-role";
+import { saveUploadBuffer } from "@/lib/storage/upload";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -84,7 +83,7 @@ async function getOrCreateLot() {
   return prisma.lot.create({ data: { name: "Lot 1", city: "Birmingham", capacityVehicles: 60 } });
 }
 
-async function downloadPhoto(url: string, dest: string) {
+async function downloadPhoto(url: string, key: string): Promise<{ url: string; size: number }> {
   const res = await fetch(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
@@ -93,8 +92,8 @@ async function downloadPhoto(url: string, dest: string) {
   });
   if (!res.ok) throw new Error(`fetch ${url} → ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
-  await writeFile(dest, buf);
-  return buf.length;
+  const publicUrl = await saveUploadBuffer(buf, key, "image/jpeg");
+  return { url: publicUrl, size: buf.length };
 }
 
 async function persistListing(scraped: ScrapedListing) {
@@ -156,11 +155,11 @@ async function persistListing(scraped: ScrapedListing) {
   let user = existingUser;
   if (!user) {
     const fileToken = crypto.randomBytes(12).toString("hex");
-    const uploadsDir = path.join(process.cwd(), "public", "uploads", "contracts");
-    await mkdir(uploadsDir, { recursive: true });
-    const fileName = `${fileToken}.pdf`;
-    await writeFile(path.join(uploadsDir, fileName), PLACEHOLDER_PDF);
-    const publicUrl = `/uploads/contracts/${fileName}`;
+    const publicUrl = await saveUploadBuffer(
+      PLACEHOLDER_PDF,
+      `contracts/${fileToken}.pdf`,
+      "application/pdf"
+    );
 
     const passwordHash = await bcrypt.hash("Welcome123!", 10);
     user = await prisma.user.create({
@@ -207,21 +206,18 @@ async function persistListing(scraped: ScrapedListing) {
   }
 
   const token = crypto.randomBytes(8).toString("hex");
-  const baseDir = path.join(process.cwd(), "public", "uploads", "vehicles", token);
-  await mkdir(baseDir, { recursive: true });
 
   const slotPaths: Record<string, string> = {};
   for (let i = 0; i < SLOT_ORDER.length; i++) {
     const slot = SLOT_ORDER[i];
-    const dest = path.join(baseDir, `${slot}.jpg`);
-    await downloadPhoto(scraped.photos[i], dest);
-    slotPaths[slot] = `/uploads/vehicles/${token}/${slot}.jpg`;
+    const { url } = await downloadPhoto(scraped.photos[i], `vehicles/${token}/${slot}.jpg`);
+    slotPaths[slot] = url;
   }
   const extraPaths: string[] = [];
   for (let i = SLOT_ORDER.length; i < scraped.photos.length; i++) {
-    const dest = path.join(baseDir, `extra-${i - SLOT_ORDER.length}.jpg`);
-    await downloadPhoto(scraped.photos[i], dest);
-    extraPaths.push(`/uploads/vehicles/${token}/extra-${i - SLOT_ORDER.length}.jpg`);
+    const idx = i - SLOT_ORDER.length;
+    const { url } = await downloadPhoto(scraped.photos[i], `vehicles/${token}/extra-${idx}.jpg`);
+    extraPaths.push(url);
   }
 
   const vehicle = await prisma.vehicle.create({

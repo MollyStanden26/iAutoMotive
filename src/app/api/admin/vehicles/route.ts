@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireStaff } from "@/lib/auth/require-role";
+import { saveUpload } from "@/lib/storage/upload";
 
 /** 8MB cap on each file. */
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
@@ -213,16 +212,12 @@ export async function POST(request: NextRequest) {
 
     const lotRecord = await getOrCreateLot(lot);
 
-    // Persist files. In dev these go to public/uploads — swap to S3/R2 for prod.
+    // Persist files via the storage abstraction — Vercel Blob in prod when
+    // BLOB_READ_WRITE_TOKEN is set, public/uploads/vehicles/<token>/ in dev.
     const token = crypto.randomBytes(8).toString("hex");
-    const baseDir = path.join(process.cwd(), "public", "uploads", "vehicles", token);
-    await mkdir(baseDir, { recursive: true });
 
     async function saveFile(file: File, subpath: string): Promise<string> {
-      const fullPath = path.join(baseDir, subpath);
-      await mkdir(path.dirname(fullPath), { recursive: true });
-      await writeFile(fullPath, Buffer.from(await file.arrayBuffer()));
-      return `/uploads/vehicles/${token}/${subpath}`;
+      return saveUpload(file, `vehicles/${token}/${subpath}`);
     }
 
     const slotUrls: Record<PhotoSlotKey, string> = {} as Record<PhotoSlotKey, string>;

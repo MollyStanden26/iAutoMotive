@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireStaff } from "@/lib/auth/require-role";
+import { saveUpload } from "@/lib/storage/upload";
 
 /**
  * List sellers for selection in admin drawers (Add vehicle, etc.).
@@ -146,16 +145,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Persist the PDF to public/uploads/contracts/<random>.pdf — served as
-    // a static URL by Next.js. Replace with R2/S3 in prod.
+    // Persist the PDF via the storage abstraction — Vercel Blob in prod,
+    // public/uploads/contracts/ in dev when BLOB_READ_WRITE_TOKEN is unset.
     const fileToken = crypto.randomBytes(12).toString("hex");
-    const uploadsDir = path.join(process.cwd(), "public", "uploads", "contracts");
-    await mkdir(uploadsDir, { recursive: true });
-    const fileName = `${fileToken}.pdf`;
-    const filePath = path.join(uploadsDir, fileName);
-    const buffer = Buffer.from(await agreement.arrayBuffer());
-    await writeFile(filePath, buffer);
-    const publicUrl = `/uploads/contracts/${fileName}`;
+    const publicUrl = await saveUpload(agreement, `contracts/${fileToken}.pdf`);
 
     const passwordHash = await bcrypt.hash(password, 10);
 

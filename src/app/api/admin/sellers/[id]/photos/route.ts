@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mkdir, writeFile, unlink } from "node:fs/promises";
-import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireStaff } from "@/lib/auth/require-role";
+import { saveUpload, deleteUpload } from "@/lib/storage/upload";
 
 export const dynamic = "force-dynamic";
 
@@ -46,8 +45,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     const token = crypto.randomBytes(8).toString("hex");
-    const baseDir = path.join(process.cwd(), "public", "uploads", "vehicles", token);
-    await mkdir(baseDir, { recursive: true });
 
     // Continue sortOrder past existing photos so new ones append.
     const existing = await prisma.mediaFile.count({
@@ -58,10 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const filename = `seller-${i}.${ext}`;
-      const fullPath = path.join(baseDir, filename);
-      await writeFile(fullPath, Buffer.from(await file.arrayBuffer()));
-      const url = `/uploads/vehicles/${token}/${filename}`;
+      const url = await saveUpload(file, `vehicles/${token}/seller-${i}.${ext}`);
 
       const row = await prisma.mediaFile.create({
         data: {
@@ -121,13 +115,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     await prisma.mediaFile.delete({ where: { id: mediaId } });
 
-    if (media.cdnUrl?.startsWith("/uploads/")) {
-      try {
-        await unlink(path.join(process.cwd(), "public", media.cdnUrl));
-      } catch {
-        // File already gone or never written — DB row is what matters.
-      }
-    }
+    if (media.cdnUrl) await deleteUpload(media.cdnUrl);
 
     if (media.isPrimary) {
       const next = await prisma.mediaFile.findFirst({
