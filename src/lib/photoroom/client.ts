@@ -105,19 +105,18 @@ export async function replaceBackground(opts: ReplaceBackgroundOptions): Promise
   //   position = bottomCenter → anchors every car to the floor of the frame
   //                              instead of free-floating mid-canvas
   //
-  // Directional margins (replacing the old uniform `padding`) — the floor
-  // strip in the iAutoMotive Studio backdrop is shallow, so a uniform
-  // padding either floated the car onto the wall or kept it large enough
-  // that its rear wheels clipped the wall's horizon. Forcing 15% margins on
-  // top/left/right while leaving the bottom flush scales the whole subject
-  // down a notch and keeps the front wheel planted on the floor edge.
+  // Directional padding — the floor strip in the iAutoMotive Studio
+  // backdrop is shallow, so a uniform padding either floated the car onto
+  // the wall or kept it large enough that its rear wheels clipped the
+  // wall's horizon. PhotoRoom v2 doesn't accept margin.{top,left,...} as
+  // separate params — it uses CSS-shorthand on `padding` with comma-
+  // separated TOP, RIGHT, BOTTOM, LEFT values. 15/15/0/15 squeezes the
+  // subject down on three sides while leaving the bottom flush so the
+  // front tyre stays planted on the floor edge.
   form.append("shadow.mode", "ai.soft");
   form.append("lighting.mode", "ai.auto");
   form.append("position", "bottomCenter");
-  form.append("margin.top", "15%");
-  form.append("margin.left", "15%");
-  form.append("margin.right", "15%");
-  form.append("margin.bottom", "0%");
+  form.append("padding", "15%, 15%, 0%, 15%");
 
   // Fixed 4:3 canvas across every processed shot so vehicle gallery grids
   // line up cleanly without per-photo crop logic on the front end.
