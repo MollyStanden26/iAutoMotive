@@ -96,9 +96,24 @@ export async function replaceBackground(opts: ReplaceBackgroundOptions): Promise
     form.append("background.color", opts.background?.color ?? FALLBACK_BACKDROP_COLOR);
   }
 
-  // Lock output to the same aspect as the source so vehicle gallery thumbs
-  // don't crop weirdly after the swap.
-  form.append("outputSize", "originalImage");
+  // Compositing realism — fixes the "floating car" look from earlier passes.
+  //
+  //   shadow.mode = ai.soft   → contact shadow under the wheels so the car
+  //                              reads as sitting on the driveway, not pasted
+  //   lighting.mode = ai.auto → re-lights the car to match the backdrop's
+  //                              warmth + direction
+  //   position = bottomCenter → anchors every car to the floor of the frame
+  //                              instead of free-floating mid-canvas
+  //   padding = 10%           → keeps the wheels off the bottom edge so the
+  //                              shadow has somewhere to land
+  form.append("shadow.mode", "ai.soft");
+  form.append("lighting.mode", "ai.auto");
+  form.append("position", "bottomCenter");
+  form.append("padding", "10%");
+
+  // Fixed 4:3 canvas across every processed shot so vehicle gallery grids
+  // line up cleanly without per-photo crop logic on the front end.
+  form.append("outputSize", "1920x1440");
 
   const res = await fetch(ENDPOINT, {
     method: "POST",
