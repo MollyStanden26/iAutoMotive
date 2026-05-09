@@ -33,15 +33,25 @@ const OUTPUT_SIZE = "1536x1024";
 const QUALITY = (process.env.OPENAI_IMAGE_QUALITY ?? "high") as "low" | "medium" | "high" | "auto";
 
 /** The instruction GPT follows on every refinement. Kept stable across
- *  calls so output is consistent run-to-run. The first half tells GPT
- *  what to fix; the second half is the (more important) "don't touch"
- *  list — without it the model sometimes re-renders the car body in a
- *  slightly different shape or recolours badges. */
+ *  calls so output is consistent run-to-run.
+ *
+ *  Structure: (1) name the scene so GPT has a frame of reference,
+ *  (2) two specific corrections — floor contact + lighting match,
+ *  (3) hard preservation list so the model doesn't re-render the car.
+ *  The "preserve EXACTLY" block is the most important part — without
+ *  it the model sometimes restyles the body or recolours badges. */
 const REFINE_PROMPT = [
-  "Polish this car photo for an online marketplace listing.",
-  "Ensure the car's tyres sit flush on the driveway floor with no gap or floating effect — the rubber should visibly contact the ground with a soft realistic contact shadow underneath.",
-  "Adjust the lighting and shadows on the car body so they match the natural daylight direction, warmth and softness visible on the stone wall, gravel and trees behind the car. The light source feel should be consistent across the subject and background.",
-  "Critical — preserve EXACTLY: the car's shape and proportions, body colour, panel lines, badges and grille design, headlight and taillight detail, wheel design and brake calipers, registration plate text, and any visible reflections of the car's surroundings on its bodywork. Only correct the ground contact and the ambient lighting match.",
+  // Scene framing
+  "This image is for The iAutoMotive Studio — a curated outdoor showroom. The backdrop shows a gravel driveway in the foreground, a low stone wall and mature trees behind, and an iAutoMotive Studio circular brand mark in the upper-right corner. The lighting in the studio is soft, slightly warm, diffuse natural daylight from above.",
+
+  // Correction #1 — grounding
+  "1) Place the car firmly on the floor of the studio. The tyres must be pressed into the gravel driveway with realistic contact — no gap, no floating, no levitation. Add a soft cast shadow on the gravel directly under and slightly behind the car, sized and softness-matched to the studio's diffuse daylight.",
+
+  // Correction #2 — lighting match
+  "2) Match the lighting on the car body to the lighting of the studio. The car should look like it was photographed in the same scene as the backdrop: same direction of light, same warmth, same softness. Reflections of the stone wall, trees, sky and surrounding gravel should be visible on the car's painted surfaces, glass and wheels where appropriate.",
+
+  // Hard preservation list
+  "Critical — preserve EXACTLY without alteration: the car's silhouette and proportions, body paint colour, panel lines, badges and grille, headlight and taillight design, wheel design and brake calipers, tyre brand markings, registration plate characters, side mirror shape, and any existing trim or decals. Do not restyle, recolour or reshape any part of the car. Only correct the floor contact and the lighting-match between the car and the studio backdrop.",
 ].join(" ");
 
 export interface RefineResult {
