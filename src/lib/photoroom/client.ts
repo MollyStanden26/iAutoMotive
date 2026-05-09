@@ -104,16 +104,20 @@ export async function replaceBackground(opts: ReplaceBackgroundOptions): Promise
   //                              warmth + direction
   //   position = bottomCenter → anchors every car to the floor of the frame
   //                              instead of free-floating mid-canvas
-  //   padding = 2%            → tiny gap between tyres and frame edge. The
-  //                              previous 10% padding pushed the car up onto
-  //                              the wall in the iAutoMotive Studio backdrop;
-  //                              the floor in that asset starts very near
-  //                              the bottom of the frame so we want the car
-  //                              dropped almost flush with the canvas edge.
+  //
+  // Directional margins (replacing the old uniform `padding`) — the floor
+  // strip in the iAutoMotive Studio backdrop is shallow, so a uniform
+  // padding either floated the car onto the wall or kept it large enough
+  // that its rear wheels clipped the wall's horizon. Forcing 15% margins on
+  // top/left/right while leaving the bottom flush scales the whole subject
+  // down a notch and keeps the front wheel planted on the floor edge.
   form.append("shadow.mode", "ai.soft");
   form.append("lighting.mode", "ai.auto");
   form.append("position", "bottomCenter");
-  form.append("padding", "2%");
+  form.append("margin.top", "15%");
+  form.append("margin.left", "15%");
+  form.append("margin.right", "15%");
+  form.append("margin.bottom", "0%");
 
   // Fixed 4:3 canvas across every processed shot so vehicle gallery grids
   // line up cleanly without per-photo crop logic on the front end.
