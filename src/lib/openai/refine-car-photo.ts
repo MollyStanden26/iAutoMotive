@@ -1,27 +1,27 @@
 /**
- * Second-pass refinement of a PhotoRoom-processed car photo using OpenAI's
- * gpt-image-1 image-edit endpoint. PhotoRoom does the heavy lifting
- * (segmentation + backdrop composite + soft shadow), but the result still
- * tends to look pasted-on — wheels not quite touching the ground, light on
- * the car body not matching the warm afternoon tones in the iAutoMotive
- * Studio backdrop. GPT cleans both up.
+ * Single-pass car compositor using OpenAI's gpt-image-1 multi-image edit
+ * endpoint. Replaces the earlier PhotoRoom + GPT chain, which produced
+ * noticeable seams (segmented car pasted onto backdrop, GPT then trying to
+ * "fix" the join) — letting one model do segmentation, compositing, and
+ * lighting in one shot gives more cohesive output.
  *
  * Endpoint: POST https://api.openai.com/v1/images/edits
  * Auth:     Authorization: Bearer $OPENAI_API_KEY
  * Docs:     https://platform.openai.com/docs/api-reference/images/createEdit
  *
- * Returns a Buffer of the refined PNG; caller hands it to saveUploadBuffer().
+ * Input: two image buffers (raw car photo + iAutoMotive Studio backdrop)
+ * Output: a Buffer of the composited PNG, ready for saveUploadBuffer().
  */
 
 const ENDPOINT = "https://api.openai.com/v1/images/edits";
 
-/** Latest released image-edit model. OpenAI sometimes refers to it as
- *  "ChatGPT image" in product copy; the API model id is `gpt-image-1`. */
+/** OpenAI's image-edit model. Public copy sometimes calls it "ChatGPT
+ *  image"; the API id is `gpt-image-1`. */
 const MODEL = "gpt-image-1";
 
-/** Output size for the refined image. gpt-image-1 only accepts a fixed
- *  set of sizes — 1536×1024 (3:2 landscape) is closest to PhotoRoom's
- *  1920×1440 4:3 output and works well as a marketplace hero shot. */
+/** 3:2 landscape — best fit for vehicle hero shots and the closest of
+ *  gpt-image-1's accepted output sizes (1024x1024, 1024x1536, 1536x1024)
+ *  to a typical car photo aspect ratio. */
 const OUTPUT_SIZE = "1536x1024";
 
 /** Quality knob:
@@ -29,42 +29,48 @@ const OUTPUT_SIZE = "1536x1024";
  *    medium → ~$0.042 / image, ~10–15s
  *    high   → ~$0.167 / image, ~20–30s
  *  Marketplace listings are the buyer's first impression so we bias to
- *  `high`. Tunable via env if cost becomes a concern. */
+ *  `high`. Override with OPENAI_IMAGE_QUALITY in env. */
 const QUALITY = (process.env.OPENAI_IMAGE_QUALITY ?? "high") as "low" | "medium" | "high" | "auto";
 
-/** The instruction GPT follows on every refinement. Kept stable across
- *  calls so output is consistent run-to-run.
+/** The instruction GPT follows. Sent on every call alongside two images:
+ *  the raw car photo (image 1) and the iAutoMotive Studio backdrop
+ *  (image 2). Stable across calls so output is consistent run-to-run.
  *
- *  Structure: (1) name the scene so GPT has a frame of reference,
- *  (2) two specific corrections — floor contact + lighting match,
- *  (3) hard preservation list so the model doesn't re-render the car.
  *  The "preserve EXACTLY" block is the most important part — without
- *  it the model sometimes restyles the body or recolours badges. */
-const REFINE_PROMPT = [
-  // Scene framing
-  "This image is for The iAutoMotive Studio — a curated outdoor showroom. The backdrop shows a gravel driveway in the foreground, a low stone wall and mature trees behind, and an iAutoMotive Studio circular brand mark in the upper-right corner. The lighting in the studio is soft, slightly warm, diffuse natural daylight from above.",
+ *  it the model occasionally restyles the car body, recolours the
+ *  paint, or rewrites the registration plate. */
+const COMPOSITE_PROMPT = [
+  // What the two inputs are
+  "You are given two images. Image 1 is a photo of a car. Image 2 is the iAutoMotive Studio backdrop — a curated outdoor showroom showing a gravel driveway in the foreground, a low stone wall with mature trees behind, and an iAutoMotive Studio circular brand mark in the upper-right corner. The studio is lit by soft, slightly warm, diffuse natural daylight from above.",
 
-  // Correction #1 — grounding
-  "1) Place the car firmly on the floor of the studio. The tyres must be pressed into the gravel driveway with realistic contact — no gap, no floating, no levitation. Add a soft cast shadow on the gravel directly under and slightly behind the car, sized and softness-matched to the studio's diffuse daylight.",
+  // Goal
+  "Produce a single photorealistic image of the car from image 1 placed inside the iAutoMotive Studio from image 2.",
 
-  // Correction #2 — lighting match
-  "2) Match the lighting on the car body to the lighting of the studio. The car should look like it was photographed in the same scene as the backdrop: same direction of light, same warmth, same softness. Reflections of the stone wall, trees, sky and surrounding gravel should be visible on the car's painted surfaces, glass and wheels where appropriate.",
+  // Specific corrections
+  "1) The car must sit firmly on the floor of the studio. The tyres must be pressed into the gravel driveway with realistic contact — no gap, no levitation. Add a soft cast shadow on the gravel directly under and slightly behind the car, sized and softness-matched to the studio's diffuse daylight.",
+  "2) The lighting on the car body must match the lighting of the studio: same direction, same warmth, same softness. The car should look like it was photographed in the studio scene, not pasted in. Reflections of the stone wall, trees, sky and surrounding gravel should be visible on the car's painted surfaces, glass and wheels where appropriate.",
+  "3) Keep the iAutoMotive Studio brand mark visible in the upper-right corner of the output, exactly as it appears in image 2. Do not move, resize, recolour or remove it.",
 
   // Hard preservation list
-  "Critical — preserve EXACTLY without alteration: the car's silhouette and proportions, body paint colour, panel lines, badges and grille, headlight and taillight design, wheel design and brake calipers, tyre brand markings, registration plate characters, side mirror shape, and any existing trim or decals. Do not restyle, recolour or reshape any part of the car. Only correct the floor contact and the lighting-match between the car and the studio backdrop.",
+  "Critical — preserve EXACTLY without alteration: the car's silhouette and proportions, body paint colour, panel lines, badges and grille, headlight and taillight design, wheel design and brake calipers, tyre brand markings, registration plate characters, side mirror shape, and any existing trim or decals from image 1. Do not restyle, recolour or reshape any part of the car. Match the camera angle of image 1 — keep the same view of the car (front three-quarter / side / rear / etc.) so the buyer sees the same angle they originally selected.",
 ].join(" ");
 
-export interface RefineResult {
+export interface CompositeResult {
   buffer: Buffer;
   mimeType: string;
 }
 
 /**
- * Sends `inputBuffer` (PNG bytes from PhotoRoom) to gpt-image-1 with the
- * fixed refinement prompt. Throws on missing key or non-2xx responses with
- * the OpenAI body text in the message so the route handler can log it.
+ * Hands gpt-image-1 the raw car shot + the studio backdrop and asks it to
+ * place the car into the studio with matched lighting and floor contact.
+ * Throws on missing key or non-2xx with the OpenAI body in the message so
+ * the route handler can log it.
  */
-export async function refineCarPhoto(inputBuffer: Buffer): Promise<RefineResult> {
+export async function compositeCarOnBackdrop(
+  carBuffer: Buffer,
+  backdropBuffer: Buffer,
+  backdropFilename = "backdrop.png",
+): Promise<CompositeResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not set — add it in Vercel → project → Environment Variables (and your local .env)");
@@ -72,11 +78,12 @@ export async function refineCarPhoto(inputBuffer: Buffer): Promise<RefineResult>
 
   const form = new FormData();
   form.append("model", MODEL);
-  // images/edits expects PNG/JPG/WebP under 25MB. PhotoRoom returns PNG so
-  // no conversion needed. Filename matters less than the MIME — use ".png"
-  // so OpenAI's content-sniffing is happy.
-  form.append("image", new Blob([new Uint8Array(inputBuffer)], { type: "image/png" }), "photoroom-out.png");
-  form.append("prompt", REFINE_PROMPT);
+  // Multi-image input. gpt-image-1 accepts up to 16 images via repeated
+  // `image[]` parts; the model treats them in the order given. We send car
+  // first so the prompt's "image 1 / image 2" labels line up.
+  form.append("image[]", new Blob([new Uint8Array(carBuffer)], { type: "image/png" }), "car.png");
+  form.append("image[]", new Blob([new Uint8Array(backdropBuffer)], { type: "image/png" }), backdropFilename);
+  form.append("prompt", COMPOSITE_PROMPT);
   form.append("size", OUTPUT_SIZE);
   form.append("quality", QUALITY);
   form.append("n", "1");
@@ -89,12 +96,12 @@ export async function refineCarPhoto(inputBuffer: Buffer): Promise<RefineResult>
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`OpenAI ${res.status}: ${text.slice(0, 300) || res.statusText}`);
+    throw new Error(`OpenAI ${res.status}: ${text.slice(0, 400) || res.statusText}`);
   }
 
   // gpt-image-1 always returns base64 — there's no `response_format` knob
-  // for this model. Decode and hand back as a Buffer to match the
-  // PhotoRoom client's contract.
+  // for this model. Decode and hand back as a Buffer to match the storage
+  // helper's expected input.
   const json = await res.json();
   const b64 = json?.data?.[0]?.b64_json;
   if (typeof b64 !== "string" || b64.length === 0) {

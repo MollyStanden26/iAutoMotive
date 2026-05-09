@@ -1,31 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/require-role";
-import { replaceBackground } from "@/lib/photoroom/client";
-import { refineCarPhoto } from "@/lib/openai/refine-car-photo";
+import { compositeCarOnBackdrop } from "@/lib/openai/refine-car-photo";
 import { saveUploadBuffer } from "@/lib/storage/upload";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// PhotoRoom is 5–15s per image, gpt-image-1 high-quality is 20–30s. With
-// up to 16 photos per batch + both passes, worst case is ~10 minutes; the
-// 300s ceiling is Vercel's hard cap so anything bigger has to be queued.
+// gpt-image-1 high-quality is 20–30s per image and the admin can batch up
+// to 16 in a single click — worst case ~8 minutes. The 300s ceiling here
+// is Vercel's hard cap for a serverless function.
 export const maxDuration = 300;
+
+/**
+ * Backdrop file lookup. Designers can drop the asset under any of these
+ * extensions; first hit wins. Same convention used since the PhotoRoom
+ * era so swapping designs is still a single-file change.
+ */
+const BACKDROP_CANDIDATES = ["png", "jpg", "jpeg", "webp"].map(ext =>
+  path.join(process.cwd(), "public", "images", `iautomotive-backdrop.${ext}`)
+);
+
+async function loadBackdrop(): Promise<{ buffer: Buffer; filename: string }> {
+  for (const candidate of BACKDROP_CANDIDATES) {
+    try {
+      const buffer = await readFile(candidate);
+      return { buffer, filename: path.basename(candidate) };
+    } catch {
+      // try next extension
+    }
+  }
+  throw new Error(
+    "Backdrop missing — drop a file at public/images/iautomotive-backdrop.{png,jpg,jpeg,webp}"
+  );
+}
+
+/**
+ * Fetch the raw car bytes for a MediaFile row. Handles both Vercel Blob
+ * URLs (prod) and local /uploads/* paths (dev).
+ */
+async function loadCarPhoto(sourceUrl: string): Promise<Buffer> {
+  if (sourceUrl.startsWith("http")) {
+    const res = await fetch(sourceUrl);
+    if (!res.ok) throw new Error(`Source fetch ${res.status}: ${res.statusText}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+  const fullPath = path.join(process.cwd(), "public", sourceUrl);
+  return readFile(fullPath);
+}
 
 /**
  * POST /api/admin/photos/replace-background
  *
- * Body: { mediaIds: string[], background?: { color?, url? } }
+ * Body: { mediaIds: string[] }
  *
- * For each MediaFile id, fetch the original photo (or use the absolute URL
- * directly), pass it through PhotoRoom, persist the result to Vercel Blob,
- * and update the row so cdnUrl points at the processed image. The original
- * URL is preserved on `originalCdnUrl` (only on first pass — re-running
- * doesn't clobber it) so the photo-editor UI can offer a "Revert" action.
+ * Single-pass GPT compositor: for each MediaFile id, fetch the original
+ * raw photo, load the iAutoMotive Studio backdrop from disk, hand both
+ * to gpt-image-1's multi-image edit endpoint with a fixed prompt asking
+ * it to place the car in the studio with floor contact + matched
+ * lighting + brand mark preserved, and persist the resulting PNG.
  *
- * Returns one row per id with { ok, error?, cdnUrl? } so the UI can mark
- * partial successes when a few images fail.
+ * Raw URL is preserved on `originalCdnUrl` (only on first pass) so the
+ * editor's "Revert" button can roll back to the unprocessed shot.
+ *
+ * Returns one row per id with { ok, error?, cdnUrl? } so the UI can
+ * surface partial successes when individual photos fail.
  */
 export async function POST(req: NextRequest) {
   // Photo editing is gated to roles that already have the "photo-editor"
@@ -33,7 +74,7 @@ export async function POST(req: NextRequest) {
   const guard = await requireRole(req, ["super-admin", "site-manager", "recon-tech"]);
   if (!guard.ok) return guard.response;
 
-  let body: { mediaIds?: unknown; background?: { color?: string; url?: string } };
+  let body: { mediaIds?: unknown };
   try { body = await req.json(); } catch { body = {}; }
 
   const ids = Array.isArray(body.mediaIds)
@@ -46,25 +87,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Process at most 16 photos per request" }, { status: 400 });
   }
 
+  // Read the backdrop once for the whole batch — same bytes go to every
+  // photo in this run, no point re-reading per id.
+  let backdrop: { buffer: Buffer; filename: string };
+  try {
+    backdrop = await loadBackdrop();
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Could not load backdrop" },
+      { status: 500 }
+    );
+  }
+
   const rows = await prisma.mediaFile.findMany({
     where: { id: { in: ids } },
     select: { id: true, cdnUrl: true, originalCdnUrl: true, entityId: true, mimeType: true },
   });
   const byId = new Map(rows.map(r => [r.id, r]));
 
-  // Process sequentially. PhotoRoom's free tier has a low concurrent-request
-  // ceiling and we'd rather take the wall-clock hit than have half the
-  // batch fail with rate-limit errors.
-  const results: { id: string; ok: boolean; cdnUrl?: string; error?: string; refined?: boolean }[] = [];
+  // Sequential — gpt-image-1's rate limits don't tolerate parallel requests
+  // on most accounts, and we'd rather take the wall-clock hit than half
+  // the batch failing.
+  const results: { id: string; ok: boolean; cdnUrl?: string; error?: string }[] = [];
   for (const id of ids) {
     const row = byId.get(id);
     if (!row) {
       results.push({ id, ok: false, error: "MediaFile not found" });
       continue;
     }
-    // Always reprocess from the original raw upload. If we've already been
-    // through PhotoRoom once, originalCdnUrl is set; otherwise cdnUrl IS
-    // the original.
+    // Always reprocess from the original raw upload. If we've been through
+    // the pipeline once, originalCdnUrl is the raw; otherwise cdnUrl IS
+    // the raw.
     const sourceUrl = row.originalCdnUrl ?? row.cdnUrl;
     if (!sourceUrl) {
       results.push({ id, ok: false, error: "No source URL" });
@@ -72,55 +125,13 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      // PhotoRoom can fetch by URL only when the URL is publicly reachable.
-      // Local /uploads/* paths aren't, so download and pass the buffer in
-      // those cases.
-      let sourceBuffer: Buffer | undefined;
-      let absoluteUrl: string | undefined;
-      if (sourceUrl.startsWith("http")) {
-        absoluteUrl = sourceUrl;
-      } else {
-        // Local path during dev — read from public/.
-        const path = await import("node:path");
-        const fs = await import("node:fs/promises");
-        const fullPath = path.join(process.cwd(), "public", sourceUrl);
-        sourceBuffer = await fs.readFile(fullPath);
-      }
+      const carBuffer = await loadCarPhoto(sourceUrl);
+      const out = await compositeCarOnBackdrop(carBuffer, backdrop.buffer, backdrop.filename);
 
-      const out = await replaceBackground({
-        sourceUrl: absoluteUrl,
-        sourceBuffer,
-        background: body.background,
-      });
-
-      // Optional second pass: hand the PhotoRoom output to gpt-image-1 to
-      // re-ground the tyres on the floor and match the lighting on the car
-      // body to the warm ambient light in the iAutoMotive Studio backdrop.
-      // Gated on OPENAI_API_KEY — when absent we ship the PhotoRoom-only
-      // result so dev environments without the key still work end-to-end.
-      let finalBuffer = out.buffer;
-      let finalMime = out.mimeType;
-      let refined = false;
-      if (process.env.OPENAI_API_KEY) {
-        try {
-          const ref = await refineCarPhoto(out.buffer);
-          finalBuffer = ref.buffer;
-          finalMime = ref.mimeType;
-          refined = true;
-        } catch (err) {
-          // Don't fail the whole pass if the GPT step blows up — keep the
-          // PhotoRoom output and surface the OpenAI error in the per-photo
-          // result so the admin sees what happened.
-          const msg = err instanceof Error ? err.message : "Unknown OpenAI error";
-          console.error(`[replace-background ${id}] gpt-image-1 refine failed:`, msg);
-        }
-      }
-
-      const ext = finalMime.includes("jpeg") ? "jpg" : "png";
+      const ext = out.mimeType.includes("jpeg") ? "jpg" : "png";
       const token = crypto.randomBytes(8).toString("hex");
-      const subdir = refined ? "refined" : "processed";
-      const key = `vehicles/${subdir}/${row.entityId}/${token}.${ext}`;
-      const newUrl = await saveUploadBuffer(finalBuffer, key, finalMime);
+      const key = `vehicles/composited/${row.entityId}/${token}.${ext}`;
+      const newUrl = await saveUploadBuffer(out.buffer, key, out.mimeType);
 
       await prisma.mediaFile.update({
         where: { id },
@@ -133,12 +144,11 @@ export async function POST(req: NextRequest) {
           originalCdnUrl: row.originalCdnUrl ?? row.cdnUrl,
         },
       });
-      results.push({ id, ok: true, cdnUrl: newUrl, refined });
+      results.push({ id, ok: true, cdnUrl: newUrl });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown PhotoRoom error";
-      // Log the actual PhotoRoom response so when something rejects (param
-      // shape, file too big, rate limit) we don't have to curl-probe to
-      // figure out what happened. The page only sees the summary status.
+      const msg = err instanceof Error ? err.message : "Unknown OpenAI error";
+      // Log so future param-shape mishaps surface in dev/Vercel logs without
+      // a manual probe — the page only sees the summary status.
       console.error(`[replace-background ${id}]`, msg);
       results.push({ id, ok: false, error: msg });
     }

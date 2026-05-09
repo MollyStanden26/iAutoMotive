@@ -190,7 +190,7 @@ export default function PhotoEditorPage() {
             Photo editor
           </div>
           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-            Replace raw backgrounds via PhotoRoom
+            Composite cars onto the iAutoMotive Studio with gpt-image-1
           </div>
         </div>
         <div style={{ padding: "12px 18px" }}>
