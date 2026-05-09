@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { AuthProvider } from "@/context/auth-context";
+import { WhatsAppBubble } from "@/components/layout/whatsapp-bubble";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -32,6 +33,8 @@ export default function RootLayout({
     <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <body>
         <AuthProvider>{children}</AuthProvider>
+        {/* Site-wide WhatsApp CTA. Self-hides on /admin/* and /support/*. */}
+        <WhatsAppBubble />
       </body>
     </html>
   );
