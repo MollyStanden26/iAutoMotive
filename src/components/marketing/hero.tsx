@@ -59,7 +59,9 @@ export function Hero() {
             onSubmit={(e) => {
               e.preventDefault();
               if (regInput.trim()) {
-                window.location.href = `/sell/offer?reg=${encodeURIComponent(regInput.trim())}`;
+                // Hand off to the marketing /sell flow; reg query param is
+                // there for future pre-fill if /sell wires it up.
+                window.location.href = `/sell?reg=${encodeURIComponent(regInput.trim())}`;
               }
             }}
           >
