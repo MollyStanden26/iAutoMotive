@@ -3,12 +3,14 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/require-role";
 import { replaceBackground } from "@/lib/photoroom/client";
+import { refineCarPhoto } from "@/lib/openai/refine-car-photo";
 import { saveUploadBuffer } from "@/lib/storage/upload";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// PhotoRoom can take 5–15s per image and the admin can batch up to 8 in a
-// single click — bump the request timeout above Next's default.
+// PhotoRoom is 5–15s per image, gpt-image-1 high-quality is 20–30s. With
+// up to 16 photos per batch + both passes, worst case is ~10 minutes; the
+// 300s ceiling is Vercel's hard cap so anything bigger has to be queued.
 export const maxDuration = 300;
 
 /**
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
   // Process sequentially. PhotoRoom's free tier has a low concurrent-request
   // ceiling and we'd rather take the wall-clock hit than have half the
   // batch fail with rate-limit errors.
-  const results: { id: string; ok: boolean; cdnUrl?: string; error?: string }[] = [];
+  const results: { id: string; ok: boolean; cdnUrl?: string; error?: string; refined?: boolean }[] = [];
   for (const id of ids) {
     const row = byId.get(id);
     if (!row) {
@@ -91,10 +93,34 @@ export async function POST(req: NextRequest) {
         background: body.background,
       });
 
-      const ext = out.mimeType.includes("jpeg") ? "jpg" : "png";
+      // Optional second pass: hand the PhotoRoom output to gpt-image-1 to
+      // re-ground the tyres on the floor and match the lighting on the car
+      // body to the warm ambient light in the iAutoMotive Studio backdrop.
+      // Gated on OPENAI_API_KEY — when absent we ship the PhotoRoom-only
+      // result so dev environments without the key still work end-to-end.
+      let finalBuffer = out.buffer;
+      let finalMime = out.mimeType;
+      let refined = false;
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          const ref = await refineCarPhoto(out.buffer);
+          finalBuffer = ref.buffer;
+          finalMime = ref.mimeType;
+          refined = true;
+        } catch (err) {
+          // Don't fail the whole pass if the GPT step blows up — keep the
+          // PhotoRoom output and surface the OpenAI error in the per-photo
+          // result so the admin sees what happened.
+          const msg = err instanceof Error ? err.message : "Unknown OpenAI error";
+          console.error(`[replace-background ${id}] gpt-image-1 refine failed:`, msg);
+        }
+      }
+
+      const ext = finalMime.includes("jpeg") ? "jpg" : "png";
       const token = crypto.randomBytes(8).toString("hex");
-      const key = `vehicles/processed/${row.entityId}/${token}.${ext}`;
-      const newUrl = await saveUploadBuffer(out.buffer, key, out.mimeType);
+      const subdir = refined ? "refined" : "processed";
+      const key = `vehicles/${subdir}/${row.entityId}/${token}.${ext}`;
+      const newUrl = await saveUploadBuffer(finalBuffer, key, finalMime);
 
       await prisma.mediaFile.update({
         where: { id },
@@ -107,7 +133,7 @@ export async function POST(req: NextRequest) {
           originalCdnUrl: row.originalCdnUrl ?? row.cdnUrl,
         },
       });
-      results.push({ id, ok: true, cdnUrl: newUrl });
+      results.push({ id, ok: true, cdnUrl: newUrl, refined });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown PhotoRoom error";
       // Log the actual PhotoRoom response so when something rejects (param

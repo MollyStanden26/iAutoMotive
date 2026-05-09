@@ -122,9 +122,10 @@ export async function replaceBackground(opts: ReplaceBackgroundOptions): Promise
   form.append("marginRight", "15%");
   form.append("marginBottom", "0%");
 
-  // Fixed 4:3 canvas across every processed shot so vehicle gallery grids
-  // line up cleanly without per-photo crop logic on the front end.
-  form.append("outputSize", "1920x1440");
+  // 1536×1024 (3:2) matches gpt-image-1's nearest accepted output size,
+  // so when the route hands the PhotoRoom buffer to refineCarPhoto() the
+  // canvas dimensions stay consistent through both passes.
+  form.append("outputSize", "1536x1024");
 
   const res = await fetch(ENDPOINT, {
     method: "POST",
