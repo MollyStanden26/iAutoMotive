@@ -45,7 +45,10 @@ const footerColumns = [
   },
   {
     heading: "LEGAL",
-    links: ["Terms of service", "Privacy policy", "Complaints", "FCA disclosure"],
+    // FCA disclosure intentionally omitted from the footer until the
+    // /legal/fca page itself is finalised; the route mapping above stays
+    // so re-adding is a one-line change.
+    links: ["Terms of service", "Privacy policy", "Complaints"],
   },
   {
     heading: "SUPPORT",
