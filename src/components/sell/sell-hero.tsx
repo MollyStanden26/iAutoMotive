@@ -34,7 +34,7 @@ export default function SellHero() {
               margin: 0,
             }}
           >
-            Get a real offer in 2&nbsp;minutes
+            Sell your car at full retail price in under 30&nbsp;days
           </h1>
           <p
             style={{
