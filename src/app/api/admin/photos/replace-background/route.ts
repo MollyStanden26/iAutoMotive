@@ -109,10 +109,12 @@ export async function POST(req: NextRequest) {
       });
       results.push({ id, ok: true, cdnUrl: newUrl });
     } catch (err) {
-      results.push({
-        id, ok: false,
-        error: err instanceof Error ? err.message : "Unknown PhotoRoom error",
-      });
+      const msg = err instanceof Error ? err.message : "Unknown PhotoRoom error";
+      // Log the actual PhotoRoom response so when something rejects (param
+      // shape, file too big, rate limit) we don't have to curl-probe to
+      // figure out what happened. The page only sees the summary status.
+      console.error(`[replace-background ${id}]`, msg);
+      results.push({ id, ok: false, error: msg });
     }
   }
 
