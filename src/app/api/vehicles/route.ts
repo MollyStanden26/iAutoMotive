@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 
+// Force a DB read on every request. Without this Vercel edge-caches the
+// response indefinitely (we just hit a 92-minute-old payload), so admin
+// changes to inventory or freshly-composited photos don't surface to
+// buyers until a deploy or cache purge.
+export const dynamic = "force-dynamic";
+
 /**
  * Public buyer-facing vehicle listing. Hides only terminal stages
  * (sold / returned / withdrawn) — every other vehicle shows up so the
