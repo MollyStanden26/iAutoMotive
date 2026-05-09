@@ -136,7 +136,13 @@ export default function PhotoEditorPage() {
         body: JSON.stringify({ mediaIds: Array.from(selected) }),
       });
       const body = await res.json();
-      if (!res.ok && !body.processed) throw new Error(body.error || `HTTP ${res.status}`);
+      if (!res.ok && !body.processed) {
+        // When EVERY photo failed, surface the first per-photo error
+        // verbatim — usually identical across the batch (auth, billing,
+        // quota) and far more useful than "HTTP 502".
+        const firstErr = body?.results?.find?.((r: { ok: boolean; error?: string }) => !r.ok)?.error;
+        throw new Error(firstErr || body.error || `HTTP ${res.status}`);
+      }
       setFlash({
         kind: body.processed === body.total ? "ok" : "err",
         text: `Processed ${body.processed} of ${body.total}` +
