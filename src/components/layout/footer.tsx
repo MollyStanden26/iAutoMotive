@@ -159,17 +159,9 @@ export function Footer() {
           }}
         >
           I Automotive Technologies Limited is a private limited company registered
-          in England and Wales (company no.{" "}
-          <a
-            href="https://find-and-update.company-information.service.gov.uk/company/15388064"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#C8CDD6", textDecoration: "underline" }}
-          >
-            15388064
-          </a>
-          ). Registered office: 310 Beaumont House, Beaumont Road, Banbury,
-          Oxfordshire, OX16 1RH, United Kingdom. Trading as iAutoMotive.
+          in England and Wales (company no. 15388064). Registered office: 310
+          Beaumont House, Beaumont Road, Banbury, Oxfordshire, OX16 1RH, United
+          Kingdom. Trading as iAutoMotive.
         </p>
 
         {/* Finance / FCA disclosure — authorised representative status */}
