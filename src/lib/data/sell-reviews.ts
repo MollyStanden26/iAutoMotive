@@ -41,7 +41,7 @@ const FEATURED: Review[] = [
   },
   {
     quote:
-      "The Value Tracker feature is brilliant — I monitored my car's price for a few months before deciding to sell. When I was ready, the process was quick and painless.",
+      "Messaged the team on WhatsApp before listing — got an honest answer in under an hour. When I was ready, the process was quick and painless.",
     name: "Rachel W.", city: "London", date: "22 Feb 2026", stars: 5,
   },
 ];
