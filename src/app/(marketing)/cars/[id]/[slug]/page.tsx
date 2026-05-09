@@ -133,7 +133,7 @@ export default function VehicleDetailPage() {
             >
               {heroPhoto ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={heroPhoto} alt={car.title} className="h-full w-full object-cover" />
+                <img src={heroPhoto} alt={car.title} className="h-full w-full object-contain" />
               ) : (
                 <div className="flex h-full items-center justify-center font-body text-sm text-slate-400">
                   No photos available

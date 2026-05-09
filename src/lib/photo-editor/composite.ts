@@ -18,14 +18,15 @@
 
 import sharp from "sharp";
 
-/** Final canvas size — same as the backdrop file's native size. We resize
- *  the backdrop to this in case a designer drops a higher-res asset later. */
-const CANVAS_WIDTH = 1536;
-const CANVAS_HEIGHT = 1024;
+/** Target output WIDTH for the composited hero. Height is derived from the
+ *  backdrop's native aspect ratio so the brand mark and floor stay in the
+ *  exact positions the designer placed them. Most marketplace heroes
+ *  display ~1200–1600px wide so 1600 is a safe fixed cap that avoids
+ *  upscaling tiny backdrops past their useful resolution. */
+const TARGET_WIDTH = 1600;
 
 /** Fraction of canvas WIDTH the car cutout should occupy. 0.78 reads well
- *  for hero shots — fills the frame without crowding the brand mark in
- *  the upper-right. */
+ *  for hero shots — fills the frame without crowding the brand mark. */
 const CAR_WIDTH_RATIO = 0.78;
 
 /** Fraction of canvas HEIGHT separating the car's lowest opaque pixel
@@ -40,39 +41,48 @@ export interface CompositeResult {
 
 /**
  * Pastes `cutoutBuffer` onto `backdropBuffer` at fixed position + scale.
- * Returns a PNG buffer at CANVAS_WIDTH × CANVAS_HEIGHT.
+ * Output canvas matches the backdrop's NATIVE aspect ratio — no cropping
+ * on either dimension — so the brand mark always lands where the
+ * designer placed it. The page just needs to render with `object-contain`
+ * (or a matching aspect-ratio container) and nothing is ever clipped.
  */
 export async function compositeOnBackdrop(
   cutoutBuffer: Buffer,
   backdropBuffer: Buffer,
 ): Promise<CompositeResult> {
-  // Normalise the backdrop to our canvas size. `cover` fills the frame
-  // and crops if the source aspect doesn't match — designers should drop
-  // 3:2 assets to avoid surprises.
+  // Read backdrop dimensions so the canvas tracks its native aspect.
+  const bdMeta = await sharp(backdropBuffer).metadata();
+  const bdWidth = bdMeta.width ?? TARGET_WIDTH;
+  const bdHeight = bdMeta.height ?? Math.round(TARGET_WIDTH * 0.625);
+  const aspect = bdWidth / bdHeight;
+
+  // Scale to TARGET_WIDTH unless the backdrop is already wider, in which
+  // case keep its native width to avoid pointless upscaling.
+  const canvasWidth = Math.min(bdWidth, TARGET_WIDTH);
+  const canvasHeight = Math.round(canvasWidth / aspect);
+
+  // Resize the backdrop preserving aspect — `fit: fill` would distort,
+  // and we just computed the matching height so this maps 1:1.
   const backdrop = await sharp(backdropBuffer)
-    .resize(CANVAS_WIDTH, CANVAS_HEIGHT, { fit: "cover", position: "center" })
+    .resize(canvasWidth, canvasHeight, { fit: "fill" })
     .toBuffer();
 
-  // Resize the car cutout proportionally to occupy CAR_WIDTH_RATIO of the
-  // canvas width. sharp preserves the aspect ratio when only `width` is
-  // given.
-  const targetCarWidth = Math.round(CANVAS_WIDTH * CAR_WIDTH_RATIO);
+  // Resize the car cutout proportionally to occupy CAR_WIDTH_RATIO of
+  // the canvas width. sharp preserves aspect when only `width` is given.
+  const targetCarWidth = Math.round(canvasWidth * CAR_WIDTH_RATIO);
   const car = await sharp(cutoutBuffer)
     .resize({ width: targetCarWidth })
     .toBuffer();
 
-  // Read the resized cutout's height so we can pin the bottom edge to
-  // the floor of the canvas.
   const carMeta = await sharp(car).metadata();
   const carWidth = carMeta.width ?? targetCarWidth;
   const carHeight = carMeta.height ?? targetCarWidth;
 
-  // Centre the car horizontally; pin to bottom with BOTTOM_MARGIN_RATIO
-  // of the canvas height of breathing room so the soft shadow PhotoRoom
-  // baked into the cutout has somewhere to land.
-  const left = Math.max(0, Math.round((CANVAS_WIDTH - carWidth) / 2));
-  const bottomMargin = Math.round(CANVAS_HEIGHT * BOTTOM_MARGIN_RATIO);
-  const top = Math.max(0, CANVAS_HEIGHT - carHeight - bottomMargin);
+  // Centre horizontally; pin to bottom with breathing room for the
+  // soft shadow PhotoRoom baked into the cutout.
+  const left = Math.max(0, Math.round((canvasWidth - carWidth) / 2));
+  const bottomMargin = Math.round(canvasHeight * BOTTOM_MARGIN_RATIO);
+  const top = Math.max(0, canvasHeight - carHeight - bottomMargin);
 
   const finalPng = await sharp(backdrop)
     .composite([{ input: car, top, left }])
