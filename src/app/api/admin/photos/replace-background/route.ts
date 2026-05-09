@@ -4,30 +4,28 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/require-role";
-import { compositeCarOnBackdrop } from "@/lib/openai/refine-car-photo";
+import { segmentCarPhoto } from "@/lib/photoroom/segment";
+import { compositeOnBackdrop } from "@/lib/photo-editor/composite";
 import { saveUploadBuffer } from "@/lib/storage/upload";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// gpt-image-1 high-quality is 20–30s per image and the admin can batch up
-// to 16 in a single click — worst case ~8 minutes. The 300s ceiling here
-// is Vercel's hard cap for a serverless function.
+// Segmentation is ~3–8s per image and the sharp composite is sub-second,
+// so 16 photos fit comfortably under Vercel's 300s ceiling.
 export const maxDuration = 300;
 
 /**
  * Backdrop file lookup. Designers can drop the asset under any of these
- * extensions; first hit wins. Same convention used since the PhotoRoom
- * era so swapping designs is still a single-file change.
+ * extensions; first hit wins.
  */
 const BACKDROP_CANDIDATES = ["png", "jpg", "jpeg", "webp"].map(ext =>
   path.join(process.cwd(), "public", "images", `iautomotive-backdrop.${ext}`)
 );
 
-async function loadBackdrop(): Promise<{ buffer: Buffer; filename: string }> {
+async function loadBackdrop(): Promise<Buffer> {
   for (const candidate of BACKDROP_CANDIDATES) {
     try {
-      const buffer = await readFile(candidate);
-      return { buffer, filename: path.basename(candidate) };
+      return await readFile(candidate);
     } catch {
       // try next extension
     }
@@ -38,39 +36,27 @@ async function loadBackdrop(): Promise<{ buffer: Buffer; filename: string }> {
 }
 
 /**
- * Fetch the raw car bytes for a MediaFile row. Handles both Vercel Blob
- * URLs (prod) and local /uploads/* paths (dev).
- */
-async function loadCarPhoto(sourceUrl: string): Promise<Buffer> {
-  if (sourceUrl.startsWith("http")) {
-    const res = await fetch(sourceUrl);
-    if (!res.ok) throw new Error(`Source fetch ${res.status}: ${res.statusText}`);
-    return Buffer.from(await res.arrayBuffer());
-  }
-  const fullPath = path.join(process.cwd(), "public", sourceUrl);
-  return readFile(fullPath);
-}
-
-/**
  * POST /api/admin/photos/replace-background
  *
  * Body: { mediaIds: string[] }
  *
- * Single-pass GPT compositor: for each MediaFile id, fetch the original
- * raw photo, load the iAutoMotive Studio backdrop from disk, hand both
- * to gpt-image-1's multi-image edit endpoint with a fixed prompt asking
- * it to place the car in the studio with floor contact + matched
- * lighting + brand mark preserved, and persist the resulting PNG.
+ * Two-stage deterministic pipeline:
  *
- * Raw URL is preserved on `originalCdnUrl` (only on first pass) so the
- * editor's "Revert" button can roll back to the unprocessed shot.
+ *   1. PhotoRoom segments the car out of the raw photo, returns a
+ *      transparent PNG with a soft contact shadow baked in. The car's
+ *      pixels are preserved byte-for-byte — no AI re-rendering.
  *
- * Returns one row per id with { ok, error?, cdnUrl? } so the UI can
- * surface partial successes when individual photos fail.
+ *   2. sharp pastes the cutout onto the iAutoMotive Studio backdrop
+ *      at a fixed position and scale (78% of canvas width, 4% from
+ *      the bottom edge), producing a 1536×1024 PNG.
+ *
+ * Output is identical run-to-run for the same inputs — no model
+ * temperature, no prompt drift, no colour shift on the bodywork.
+ *
+ * Raw URL is preserved on `originalCdnUrl` (only on first pass) so
+ * Revert always rolls back to the unprocessed shot.
  */
 export async function POST(req: NextRequest) {
-  // Photo editing is gated to roles that already have the "photo-editor"
-  // RBAC permission (super-admin, site-manager, recon-tech).
   const guard = await requireRole(req, ["super-admin", "site-manager", "recon-tech"]);
   if (!guard.ok) return guard.response;
 
@@ -87,11 +73,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Process at most 16 photos per request" }, { status: 400 });
   }
 
-  // Read the backdrop once for the whole batch — same bytes go to every
-  // photo in this run, no point re-reading per id.
-  let backdrop: { buffer: Buffer; filename: string };
+  // Load backdrop once for the whole batch.
+  let backdropBuffer: Buffer;
   try {
-    backdrop = await loadBackdrop();
+    backdropBuffer = await loadBackdrop();
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Could not load backdrop" },
@@ -105,9 +90,8 @@ export async function POST(req: NextRequest) {
   });
   const byId = new Map(rows.map(r => [r.id, r]));
 
-  // Sequential — gpt-image-1's rate limits don't tolerate parallel requests
-  // on most accounts, and we'd rather take the wall-clock hit than half
-  // the batch failing.
+  // Sequential — PhotoRoom's free tier doesn't tolerate parallel calls
+  // and the wall-clock cost is fine for batch sizes this small.
   const results: { id: string; ok: boolean; cdnUrl?: string; error?: string }[] = [];
   for (const id of ids) {
     const row = byId.get(id);
@@ -115,9 +99,8 @@ export async function POST(req: NextRequest) {
       results.push({ id, ok: false, error: "MediaFile not found" });
       continue;
     }
-    // Always reprocess from the original raw upload. If we've been through
-    // the pipeline once, originalCdnUrl is the raw; otherwise cdnUrl IS
-    // the raw.
+    // Always reprocess from the raw upload. originalCdnUrl is set on the
+    // first pass, so subsequent runs reach the same source bytes.
     const sourceUrl = row.originalCdnUrl ?? row.cdnUrl;
     if (!sourceUrl) {
       results.push({ id, ok: false, error: "No source URL" });
@@ -125,12 +108,23 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const carBuffer = await loadCarPhoto(sourceUrl);
-      const out = await compositeCarOnBackdrop(carBuffer, backdrop.buffer, backdrop.filename);
+      // Stage 1: segment the car out (PhotoRoom). For absolute URLs we
+      // pass the URL so PhotoRoom can fetch directly; for local
+      // /uploads/* paths we read the file and pass the buffer (PhotoRoom
+      // can't reach localhost).
+      const cutout = sourceUrl.startsWith("http")
+        ? await segmentCarPhoto({ url: sourceUrl })
+        : await segmentCarPhoto({
+            buffer: await readFile(path.join(process.cwd(), "public", sourceUrl)),
+          });
 
-      const ext = out.mimeType.includes("jpeg") ? "jpg" : "png";
+      // Stage 2: paste cutout onto backdrop at fixed position + scale
+      // (deterministic, no AI). Result is the canvas size from
+      // composite.ts (1536×1024 PNG).
+      const out = await compositeOnBackdrop(cutout.buffer, backdropBuffer);
+
       const token = crypto.randomBytes(8).toString("hex");
-      const key = `vehicles/composited/${row.entityId}/${token}.${ext}`;
+      const key = `vehicles/composited/${row.entityId}/${token}.png`;
       const newUrl = await saveUploadBuffer(out.buffer, key, out.mimeType);
 
       await prisma.mediaFile.update({
@@ -139,16 +133,13 @@ export async function POST(req: NextRequest) {
           cdnUrl: newUrl,
           storageKey: newUrl,
           mimeType: out.mimeType,
-          // First pass — preserve the raw upload URL. Subsequent passes
-          // keep the same originalCdnUrl so revert always lands on raw.
+          // First pass — preserve the raw upload URL so Revert works.
           originalCdnUrl: row.originalCdnUrl ?? row.cdnUrl,
         },
       });
       results.push({ id, ok: true, cdnUrl: newUrl });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown OpenAI error";
-      // Log so future param-shape mishaps surface in dev/Vercel logs without
-      // a manual probe — the page only sees the summary status.
+      const msg = err instanceof Error ? err.message : "Unknown processing error";
       console.error(`[replace-background ${id}]`, msg);
       results.push({ id, ok: false, error: msg });
     }

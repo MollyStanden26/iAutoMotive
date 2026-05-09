@@ -196,7 +196,7 @@ export default function PhotoEditorPage() {
             Photo editor
           </div>
           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-            Composite cars onto the iAutoMotive Studio with gpt-image-1
+            Cut cars out and paste onto the iAutoMotive Studio backdrop
           </div>
         </div>
         <div style={{ padding: "12px 18px" }}>
