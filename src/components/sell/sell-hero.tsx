@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { WhatsAppOfferModal } from "./whatsapp-offer-modal";
 
 type Tab = "reg" | "vin";
 
 export default function SellHero() {
   const [activeTab, setActiveTab] = useState<Tab>("reg");
   const [inputValue, setInputValue] = useState("");
+  const [waModalOpen, setWaModalOpen] = useState(false);
 
   return (
     <section
@@ -157,9 +159,12 @@ export default function SellHero() {
             />
           </div>
 
-          {/* Submit button */}
+          {/* Submit button — opens the WhatsApp confirmation modal so a
+              real person can pick up the conversation. The form's reg/VIN
+              is passed through and embedded in the pre-filled message. */}
           <button
             type="button"
+            onClick={() => setWaModalOpen(true)}
             style={{
               width: "100%",
               height: 48,
@@ -185,6 +190,13 @@ export default function SellHero() {
           </button>
         </div>
       </div>
+
+      <WhatsAppOfferModal
+        open={waModalOpen}
+        onClose={() => setWaModalOpen(false)}
+        identifierKind={activeTab}
+        identifierValue={inputValue}
+      />
     </section>
   );
 }
