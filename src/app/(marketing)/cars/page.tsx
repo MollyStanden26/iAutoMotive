@@ -17,7 +17,6 @@ interface ApiCar {
   mileage: string;
   mileageNumeric: number;
   price: number;
-  monthlyEstimate: number;
   imageUrl?: string;
   bodyType?: string | null;
   fuelType?: string | null;

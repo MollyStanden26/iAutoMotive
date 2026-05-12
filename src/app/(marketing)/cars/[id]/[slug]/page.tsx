@@ -17,7 +17,6 @@ interface CarDetails {
   subtitle: string;
   mileage: number;
   price: number;
-  monthlyEstimate: number;
   details: {
     fuelType: string;
     transmission: string;
@@ -199,33 +198,27 @@ export default function VehicleDetailPage() {
               </div>
             </div>
 
-            {/* Price details */}
+            {/* Price details — pay-once only.
+                Pay-monthly card removed: the figure was a mock 60-month
+                divide-by-60 with no real APR / credit check behind it,
+                which is a regulatory grey area for a UK consumer finance
+                offering. The real finance flow lives at
+                /purchase/steps/finance, which collects affordability data
+                and routes through the lender panel before quoting. */}
             <div className="mt-ac-6 rounded-[16px] bg-sky-50 p-ac-6">
               <div className="flex items-baseline gap-ac-2 justify-center">
                 <span className="h-[3px] w-[24px] rounded bg-amber-400" />
                 <h2 className="font-heading text-2xl font-bold text-slate-900">Price Details</h2>
               </div>
-              <div className="mt-ac-4 grid grid-cols-1 gap-ac-4 md:grid-cols-2">
-                <div className="rounded-[12px] bg-white p-ac-5">
-                  <div className="font-body text-[14px] font-semibold text-slate-900">Pay monthly</div>
-                  <div className="mt-ac-2">
-                    <span className="font-heading text-3xl font-bold text-slate-900">{fmt(car.monthlyEstimate)}</span>
-                    <span className="font-body text-sm text-slate-500">/mo*</span>
-                  </div>
-                  <p className="mt-ac-3 font-body text-[13px] text-slate-500">
-                    Estimated based on a 60-month plan with iAutoMotive Finance.
-                  </p>
+              <div className="mt-ac-4 mx-auto max-w-md rounded-[12px] bg-white p-ac-5">
+                <div className="font-body text-[14px] font-semibold text-slate-900">Pay once</div>
+                <div className="mt-ac-2">
+                  <span className="font-heading text-3xl font-bold text-slate-900">{fmt(car.price)}</span>
+                  <span className="ml-ac-2 font-body text-sm font-semibold text-emerald-600">Free shipping</span>
                 </div>
-                <div className="rounded-[12px] bg-white p-ac-5">
-                  <div className="font-body text-[14px] font-semibold text-slate-900">Pay once</div>
-                  <div className="mt-ac-2">
-                    <span className="font-heading text-3xl font-bold text-slate-900">{fmt(car.price)}</span>
-                    <span className="ml-ac-2 font-body text-sm font-semibold text-emerald-600">Free shipping</span>
-                  </div>
-                  <div className="mt-ac-4 space-y-ac-2 font-body text-[13px]">
-                    <div className="flex justify-between"><span className="text-slate-500">Vehicle price</span><span className="text-slate-900">{fmt(car.price)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Shipping fee</span><span className="font-semibold text-emerald-600">£0</span></div>
-                  </div>
+                <div className="mt-ac-4 space-y-ac-2 font-body text-[13px]">
+                  <div className="flex justify-between"><span className="text-slate-500">Vehicle price</span><span className="text-slate-900">{fmt(car.price)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Shipping fee</span><span className="font-semibold text-emerald-600">£0</span></div>
                 </div>
               </div>
             </div>
@@ -244,9 +237,6 @@ export default function VehicleDetailPage() {
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 <span className="font-heading text-3xl font-extrabold text-slate-900">{fmt(car.price)}</span>
               </div>
-              <p className="mt-ac-1 font-body text-[13px] text-slate-500">
-                {fmt(car.monthlyEstimate)}/mo estimated · £0 cash down
-              </p>
               <p className="mt-ac-1 font-body text-[13px] font-semibold text-emerald-600">
                 Free shipping
               </p>

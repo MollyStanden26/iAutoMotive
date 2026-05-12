@@ -45,7 +45,6 @@ export async function GET() {
         // Filter-friendly numeric variant. Card UI keeps the "13k" string above.
         mileageNumeric: v.mileageAtIntake,
         price: v.listingPriceGbp ? Math.round(v.listingPriceGbp / 100) : 0,
-        monthlyEstimate: v.listingPriceGbp ? Math.round((v.listingPriceGbp / 100) / 60) : 0,
         imageUrl: v.mediaFiles[0]?.cdnUrl,
         bodyType: v.bodyType,             // schema enum: hatchback/saloon/suv/...
         fuelType: v.fuelType,             // petrol/diesel/electric/hybrid/...

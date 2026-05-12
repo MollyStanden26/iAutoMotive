@@ -30,7 +30,6 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
         subtitle: [v.trim, `${v.mileageAtIntake.toLocaleString()} miles`].filter(Boolean).join(" · "),
         mileage: v.mileageAtIntake,
         price: v.listingPriceGbp ? Math.round(v.listingPriceGbp / 100) : 0,
-        monthlyEstimate: v.listingPriceGbp ? Math.round((v.listingPriceGbp / 100) / 60) : 0,
         // Vehicle details for the spec table
         details: {
           fuelType: labelize(v.fuelType),

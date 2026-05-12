@@ -10,7 +10,9 @@ interface VehicleCardProps {
   trim: string;
   mileage: string;
   price: number;
-  monthlyEstimate: number;
+  /** Deprecated — kept optional so existing callers compile while we
+   *  remove the mock-finance display surface. Not rendered. */
+  monthlyEstimate?: number;
   imageUrl?: string;
   badge?: string;
   isSaved?: boolean;
@@ -34,7 +36,6 @@ export function VehicleCard({
   trim,
   mileage,
   price,
-  monthlyEstimate,
   imageUrl,
   badge,
   isSaved = false,
@@ -186,19 +187,6 @@ export function VehicleCard({
           }}
         >
           {formatPrice(price)}
-        </p>
-
-        {/* Monthly estimate */}
-        <p
-          style={{
-            fontFamily: "var(--ac-font-body)",
-            fontSize: "14px",
-            fontWeight: 400,
-            color: "#4A556B",
-            margin: "4px 0 0",
-          }}
-        >
-          {formatPrice(monthlyEstimate)}/mo estimated
         </p>
 
         {/* Divider */}

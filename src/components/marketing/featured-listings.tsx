@@ -12,7 +12,7 @@ interface ApiCar {
   trim: string;
   mileage: string;
   price: number;
-  monthlyEstimate: number;
+  monthlyEstimate?: number;
   imageUrl?: string;
 }
 
@@ -158,17 +158,6 @@ export function FeaturedListings() {
                   }}
                 >
                   {fmt(car.price)}
-                </p>
-                <p
-                  className="font-body"
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 400,
-                    color: "#4A556B",
-                    margin: "2px 0 0",
-                  }}
-                >
-                  {fmt(car.monthlyEstimate)}/mo estimated
                 </p>
               </div>
 
