@@ -75,7 +75,7 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
 
 /* ── Lot config defaults ── */
 export const DEFAULT_LOT_CONFIG: LotConfig[] = [
-  { id: 'lot1', name: 'Lot 1', city: 'Birmingham', capacity: 60, address: '14 Tyburn Rd, B24 9HN',   hours: 'Mon–Sat 8–6', manager: 'Tom B.',  active: true },
+  { id: 'lot1', name: 'Lot 1', city: 'Beaumont House', capacity: 60, address: '310 Beaumont House, Beaumont Road, Banbury, England, OX16 1RH', hours: 'Mon–Sat 8–6', manager: 'Tom B.', active: true },
   { id: 'lot2', name: 'Lot 2', city: 'Manchester', capacity: 60, address: 'Trafford Park, M17 1PZ',  hours: 'Mon–Sat 8–6', manager: 'Mark O.', active: true },
   { id: 'lot3', name: 'Lot 3', city: 'Bristol',    capacity: 60, address: 'Avonmouth Way, BS11 9HP', hours: 'Mon–Sat 8–6', manager: null,      active: true },
 ];

@@ -171,18 +171,21 @@ async function main() {
 
     console.log("  Creating lots...");
 
+    // Variable name kept as `lotBirmingham` for git history continuity —
+    // it just refers to "the first lot". Underlying row is now the
+    // iAutoMotive Beaumont House facility in Banbury.
     const lotBirmingham = await tx.lot.create({
       data: {
-        name: "Lot 1 — Birmingham",
-        addressLine1: "Unit 4, Heartlands Business Park",
-        city: "Birmingham",
-        postcode: "B5 4HN",
+        name: "Lot 1 — Beaumont House",
+        addressLine1: "310 Beaumont House, Beaumont Road",
+        city: "Banbury",
+        postcode: "OX16 1RH",
         phone: "+441211234567",
-        capacityVehicles: 40,
+        capacityVehicles: 60,
         managerId: sarahWhitfield.id,
         status: "active",
-        lat: 52.4814,
-        lng: -1.8998,
+        lat: 52.0612,
+        lng: -1.3463,
       },
     });
 

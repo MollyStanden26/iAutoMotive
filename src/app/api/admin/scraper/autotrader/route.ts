@@ -78,9 +78,9 @@ function regFromAtId(atId: string): string {
 }
 
 async function getOrCreateLot() {
-  const existing = await prisma.lot.findFirst({ where: { name: "Lot 1", city: "Birmingham" } });
+  const existing = await prisma.lot.findFirst({ where: { name: "Lot 1", city: "Beaumont House" } });
   if (existing) return existing;
-  return prisma.lot.create({ data: { name: "Lot 1", city: "Birmingham", capacityVehicles: 60 } });
+  return prisma.lot.create({ data: { name: "Lot 1", city: "Beaumont House", capacityVehicles: 60 } });
 }
 
 async function downloadPhoto(url: string, key: string): Promise<{ url: string; size: number }> {

@@ -35,13 +35,13 @@ const STAGES       = [
 ] as const;
 
 const LOT_DEFINITIONS: Record<string, { name: string; city: string; capacity: number }> = {
-  "Lot 1 Birmingham": { name: "Lot 1", city: "Birmingham", capacity: 60 },
-  "Lot 2 Manchester": { name: "Lot 2", city: "Manchester", capacity: 60 },
-  "Lot 3 Bristol":    { name: "Lot 3", city: "Bristol",    capacity: 60 },
+  "Lot 1 Beaumont House": { name: "Lot 1", city: "Beaumont House", capacity: 60 },
+  "Lot 2 Manchester":     { name: "Lot 2", city: "Manchester",     capacity: 60 },
+  "Lot 3 Bristol":        { name: "Lot 3", city: "Bristol",        capacity: 60 },
 };
 
 async function getOrCreateLot(label: string) {
-  const def = LOT_DEFINITIONS[label] ?? LOT_DEFINITIONS["Lot 1 Birmingham"];
+  const def = LOT_DEFINITIONS[label] ?? LOT_DEFINITIONS["Lot 1 Beaumont House"];
   const existing = await prisma.lot.findFirst({ where: { name: def.name, city: def.city } });
   if (existing) return existing;
   return prisma.lot.create({

@@ -165,7 +165,7 @@ export const MOCK_DOCUMENTS: SellerDocument[] = [
 export const MOCK_LOT_MANAGER: LotManager = {
   name: 'Tom B.',
   role: 'Lot Manager',
-  location: 'Birmingham',
+  location: 'Beaumont House, Banbury',
   responseTime: 'Typically replies in < 1 hour',
 };
 

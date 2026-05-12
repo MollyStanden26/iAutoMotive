@@ -151,7 +151,7 @@ export const reconStages = [
 ];
 
 export const lotCapacity = [
-  { name: 'Lot 1 Birmingham', vehicles: 52, capacity: 87, color: '#F87171', warning: 'Near capacity' },
+  { name: 'Lot 1 Beaumont House', vehicles: 52, capacity: 87, color: '#F87171', warning: 'Near capacity' },
   { name: 'Lot 2 Manchester', vehicles: 48, capacity: 80, color: '#F5A623' },
   { name: 'Lot 3 Bristol',    vehicles: 42, capacity: 70, color: '#34D399' },
 ];
@@ -183,7 +183,7 @@ export const revenueKpis = [
 ];
 
 export const gpuByLot = [
-  { name: 'Lot 1 Birmingham', deals: 4, gpu: 1124, color: '#34D399' },
+  { name: 'Lot 1 Beaumont House', deals: 4, gpu: 1124, color: '#34D399' },
   { name: 'Lot 2 Manchester', deals: 3, gpu: 984,  color: '#4DD9C7' },
   { name: 'Lot 3 Bristol',    deals: 2, gpu: 922,  color: '#F5A623' },
 ];

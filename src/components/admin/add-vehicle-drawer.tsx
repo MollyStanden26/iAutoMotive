@@ -102,7 +102,7 @@ const EMPTY: VehicleForm = {
   exteriorColour: "", owners: "1", hpiClear: false,
   conditionGrade: "good", serviceHistory: "full",
   listingPriceGbp: "", floorPriceGbp: "",
-  lot: "Lot 1 Birmingham", stage: "offer_accepted",
+  lot: "Lot 1 Beaumont House", stage: "offer_accepted",
   sellerId: "",
   slotPhotos: {}, extraPhotos: [],
   hpiCertificate: null, conditionReport: null, v5cLogbook: null,
@@ -113,7 +113,7 @@ const TRANSMISSIONS = ["manual", "automatic", "semi_automatic", "cvt"];
 const BODY_TYPES   = ["hatchback", "saloon", "estate", "suv", "coupe", "convertible", "mpv", "pickup", "van"];
 const CONDITIONS   = ["excellent", "good", "fair", "below_average"];
 const SERVICE      = ["full", "partial", "none"];
-const LOTS_LIST    = ["Lot 1 Birmingham", "Lot 2 Manchester", "Lot 3 Bristol"];
+const LOTS_LIST    = ["Lot 1 Beaumont House", "Lot 2 Manchester", "Lot 3 Bristol"];
 const STAGES       = [
   "offer_accepted", "collected", "inspecting", "in_mechanical",
   "in_body_paint", "in_detail", "in_photography", "listing_ready", "live",

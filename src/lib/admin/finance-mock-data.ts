@@ -123,7 +123,7 @@ export const WATERFALL_DATA: WaterfallItem[] = [
 
 /* ── GPU by lot ── */
 export const GPU_BY_LOT: GpuByLot[] = [
-  { lot: "Lot 1 Birmingham", gpu: 1720, fill: "#172D4D" },
+  { lot: "Lot 1 Beaumont House", gpu: 1720, fill: "#172D4D" },
   { lot: "Lot 2 Manchester", gpu: 1840, fill: "#1D5A4D" },
   { lot: "Lot 3 Bristol",    gpu: 2020, fill: "#4DD9C7" },
   { lot: "Portfolio avg",    gpu: 1847, fill: "#1D5A4D" },
