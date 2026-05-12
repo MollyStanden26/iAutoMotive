@@ -12,9 +12,13 @@ next-env.d.ts
 # Stray Next tmp build dir produced when TMPDIR is short-circuited into the worktree
 var/
 
-# Signed consignment agreements should never be in git — they're per-seller
-# private documents persisted via filesystem in dev only. Move to S3/R2 for prod.
+# Local-filesystem fallback for the upload pipeline. In prod everything
+# lands on Vercel Blob (BLOB_READ_WRITE_TOKEN); these directories only
+# exist when running without that token and they're dev artefacts, not
+# data we want shipped in git.
 public/uploads/contracts/
+public/uploads/vehicles/
 
 # Vercel artifacts
 .vercel/
+.vercel
