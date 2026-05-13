@@ -19,6 +19,10 @@ var/
 public/uploads/contracts/
 public/uploads/vehicles/
 
+# Scratch folder for one-off photo swaps fed to scripts/swap-photos-*.mjs.
+# Files here are inputs to the script, not data we want shipped in git.
+tmp-replace/
+
 # Vercel artifacts
 .vercel/
 .vercel
