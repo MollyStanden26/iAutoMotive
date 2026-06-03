@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
+
+/** Per-file ceiling — mirrors /api/admin/upload and /api/admin/vehicles. */
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 const T = {
   bgPanel:     "#0D1525",
@@ -156,6 +160,9 @@ export function AddVehicleDrawer({ open, onClose, onCreated }: AddVehicleDrawerP
   const [sellersLoading, setSellersLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // null = not yet probed; "direct" = client-to-Blob (prod with Blob configured);
+  // "multipart" = legacy single-request upload (local dev).
+  const [uploadMode, setUploadMode] = useState<"direct" | "multipart" | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -170,6 +177,22 @@ export function AddVehicleDrawer({ open, onClose, onCreated }: AddVehicleDrawerP
       .then(data => { if (!cancelled) setSellers(data.sellers ?? []); })
       .catch(err => { if (!cancelled) console.error("[AddVehicleDrawer] fetch sellers failed:", err); })
       .finally(() => { if (!cancelled) setSellersLoading(false); });
+
+    // Probe the upload mode. In prod with Vercel Blob configured we'll stream
+    // files directly to Blob from the client (no 4.5 MB function-body cap);
+    // in dev we fall back to the legacy multipart submit, which works fine
+    // against a local server without any body-size limit.
+    fetch("/api/admin/upload")
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(data => {
+        if (cancelled) return;
+        setUploadMode(data.direct ? "direct" : "multipart");
+      })
+      .catch(err => {
+        if (cancelled) return;
+        console.warn("[AddVehicleDrawer] upload-mode probe failed, defaulting to multipart:", err);
+        setUploadMode("multipart");
+      });
 
     return () => {
       cancelled = true;
@@ -292,28 +315,101 @@ export function AddVehicleDrawer({ open, onClose, onCreated }: AddVehicleDrawerP
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const fd = new FormData();
-      // Scalar/text fields. Skip the file collections — they go in below.
+      // Pre-flight size check. Catches it on the client so the user sees
+      // which file is too big rather than a generic upload failure later.
+      const tooBig: string[] = [];
+      for (const slot of SLOTS) {
+        const p = form.slotPhotos[slot.key];
+        if (p && p.file.size > MAX_UPLOAD_BYTES) tooBig.push(`${slot.label} photo`);
+      }
+      form.extraPhotos.forEach((p, i) => {
+        if (p.file.size > MAX_UPLOAD_BYTES) tooBig.push(`Extra photo #${i + 1}`);
+      });
+      VEHICLE_DOCS.forEach(d => {
+        const f = form[d.key] as File | null;
+        if (f && f.size > MAX_UPLOAD_BYTES) tooBig.push(d.label);
+      });
+      if (tooBig.length) {
+        throw new Error(
+          `Too large (max ${(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0)}MB each): ${tooBig.join(", ")}`
+        );
+      }
+
+      // Collect the scalar/text fields once — both paths need them.
+      const scalarFields: Record<string, string> = {};
       const skip = new Set(["slotPhotos", "extraPhotos", "hpiCertificate", "conditionReport", "v5cLogbook"]);
       Object.entries(form).forEach(([k, v]) => {
         if (skip.has(k)) return;
         if (v == null) return;
-        fd.append(k, typeof v === "boolean" ? (v ? "true" : "false") : String(v));
-      });
-      // Named photos
-      for (const slot of SLOTS) {
-        const p = form.slotPhotos[slot.key];
-        if (p) fd.append(`photo_${slot.key}`, p.file, p.file.name);
-      }
-      // Extras
-      form.extraPhotos.forEach(p => fd.append("photo_extra", p.file, p.file.name));
-      // Required PDFs
-      VEHICLE_DOCS.forEach(d => {
-        const f = form[d.key] as File | null;
-        if (f) fd.append(d.key, f, f.name);
+        scalarFields[k] = typeof v === "boolean" ? (v ? "true" : "false") : String(v);
       });
 
-      const res = await fetch("/api/admin/vehicles", { method: "POST", body: fd });
+      let res: Response;
+
+      if (uploadMode === "direct") {
+        // PROD path — upload each file straight to Vercel Blob, then send a
+        // tiny JSON payload (URLs + metadata) to /api/admin/vehicles. This
+        // keeps the function body well under Vercel's 4.5 MB cap and is what
+        // unblocks the 413 the user reported.
+        const token = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+          .map(b => b.toString(16).padStart(2, "0")).join("");
+
+        const safeExt = (filename: string, fallback = "jpg") => {
+          const e = (filename.split(".").pop() || fallback).toLowerCase().replace(/[^a-z0-9]/g, "");
+          return e || fallback;
+        };
+
+        const uploadOne = async (file: File, key: string) => {
+          const blob = await upload(`vehicles/${token}/${key}`, file, {
+            access: "public",
+            handleUploadUrl: "/api/admin/upload",
+            contentType: file.type || "application/octet-stream",
+          });
+          return { url: blob.url, name: file.name, mime: file.type, size: file.size };
+        };
+
+        const photos: Record<string, { url: string; name: string; mime: string; size: number }> = {};
+        for (const slot of SLOTS) {
+          const p = form.slotPhotos[slot.key];
+          if (!p) continue;
+          photos[slot.key] = await uploadOne(p.file, `${slot.key}.${safeExt(p.file.name)}`);
+        }
+
+        const extraPhotos: { url: string; name: string; mime: string; size: number }[] = [];
+        for (let i = 0; i < form.extraPhotos.length; i++) {
+          const p = form.extraPhotos[i];
+          extraPhotos.push(await uploadOne(p.file, `extra-${i}.${safeExt(p.file.name)}`));
+        }
+
+        const docs: Record<string, { url: string; name: string; mime: string; size: number }> = {};
+        for (const d of VEHICLE_DOCS) {
+          const f = form[d.key] as File | null;
+          if (!f) continue;
+          docs[d.key] = await uploadOne(f, `${d.key}.pdf`);
+        }
+
+        res = await fetch("/api/admin/vehicles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fields: scalarFields, photos, extraPhotos, docs }),
+        });
+      } else {
+        // DEV path — original multipart submit. Local dev has no body-size cap
+        // so the single-request approach is fine and we don't need Blob set up.
+        const fd = new FormData();
+        Object.entries(scalarFields).forEach(([k, v]) => fd.append(k, v));
+        for (const slot of SLOTS) {
+          const p = form.slotPhotos[slot.key];
+          if (p) fd.append(`photo_${slot.key}`, p.file, p.file.name);
+        }
+        form.extraPhotos.forEach(p => fd.append("photo_extra", p.file, p.file.name));
+        VEHICLE_DOCS.forEach(d => {
+          const f = form[d.key] as File | null;
+          if (f) fd.append(d.key, f, f.name);
+        });
+        res = await fetch("/api/admin/vehicles", { method: "POST", body: fd });
+      }
+
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Save failed (${res.status})`);
