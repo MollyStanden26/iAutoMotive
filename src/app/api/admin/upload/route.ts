@@ -25,8 +25,16 @@ import { requireStaff } from "@/lib/auth/require-role";
  *                            client falls back rather than half-uploading.
  */
 
-/** Per-file ceiling. Matches MAX_FILE_BYTES in src/app/api/admin/vehicles/route.ts. */
-export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+/**
+ * Per-file ceiling. Matches MAX_FILE_BYTES in src/app/api/admin/vehicles/route.ts
+ * and MAX_UPLOAD_BYTES in src/components/admin/add-vehicle-drawer.tsx.
+ *
+ * NOT exported — Next.js App Router only allows a fixed set of `route.ts`
+ * exports (runtime/dynamic/maxDuration/HTTP-method handlers/etc.), and the
+ * build fails with "MAX_UPLOAD_BYTES is not a valid Route export field"
+ * otherwise. The three call sites duplicate this constant on purpose.
+ */
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 const ALLOWED_CONTENT_TYPES = [
   "image/jpeg",
