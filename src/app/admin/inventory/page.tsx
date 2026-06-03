@@ -43,8 +43,9 @@ const T = {
 /* ================================================================== */
 /*  TOPBAR                                                             */
 /* ================================================================== */
-function Topbar({ selectedCount, onAddVehicle }: { selectedCount: number; onAddVehicle: () => void }) {
+function Topbar({ selectedCount, onAddVehicle, onBulkDelete, bulkDeleting }: { selectedCount: number; onAddVehicle: () => void; onBulkDelete: () => void; bulkDeleting: boolean }) {
   const router = useRouter();
+  const hasSelection = selectedCount > 0;
   return (
     <div className="flex items-center justify-between px-5 flex-shrink-0" style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}` }}>
       <div className="flex items-center gap-2">
@@ -54,7 +55,8 @@ function Topbar({ selectedCount, onAddVehicle }: { selectedCount: number; onAddV
       </div>
       <div className="flex items-center gap-2">
         <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("export inventory CSV")}>Export CSV</button>
-        <button className="px-3 py-[6px] rounded-[8px]" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary, opacity: selectedCount === 0 ? 0.4 : 1, cursor: selectedCount === 0 ? "default" : "pointer", pointerEvents: selectedCount === 0 ? "none" : "auto" }} onClick={() => console.log("bulk reprice", selectedCount)}>Bulk reprice</button>
+        <button className="px-3 py-[6px] rounded-[8px]" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary, opacity: !hasSelection ? 0.4 : 1, cursor: !hasSelection ? "default" : "pointer", pointerEvents: !hasSelection ? "none" : "auto" }} onClick={() => console.log("bulk reprice", selectedCount)}>Bulk reprice</button>
+        <button className="px-3 py-[6px] rounded-[8px] hover:opacity-90" style={{ background: "transparent", border: `1px solid ${T.red}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.red, opacity: (!hasSelection || bulkDeleting) ? 0.4 : 1, cursor: (!hasSelection || bulkDeleting) ? "default" : "pointer", pointerEvents: (!hasSelection || bulkDeleting) ? "none" : "auto" }} onClick={onBulkDelete}>{bulkDeleting ? "Deleting…" : `Delete${hasSelection ? ` (${selectedCount})` : ""}`}</button>
         <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: `1px solid ${T.indigo}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={onAddVehicle}>+ Add vehicle</button>
       </div>
     </div>
@@ -489,12 +491,54 @@ export default function InventoryPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [vehiclesRefreshKey, setVehiclesRefreshKey] = useState(0);
   const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const handleBulkDelete = async () => {
+    const ids = selectedVehicles;
+    if (ids.length === 0) return;
+    const ok = window.confirm(
+      `Delete ${ids.length} vehicle${ids.length === 1 ? "" : "s"}?\n\n` +
+      `This removes each vehicle along with its photos, documents, ` +
+      `consignment, and any deals or enquiries. This cannot be undone.`
+    );
+    if (!ok) return;
+    setBulkDeleting(true);
+    try {
+      const res = await fetch("/api/admin/vehicles/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body.error || `Bulk delete failed (${res.status})`);
+      }
+      const failedCount = (body.failed?.length ?? 0) + (body.notFound?.length ?? 0);
+      if (failedCount > 0) {
+        window.alert(
+          `Deleted ${body.deletedCount ?? 0}. ` +
+          `${failedCount} could not be deleted — they may have already been removed.`
+        );
+      }
+      setSelectedVehicles([]);
+      setVehiclesRefreshKey(k => k + 1);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Bulk delete failed");
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <Topbar selectedCount={selectedVehicles.length} onAddVehicle={() => setAddOpen(true)} />
+        <Topbar
+          selectedCount={selectedVehicles.length}
+          onAddVehicle={() => setAddOpen(true)}
+          onBulkDelete={handleBulkDelete}
+          bulkDeleting={bulkDeleting}
+        />
         <div className="flex-1 flex flex-col gap-[10px] overflow-x-hidden" style={{ padding: "14px 20px" }}>
           <KpiStrip />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 292px", gap: 10 }}>
