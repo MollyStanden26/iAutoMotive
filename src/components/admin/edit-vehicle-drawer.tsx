@@ -66,6 +66,7 @@ export function EditVehicleDrawer({ open, vehicleId, onClose, onSaved }: EditVeh
   const [vehicle, setVehicle] = useState<VehicleDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const cancel = () => {
@@ -143,6 +144,35 @@ export function EditVehicleDrawer({ open, vehicleId, onClose, onSaved }: EditVeh
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!vehicle) return;
+    // Hard-confirm because this also nukes photos, documents, consignment,
+    // any deals/enquiries, etc. Plain window.confirm is fine for a v1 — if
+    // we ever soft-delete, this becomes a different flow.
+    const label = `${vehicle.year} ${vehicle.make} ${vehicle.model} (${vehicle.registration})`;
+    const ok = window.confirm(
+      `Delete ${label}?\n\n` +
+      `This removes the vehicle, its photos, documents, consignment, and any ` +
+      `deals or enquiries tied to it. This cannot be undone.`
+    );
+    if (!ok) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/vehicles/${vehicle.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Delete failed (${res.status})`);
+      }
+      onSaved?.();
+      cancel();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -289,18 +319,23 @@ export function EditVehicleDrawer({ open, vehicleId, onClose, onSaved }: EditVeh
 
           <footer className="flex items-center gap-2 px-5"
             style={{ height: 64, borderTop: `1px solid ${T.border}`, background: T.bgPanel, flexShrink: 0 }}>
+            <button type="button" onClick={handleDelete} disabled={submitting || deleting || !vehicle}
+              className="px-3 py-[7px] rounded-[8px] hover:opacity-90"
+              style={{ background: "transparent", border: `1px solid ${T.red}`, color: T.red, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, opacity: (submitting || deleting || !vehicle) ? 0.5 : 1, cursor: deleting ? "wait" : "pointer" }}>
+              {deleting ? "Deleting…" : "Delete"}
+            </button>
             {error && (
-              <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.red, flex: 1 }}>{error}</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.red, flex: 1, marginLeft: 8 }}>{error}</span>
             )}
             <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-              <button type="button" onClick={cancel} disabled={submitting}
+              <button type="button" onClick={cancel} disabled={submitting || deleting}
                 className="px-4 py-[7px] rounded-[8px] hover:opacity-80"
-                style={{ background: T.bgSection, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, color: T.textSecondary, opacity: submitting ? 0.5 : 1 }}>
+                style={{ background: T.bgSection, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, color: T.textSecondary, opacity: (submitting || deleting) ? 0.5 : 1 }}>
                 Cancel
               </button>
-              <button type="submit" disabled={submitting || !vehicle}
+              <button type="submit" disabled={submitting || deleting || !vehicle}
                 className="px-4 py-[7px] rounded-[8px] hover:opacity-90"
-                style={{ background: T.tealBg, border: `1px solid ${T.teal}`, color: T.teal200, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, opacity: (submitting || !vehicle) ? 0.6 : 1, cursor: submitting ? "wait" : "pointer" }}>
+                style={{ background: T.tealBg, border: `1px solid ${T.teal}`, color: T.teal200, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, opacity: (submitting || deleting || !vehicle) ? 0.6 : 1, cursor: submitting ? "wait" : "pointer" }}>
                 {submitting ? "Saving…" : "Save changes"}
               </button>
             </div>

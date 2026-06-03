@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireStaff } from "@/lib/auth/require-role";
+import { deleteUpload } from "@/lib/storage/upload";
 
 const FUEL_TYPES   = ["petrol", "diesel", "hybrid", "plugin_hybrid", "electric", "mild_hybrid"] as const;
 const TRANSMISSIONS = ["manual", "automatic", "semi_automatic", "cvt"] as const;
@@ -129,5 +130,75 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   } catch (error) {
     console.error("[PATCH /api/admin/vehicles/[id]]", error);
     return NextResponse.json({ error: "Failed to update vehicle" }, { status: 500 });
+  }
+}
+
+/**
+ * Delete a vehicle and tear down its directly-attached rows.
+ *
+ *  • Prisma's `onDelete: Cascade` on Consignment / Deal / ConsignmentFeature
+ *    means those are deleted automatically when the Vehicle row goes.
+ *  • MediaFile and Document are polymorphic (entityType + entityId, no FK)
+ *    so we have to delete them explicitly.
+ *  • LotSlot.vehicleId is nullable — we null it out rather than delete the
+ *    slot, since the slot itself is forecourt geometry that outlives any
+ *    one car.
+ *  • Blob cleanup is best-effort *after* the DB delete commits. The DB row
+ *    is the source of truth; a stale Blob is preferable to a 500 that
+ *    leaves the vehicle half-deleted.
+ *
+ * Any other relations (BuyerEnquiry, Lead.convertedToVehicleId, etc.) that
+ * still point at this id will be left dangling — those are softer references
+ * (history / analytics) that don't break the app.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.response;
+  try {
+    const vehicle = await prisma.vehicle.findUnique({ where: { id: params.id } });
+    if (!vehicle) return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
+
+    // Collect Blob URLs BEFORE deleting their DB rows.
+    const media = await prisma.mediaFile.findMany({
+      where: { entityType: "vehicle", entityId: vehicle.id },
+      select: { cdnUrl: true },
+    });
+    const docs = await prisma.document.findMany({
+      where: { entityType: "vehicle", entityId: vehicle.id },
+      select: { cdnUrl: true },
+    });
+    // `.filter(Boolean)` alone doesn't narrow `(string|null)[]` to `string[]`
+    // in TS — need a type predicate so deleteUpload(url) below typechecks.
+    const blobUrls = [...media, ...docs]
+      .map(r => r.cdnUrl)
+      .filter((u): u is string => typeof u === "string" && u.length > 0);
+
+    await prisma.mediaFile.deleteMany({
+      where: { entityType: "vehicle", entityId: vehicle.id },
+    });
+    await prisma.document.deleteMany({
+      where: { entityType: "vehicle", entityId: vehicle.id },
+    });
+    await prisma.lotSlot.updateMany({
+      where: { vehicleId: vehicle.id },
+      data: { vehicleId: null },
+    });
+    await prisma.vehicle.delete({ where: { id: vehicle.id } });
+
+    // Best-effort: fire-and-forget Blob deletions. Don't await sequentially —
+    // there can be ~8 files per vehicle and a slow Blob round-trip per file
+    // would noticeably hold the response. Failures are swallowed by
+    // deleteUpload itself; we wrap defensively as a belt-and-braces.
+    await Promise.all(blobUrls.map(url => deleteUpload(url).catch(() => {})));
+
+    return NextResponse.json({
+      ok: true,
+      id: vehicle.id,
+      registration: vehicle.registration,
+    });
+  } catch (error) {
+    console.error("[DELETE /api/admin/vehicles/[id]]", error);
+    const message = error instanceof Error ? error.message : "Failed to delete vehicle";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
