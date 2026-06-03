@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -258,6 +259,10 @@ const tagColours: Record<string, { bg: string; text: string }> = {
 type Tab = "releases" | "coverage";
 
 export default function PressPage() {
+  // Hidden from the public until ready — returns 404 for direct visits.
+  // Re-enable by deleting this line (and restoring the footer/navbar links).
+  notFound();
+
   const [activeTab, setActiveTab] = useState<Tab>("releases");
 
   return (
