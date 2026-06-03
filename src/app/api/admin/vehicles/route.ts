@@ -109,23 +109,176 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Intake normalisation
+//
+// Two request shapes converge into the same NormalizedIntake object so the
+// DB-writing logic below has a single code path:
+//
+//   • application/json   — files were uploaded straight to Vercel Blob from
+//                          the browser; the body carries the resulting URLs.
+//                          This is what unblocks the 413 in prod (Vercel's
+//                          serverless body cap is ~4.5 MB, can't be raised).
+//
+//   • multipart/form-data — files arrive in the request body. Used by local
+//                          dev where there's no body-size limit.
+// ────────────────────────────────────────────────────────────────────────────
+
+class IntakeError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+type IntakeMeta = { url: string; name: string; mime: string; size: number };
+
+interface NormalizedIntake {
+  get: (k: string) => string;
+  photos: Record<PhotoSlotKey, IntakeMeta>;
+  extras: IntakeMeta[];
+  docs: Record<string, IntakeMeta>;
+  hpiClear: boolean;
+}
+
+/** Match the URLs that Vercel Blob's `put()` and client `upload()` return. */
+const BLOB_URL_RE = /^https:\/\/[a-z0-9.-]+\.public\.blob\.vercel-storage\.com\/vehicles\//i;
+
+async function parseIntake(request: NextRequest): Promise<NormalizedIntake> {
+  const ct = request.headers.get("content-type") || "";
+  if (ct.includes("application/json")) return parseJsonIntake(request);
+  if (ct.includes("multipart/form-data")) return parseMultipartIntake(request);
+  throw new IntakeError(415, "Expected multipart/form-data or application/json");
+}
+
+async function parseMultipartIntake(request: NextRequest): Promise<NormalizedIntake> {
+  const form = await request.formData();
+  const get = (k: string) => {
+    const v = form.get(k);
+    return typeof v === "string" ? v.trim() : "";
+  };
+
+  const token = crypto.randomBytes(8).toString("hex");
+  const saveFile = (file: File, subpath: string) =>
+    saveUpload(file, `vehicles/${token}/${subpath}`);
+
+  const photos: Record<PhotoSlotKey, IntakeMeta> = {} as Record<PhotoSlotKey, IntakeMeta>;
+  for (const slot of REQUIRED_PHOTO_SLOTS) {
+    const f = form.get(`photo_${slot}`);
+    if (!(f instanceof File) || f.size === 0) {
+      throw new IntakeError(400, `Photo for "${slot.replace(/_/g, " ")}" is required`);
+    }
+    if (!f.type.startsWith("image/")) {
+      throw new IntakeError(400, `Photo for ${slot} must be an image file`);
+    }
+    if (f.size > MAX_FILE_BYTES) {
+      throw new IntakeError(413, `Photo for ${slot} too large (max 8MB)`);
+    }
+    const ext = (f.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const url = await saveFile(f, `${slot}.${ext}`);
+    photos[slot] = { url, name: f.name, mime: f.type, size: f.size };
+  }
+
+  const docs: Record<string, IntakeMeta> = {};
+  for (const doc of REQUIRED_DOCS) {
+    const f = form.get(doc.key);
+    if (!(f instanceof File) || f.size === 0) {
+      throw new IntakeError(400, `${doc.title} (PDF) is required`);
+    }
+    if (f.type !== "application/pdf") {
+      throw new IntakeError(400, `${doc.title} must be a PDF`);
+    }
+    if (f.size > MAX_FILE_BYTES) {
+      throw new IntakeError(413, `${doc.title} too large (max 8MB)`);
+    }
+    const url = await saveFile(f, `${doc.key}.pdf`);
+    docs[doc.key] = { url, name: f.name, mime: f.type, size: f.size };
+  }
+
+  const extras: IntakeMeta[] = [];
+  let i = 0;
+  for (const v of form.getAll("photo_extra")) {
+    if (!(v instanceof File) || v.size === 0 || !v.type.startsWith("image/")) continue;
+    if (v.size > MAX_FILE_BYTES) {
+      throw new IntakeError(413, `Extra photo "${v.name}" too large (max 8MB)`);
+    }
+    const ext = (v.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const url = await saveFile(v, `extra-${i}.${ext}`);
+    extras.push({ url, name: v.name, mime: v.type, size: v.size });
+    i++;
+  }
+
+  return { get, photos, extras, docs, hpiClear: form.get("hpiClear") === "true" };
+}
+
+async function parseJsonIntake(request: NextRequest): Promise<NormalizedIntake> {
+  const body = await request.json() as {
+    fields?: Record<string, string | undefined>;
+    photos?: Partial<Record<PhotoSlotKey, IntakeMeta>>;
+    extraPhotos?: IntakeMeta[];
+    docs?: Record<string, IntakeMeta>;
+  };
+  const fields = body.fields ?? {};
+  const get = (k: string) => {
+    const v = fields[k];
+    return typeof v === "string" ? v.trim() : "";
+  };
+
+  const isValidBlobUrl = (u: unknown): u is string =>
+    typeof u === "string" && BLOB_URL_RE.test(u);
+
+  const validateMeta = (
+    m: IntakeMeta | undefined,
+    label: string,
+    mimeCheck: (mime: string) => boolean,
+    mimeExpected: string
+  ): IntakeMeta => {
+    if (!m) throw new IntakeError(400, `${label} is required`);
+    if (!isValidBlobUrl(m.url)) throw new IntakeError(400, `${label} URL is not a recognised Blob URL`);
+    if (typeof m.size !== "number" || m.size <= 0) throw new IntakeError(400, `${label} size is invalid`);
+    if (m.size > MAX_FILE_BYTES) throw new IntakeError(413, `${label} too large (max 8MB)`);
+    if (typeof m.mime !== "string" || !mimeCheck(m.mime)) throw new IntakeError(400, `${label} must be ${mimeExpected}`);
+    return { url: m.url, name: String(m.name ?? ""), mime: m.mime, size: m.size };
+  };
+
+  const photos: Record<PhotoSlotKey, IntakeMeta> = {} as Record<PhotoSlotKey, IntakeMeta>;
+  for (const slot of REQUIRED_PHOTO_SLOTS) {
+    photos[slot] = validateMeta(
+      body.photos?.[slot],
+      `Photo for "${slot.replace(/_/g, " ")}"`,
+      (mime) => mime.startsWith("image/"),
+      "an image"
+    );
+  }
+
+  const docs: Record<string, IntakeMeta> = {};
+  for (const doc of REQUIRED_DOCS) {
+    docs[doc.key] = validateMeta(
+      body.docs?.[doc.key],
+      doc.title,
+      (mime) => mime === "application/pdf",
+      "a PDF"
+    );
+  }
+
+  const extras: IntakeMeta[] = [];
+  for (const e of body.extraPhotos ?? []) {
+    if (!e || !isValidBlobUrl(e.url) || typeof e.size !== "number" || e.size <= 0) continue;
+    if (typeof e.mime !== "string" || !e.mime.startsWith("image/")) continue;
+    if (e.size > MAX_FILE_BYTES) {
+      throw new IntakeError(413, `Extra photo "${e.name ?? ""}" too large (max 8MB)`);
+    }
+    extras.push({ url: e.url, name: String(e.name ?? "extra"), mime: e.mime, size: e.size });
+  }
+
+  return { get, photos, extras, docs, hpiClear: get("hpiClear") === "true" };
+}
+
 export async function POST(request: NextRequest) {
   const guard = await requireStaff(request);
   if (!guard.ok) return guard.response;
   try {
-    const contentType = request.headers.get("content-type") || "";
-    if (!contentType.includes("multipart/form-data")) {
-      return NextResponse.json(
-        { error: "Expected multipart/form-data" },
-        { status: 415 }
-      );
-    }
-
-    const form = await request.formData();
-    const get = (k: string) => {
-      const v = form.get(k);
-      return typeof v === "string" ? v.trim() : "";
-    };
+    const intake = await parseIntake(request);
+    const { get, photos, extras, docs, hpiClear } = intake;
 
     // Required scalars
     const sellerId        = get("sellerId");
@@ -151,47 +304,6 @@ export async function POST(request: NextRequest) {
     if (!isAllowed(transmission, TRANSMISSIONS))  return NextResponse.json({ error: "Invalid gearbox" }, { status: 400 });
     if (!isAllowed(bodyType, BODY_TYPES))         return NextResponse.json({ error: "Invalid body type" }, { status: 400 });
 
-    // Required photos: all 5 named slots
-    const photoFiles: Record<PhotoSlotKey, File> = {} as Record<PhotoSlotKey, File>;
-    for (const slot of REQUIRED_PHOTO_SLOTS) {
-      const f = form.get(`photo_${slot}`);
-      if (!(f instanceof File) || f.size === 0) {
-        return NextResponse.json(
-          { error: `Photo for "${slot.replace(/_/g, " ")}" is required` },
-          { status: 400 }
-        );
-      }
-      if (!f.type.startsWith("image/")) {
-        return NextResponse.json({ error: `Photo for ${slot} must be an image file` }, { status: 400 });
-      }
-      if (f.size > MAX_FILE_BYTES) {
-        return NextResponse.json({ error: `Photo for ${slot} too large (max 8MB)` }, { status: 413 });
-      }
-      photoFiles[slot] = f;
-    }
-
-    // Required documents
-    const docFiles: Record<string, File> = {};
-    for (const doc of REQUIRED_DOCS) {
-      const f = form.get(doc.key);
-      if (!(f instanceof File) || f.size === 0) {
-        return NextResponse.json({ error: `${doc.title} (PDF) is required` }, { status: 400 });
-      }
-      if (f.type !== "application/pdf") {
-        return NextResponse.json({ error: `${doc.title} must be a PDF` }, { status: 400 });
-      }
-      if (f.size > MAX_FILE_BYTES) {
-        return NextResponse.json({ error: `${doc.title} too large (max 8MB)` }, { status: 413 });
-      }
-      docFiles[doc.key] = f;
-    }
-
-    // Optional extras
-    const extraPhotos: File[] = [];
-    for (const v of form.getAll("photo_extra")) {
-      if (v instanceof File && v.size > 0 && v.type.startsWith("image/")) extraPhotos.push(v);
-    }
-
     // Resolve seller
     const seller = await prisma.user.findUnique({
       where: { id: sellerId },
@@ -211,40 +323,6 @@ export async function POST(request: NextRequest) {
     }
 
     const lotRecord = await getOrCreateLot(lot);
-
-    // Persist files via the storage abstraction — Vercel Blob in prod when
-    // BLOB_READ_WRITE_TOKEN is set, public/uploads/vehicles/<token>/ in dev.
-    const token = crypto.randomBytes(8).toString("hex");
-
-    async function saveFile(file: File, subpath: string): Promise<string> {
-      return saveUpload(file, `vehicles/${token}/${subpath}`);
-    }
-
-    const slotUrls: Record<PhotoSlotKey, string> = {} as Record<PhotoSlotKey, string>;
-    for (const slot of REQUIRED_PHOTO_SLOTS) {
-      const file = photoFiles[slot];
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      slotUrls[slot] = await saveFile(file, `${slot}.${ext}`);
-    }
-
-    const extraUrls: { url: string; name: string; mime: string; size: number }[] = [];
-    for (let i = 0; i < extraPhotos.length; i++) {
-      const file = extraPhotos[i];
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      extraUrls.push({
-        url: await saveFile(file, `extra-${i}.${ext}`),
-        name: file.name,
-        mime: file.type,
-        size: file.size,
-      });
-    }
-
-    const docUrls: Record<string, { url: string; size: number; mime: string; name: string }> = {};
-    for (const doc of REQUIRED_DOCS) {
-      const f = docFiles[doc.key];
-      const url = await saveFile(f, `${doc.key}.pdf`);
-      docUrls[doc.key] = { url, size: f.size, mime: f.type, name: f.name };
-    }
 
     const vehicle = await prisma.vehicle.create({
       data: {
@@ -271,29 +349,29 @@ export async function POST(request: NextRequest) {
         lotId: lotRecord.id,
         listingPriceGbp: listingPricePounds * 100, // pence
         floorPriceGbp: parseInt(get("floorPriceGbp"), 10) ? parseInt(get("floorPriceGbp"), 10) * 100 : null,
-        hasHpiClear: form.get("hpiClear") === "true",
+        hasHpiClear: hpiClear,
       },
     });
 
     // Photos
     for (const slot of REQUIRED_PHOTO_SLOTS) {
-      const file = photoFiles[slot];
+      const meta = photos[slot];
       await prisma.mediaFile.create({
         data: {
           entityType: "vehicle",
           entityId: vehicle.id,
           category: SLOT_TO_CATEGORY[slot] as any,
-          cdnUrl: slotUrls[slot],
-          storageKey: slotUrls[slot],
-          mimeType: file.type,
-          fileSizeBytes: file.size,
+          cdnUrl: meta.url,
+          storageKey: meta.url,
+          mimeType: meta.mime,
+          fileSizeBytes: meta.size,
           isPrimary: slot === "front_34",
           sortOrder: REQUIRED_PHOTO_SLOTS.indexOf(slot),
         },
       });
     }
-    for (let i = 0; i < extraUrls.length; i++) {
-      const e = extraUrls[i];
+    for (let i = 0; i < extras.length; i++) {
+      const e = extras[i];
       await prisma.mediaFile.create({
         data: {
           entityType: "vehicle",
@@ -311,7 +389,7 @@ export async function POST(request: NextRequest) {
 
     // Documents (HPI / Condition / V5C)
     for (const doc of REQUIRED_DOCS) {
-      const meta = docUrls[doc.key];
+      const meta = docs[doc.key];
       await prisma.document.create({
         data: {
           entityType: "vehicle",
@@ -339,6 +417,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ vehicle: { id: vehicle.id, registration: vehicle.registration } }, { status: 201 });
   } catch (error) {
+    if (error instanceof IntakeError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("[POST /api/admin/vehicles]", error);
     const message = error instanceof Error ? error.message : "Failed to create vehicle";
     return NextResponse.json({ error: message }, { status: 500 });
