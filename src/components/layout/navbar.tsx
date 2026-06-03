@@ -394,10 +394,12 @@ export function Navbar() {
                 </Link>
               )}
 
+              {/* "About iAutoMotive" link removed while /about is hidden from
+                  the public. Re-add alongside re-enabling the route. */}
               <Link
                 href="/contact"
                 className="font-body flex items-center transition-colors"
-                style={{ padding: "14px 0", fontSize: 15, fontWeight: 500, color: "#0F1724", textDecoration: "none", gap: 12, borderBottom: "1px solid #EAECEF" }}
+                style={{ padding: "14px 0", fontSize: 15, fontWeight: 500, color: "#0F1724", textDecoration: "none", gap: 12 }}
                 onClick={() => setMobileOpen(false)}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -406,20 +408,6 @@ export function Navbar() {
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
                 Support and Contact
-              </Link>
-
-              <Link
-                href="/about"
-                className="font-body flex items-center transition-colors"
-                style={{ padding: "14px 0", fontSize: 15, fontWeight: 500, color: "#0F1724", textDecoration: "none", gap: 12 }}
-                onClick={() => setMobileOpen(false)}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                  <line x1="8" y1="21" x2="16" y2="21" />
-                  <line x1="12" y1="17" x2="12" y2="21" />
-                </svg>
-                About iAutoMotive
               </Link>
             </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -226,6 +227,10 @@ const team = [
 /* ------------------------------------------------------------------ */
 
 export default function AboutPage() {
+  // Hidden from the public until ready — returns 404 for direct visits.
+  // Re-enable by deleting this line (and restoring the footer/navbar links).
+  notFound();
+
   return (
     <main className="min-h-screen bg-white">
       {/* ── Hero ────────────────────────────────────────────────── */}

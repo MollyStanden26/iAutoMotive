@@ -41,7 +41,10 @@ const footerColumns = [
   },
   {
     heading: "COMPANY",
-    links: ["About us", "Press", "Careers", "Contact"],
+    // About us / Press / Careers are hidden until those pages are ready for
+    // the public (the routes themselves 404). The linkMap entries above stay
+    // so re-adding each is a one-line change here.
+    links: ["Contact"],
   },
   {
     heading: "LEGAL",

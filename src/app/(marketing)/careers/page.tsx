@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                              */
@@ -143,6 +144,10 @@ const perks = [
 /* ------------------------------------------------------------------ */
 
 export default function CareersPage() {
+  // Hidden from the public until ready — returns 404 for direct visits.
+  // Re-enable by deleting this line (and restoring the footer/navbar links).
+  notFound();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("");
 
