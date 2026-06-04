@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { LeaveMessageModal } from "@/components/contact/leave-message-modal";
 
 /* ------------------------------------------------------------------ */
 /*  Contact details                                                   */
@@ -128,8 +129,10 @@ const popularArticles = [
 
 export default function ContactPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [messageOpen, setMessageOpen] = useState(false);
 
   return (
+    <>
     <main style={{ backgroundColor: "#FFFFFF", minHeight: "100vh" }}>
       {/* ============================================================ */}
       {/* HERO                                                         */}
@@ -615,8 +618,10 @@ export default function ContactPage() {
               </p>
             </a>
 
-            {/* Phone */}
-            <div
+            {/* Leave us a message */}
+            <button
+              type="button"
+              onClick={() => setMessageOpen(true)}
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -626,86 +631,8 @@ export default function ContactPage() {
                 backgroundColor: "#FFFFFF",
                 borderRadius: "20px",
                 border: "1px solid #EAECEF",
-              }}
-            >
-              <div
-                style={{
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  backgroundColor: "#E0FAF5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008C7C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-                </svg>
-              </div>
-              <p className="font-heading" style={{ fontSize: "16px", fontWeight: 600, color: "#0F1724", margin: 0 }}>
-                Call Us
-              </p>
-              <p className="font-body" style={{ fontSize: "13px", color: "#4A556B", margin: 0 }}>
-                [Phone number &mdash; TBC]
-              </p>
-              <p className="font-body" style={{ fontSize: "12px", color: "#8492A8", margin: 0, textAlign: "center" }}>
-                Mon&ndash;Fri 9am&ndash;6pm, Sat 10am&ndash;4pm
-              </p>
-            </div>
-
-            {/* Live Chat */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "12px",
-                padding: "32px 24px",
-                backgroundColor: "#FFFFFF",
-                borderRadius: "20px",
-                border: "1px solid #EAECEF",
-              }}
-            >
-              <div
-                style={{
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  backgroundColor: "#E0FAF5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008C7C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                </svg>
-              </div>
-              <p className="font-heading" style={{ fontSize: "16px", fontWeight: 600, color: "#0F1724", margin: 0 }}>
-                Live Chat
-              </p>
-              <p className="font-body" style={{ fontSize: "13px", color: "#4A556B", margin: 0 }}>
-                Coming soon
-              </p>
-              <p className="font-body" style={{ fontSize: "12px", color: "#8492A8", margin: 0, textAlign: "center" }}>
-                Chat with our team in real time
-              </p>
-            </div>
-
-            {/* Complaints */}
-            <Link
-              href="/legal/complaints"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "12px",
-                padding: "32px 24px",
-                backgroundColor: "#FFFFFF",
-                borderRadius: "20px",
-                textDecoration: "none",
-                border: "1px solid #EAECEF",
+                cursor: "pointer",
+                textAlign: "center",
                 transition: "box-shadow 0.2s ease, border-color 0.2s ease",
               }}
               onMouseEnter={(e) => {
@@ -729,22 +656,20 @@ export default function ContactPage() {
                 }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008C7C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="12" y1="18" x2="12" y2="12" />
-                  <line x1="9" y1="15" x2="15" y2="15" />
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
               </div>
               <p className="font-heading" style={{ fontSize: "16px", fontWeight: 600, color: "#0F1724", margin: 0 }}>
-                Make a Complaint
+                Leave us a message
               </p>
               <p className="font-body" style={{ fontSize: "13px", color: "#008C7C", margin: 0 }}>
-                complaints@iautomotive.co.uk
+                Send our team a message
               </p>
               <p className="font-body" style={{ fontSize: "12px", color: "#8492A8", margin: 0, textAlign: "center" }}>
-                View our full complaints policy
+                We&rsquo;ll reply by email, usually within a working day
               </p>
-            </Link>
+            </button>
+
           </div>
 
           {/* Support hours */}
@@ -779,7 +704,6 @@ export default function ContactPage() {
               { label: "FAQ", href: "/faq", icon: "?" },
               { label: "Sell your car", href: "/sell", icon: "\u00A3" },
               { label: "Browse cars", href: "/cars", icon: "\u25B6" },
-              { label: "How it works", href: "/sell/how-it-works", icon: "\u2192" },
             ].map((link) => (
               <Link
                 key={link.label}
@@ -835,5 +759,7 @@ export default function ContactPage() {
         </div>
       </section>
     </main>
+    <LeaveMessageModal open={messageOpen} onClose={() => setMessageOpen(false)} />
+    </>
   );
 }

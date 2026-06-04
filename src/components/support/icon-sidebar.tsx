@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  Headphones, MessageSquare, Inbox, BookOpen, Users, Settings, ArrowLeftRight,
+  Headphones, MessageSquare, Inbox, BookOpen, Users, Settings, ArrowLeftRight, Mail,
 } from "lucide-react";
 import { SUPPORT_TICKETS } from "@/lib/support/mock-data";
 
@@ -40,6 +40,7 @@ const SIDEBAR_ITEMS = [
   { type: "divider" as const },
   { type: "item" as const, icon: MessageSquare, label: "Tickets",       href: "/support/tickets" },
   { type: "item" as const, icon: Inbox,         label: "Conversations", href: "/support/conversations" },
+  { type: "item" as const, icon: Mail,          label: "Enquiries",     href: "/support/enquiries" },
   { type: "item" as const, icon: Users,         label: "Sellers",       href: "/support/sellers" },
   { type: "item" as const, icon: BookOpen,      label: "Knowledge base", href: "/support/kb" },
   { type: "divider" as const },
