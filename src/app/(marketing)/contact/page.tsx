@@ -4,6 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 
 /* ------------------------------------------------------------------ */
+/*  Contact details                                                   */
+/* ------------------------------------------------------------------ */
+
+// Same number used by the site-wide WhatsApp bubble and the Sell flow.
+// If it changes, update src/components/layout/whatsapp-bubble.tsx and
+// src/components/sell/* too.
+const WHATSAPP_NUMBER = "447418605138"; // E.164 minus the "+" — wa.me format
+const WHATSAPP_DISPLAY = "+44 7418 605138";
+const WHATSAPP_HREF = `https://wa.me/${WHATSAPP_NUMBER}`;
+
+/* ------------------------------------------------------------------ */
 /*  Browse Topics Data                                                */
 /* ------------------------------------------------------------------ */
 
@@ -503,7 +514,7 @@ export default function ContactPage() {
           >
             {/* Email */}
             <a
-              href="mailto:hello@iautomotive.co.uk"
+              href="mailto:support@iautomotive.co.uk"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -545,10 +556,62 @@ export default function ContactPage() {
                 Email Us
               </p>
               <p className="font-body" style={{ fontSize: "13px", color: "#008C7C", margin: 0 }}>
-                hello@iautomotive.co.uk
+                support@iautomotive.co.uk
               </p>
               <p className="font-body" style={{ fontSize: "12px", color: "#8492A8", margin: 0, textAlign: "center" }}>
                 We typically respond within 2 hours
+              </p>
+            </a>
+
+            {/* WhatsApp */}
+            <a
+              href={WHATSAPP_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "12px",
+                padding: "32px 24px",
+                backgroundColor: "#FFFFFF",
+                borderRadius: "20px",
+                textDecoration: "none",
+                border: "1px solid #EAECEF",
+                transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
+                e.currentTarget.style.borderColor = "#008C7C";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.borderColor = "#EAECEF";
+              }}
+            >
+              <div
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "50%",
+                  backgroundColor: "#E0FAF5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#008C7C" aria-hidden="true">
+                  <path d="M17.47 14.38c-.29-.15-1.71-.84-1.97-.94-.27-.1-.46-.15-.65.15-.19.29-.75.94-.92 1.13-.17.19-.34.22-.63.07-.29-.15-1.22-.45-2.32-1.43-.86-.77-1.44-1.71-1.61-2-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.07-.15-.65-1.57-.89-2.15-.23-.56-.47-.48-.65-.49-.17-.01-.36-.01-.55-.01-.19 0-.51.07-.77.36-.27.29-1.01.99-1.01 2.41 0 1.42 1.04 2.79 1.18 2.98.15.19 2.04 3.12 4.95 4.37.69.3 1.23.48 1.65.61.69.22 1.32.19 1.82.12.56-.08 1.71-.7 1.95-1.37.24-.67.24-1.25.17-1.37-.07-.12-.26-.19-.55-.34zM12.04 21.5h-.01a9.45 9.45 0 01-4.82-1.32l-.35-.21-3.58.94.96-3.49-.23-.36a9.43 9.43 0 01-1.45-5.03c0-5.22 4.25-9.47 9.48-9.47 2.53 0 4.91.99 6.7 2.78a9.42 9.42 0 012.77 6.7c-.01 5.22-4.26 9.47-9.48 9.47zm8.07-17.54A11.36 11.36 0 0012.04.5C5.75.5.64 5.61.64 11.9c0 2.01.53 3.98 1.53 5.71L.5 23.5l6.05-1.59a11.36 11.36 0 005.48 1.4h.01c6.29 0 11.4-5.11 11.4-11.4a11.33 11.33 0 00-3.33-8.05z" />
+                </svg>
+              </div>
+              <p className="font-heading" style={{ fontSize: "16px", fontWeight: 600, color: "#0F1724", margin: 0 }}>
+                WhatsApp
+              </p>
+              <p className="font-body" style={{ fontSize: "13px", color: "#008C7C", margin: 0 }}>
+                {WHATSAPP_DISPLAY}
+              </p>
+              <p className="font-body" style={{ fontSize: "12px", color: "#8492A8", margin: 0, textAlign: "center" }}>
+                Message us &mdash; a real person replies
               </p>
             </a>
 
