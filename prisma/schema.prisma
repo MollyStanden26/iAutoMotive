@@ -1913,3 +1913,27 @@ model SupportMessage {
   @@index([conversationId, createdAt])
   @@map("support_messages")
 }
+
+/// Public "leave us a message" enquiries from the marketing contact page.
+/// Submitted by anonymous visitors; read + actioned by staff in /support.
+enum ContactMessageStatus {
+  new
+  read
+  archived
+}
+
+model ContactMessage {
+  id        String               @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  subject   String?
+  body      String
+  status    ContactMessageStatus @default(new)
+  /// Which form/page produced this — future-proofing if other surfaces reuse it.
+  source    String?              @default("contact_page")
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@map("contact_messages")
+}
