@@ -510,8 +510,13 @@ export default function ContactPage() {
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              // Flex + centre so the cards sit centred as a group at any width
+              // (a grid with auto-fit left-fills and leaves an empty trailing
+              // column when there are only a few cards). Each card sets its own
+              // flex-basis below.
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
               gap: "16px",
             }}
           >
@@ -519,6 +524,7 @@ export default function ContactPage() {
             <a
               href="mailto:support@iautomotive.co.uk"
               style={{
+                flex: "0 1 248px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -572,6 +578,7 @@ export default function ContactPage() {
               target="_blank"
               rel="noopener noreferrer"
               style={{
+                flex: "0 1 248px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -623,6 +630,7 @@ export default function ContactPage() {
               type="button"
               onClick={() => setMessageOpen(true)}
               style={{
+                flex: "0 1 248px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -695,7 +703,8 @@ export default function ContactPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 220px))",
+              justifyContent: "center",
               gap: "16px",
               textAlign: "center",
             }}
