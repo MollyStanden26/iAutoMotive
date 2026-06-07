@@ -52,10 +52,11 @@ function CarSilhouette({ type }: { type: StyleKey }) {
 interface Tile {
   label: string;
   type: StyleKey | null; // null = "Shop all"
+  image?: string;        // real photo; falls back to the SVG silhouette when absent
 }
 
 const TILES: Tile[] = [
-  { label: "SUVs",         type: "suv" },
+  { label: "SUVs",         type: "suv", image: "/images/body-styles/suv.webp" },
   { label: "Saloons",      type: "saloon" },
   { label: "Hatchbacks",   type: "hatchback" },
   { label: "Estates",      type: "estate" },
@@ -165,7 +166,16 @@ export function PopularStyles() {
                 className="flex items-center justify-center"
                 style={{ width: 132, height: 84 }}
               >
-                {t.type ? (
+                {t.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={t.image}
+                    alt={t.label}
+                    loading="lazy"
+                    className="transition-transform duration-200 group-hover:scale-110"
+                    style={{ width: 124, height: 76, objectFit: "contain" }}
+                  />
+                ) : t.type ? (
                   <div
                     className="flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
                     style={{ width: 120, height: 64 }}
