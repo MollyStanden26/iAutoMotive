@@ -71,6 +71,7 @@ const BODY_TYPE_OPTIONS = [
   { value: "coupe",       label: "Coupe" },
   { value: "convertible", label: "Convertible" },
   { value: "mpv",         label: "MPV" },
+  { value: "pickup",      label: "Pickup" },
 ] as const;
 
 const FUEL_TYPE_OPTIONS = [
