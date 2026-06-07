@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FilterSidebar, DEFAULT_FILTERS, type Filters } from "@/components/browse/filter-sidebar";
 import { SearchBar } from "@/components/browse/search-bar";
 import { FilterChips } from "@/components/browse/filter-chips";
@@ -34,6 +35,73 @@ const SORT_LABELS: Record<SortKey, string> = {
   "mileage-asc": "Lowest mileage",
 };
 
+// ── URL ⇆ filter-state sync ─────────────────────────────────────────────────
+// Body styles use ?type= and fuel uses ?fuel= (so the homepage tiles + footer
+// links keep working); the other dimensions get their own params. Arrays are
+// comma-joined. Enums are validated on read; makes/models/trims are free text.
+const ARRAY_PARAMS: { param: string; field: "bodyTypes" | "fuelTypes" | "transmissions" | "colours" | "makes" | "models" | "trims" }[] = [
+  { param: "type",    field: "bodyTypes" },
+  { param: "fuel",    field: "fuelTypes" },
+  { param: "gearbox", field: "transmissions" },
+  { param: "colour",  field: "colours" },
+  { param: "make",    field: "makes" },
+  { param: "model",   field: "models" },
+  { param: "trim",    field: "trims" },
+];
+const SCALAR_PARAMS: { param: string; field: "minPrice" | "maxPrice" | "minYear" | "maxMileage" }[] = [
+  { param: "minPrice",   field: "minPrice" },
+  { param: "maxPrice",   field: "maxPrice" },
+  { param: "minYear",    field: "minYear" },
+  { param: "maxMileage", field: "maxMileage" },
+];
+const VALID_ENUM: Record<string, Set<string>> = {
+  type:    new Set(["suv","saloon","hatchback","estate","coupe","convertible","mpv","pickup"]),
+  fuel:    new Set(["petrol","diesel","electric","hybrid","plugin_hybrid","mild_hybrid"]),
+  gearbox: new Set(["automatic","manual"]),
+};
+const FREE_TEXT = new Set(["makes","models","trims"]);
+const SORT_KEYS: SortKey[] = ["recommended","price-asc","price-desc","year-desc","mileage-asc"];
+
+function filtersToQuery(filters: Filters, q: string, sort: SortKey): string {
+  const p = new URLSearchParams();
+  for (const { param, field } of ARRAY_PARAMS) {
+    if (filters[field].length) p.set(param, filters[field].join(","));
+  }
+  for (const { param, field } of SCALAR_PARAMS) {
+    const v = filters[field].trim();
+    if (v) p.set(param, v);
+  }
+  if (q.trim()) p.set("q", q.trim());
+  if (sort !== "recommended") p.set("sort", sort);
+  return p.toString();
+}
+
+function queryToState(search: string): { filters: Filters; q: string; sort: SortKey } {
+  const p = new URLSearchParams(search);
+  const filters: Filters = { ...DEFAULT_FILTERS };
+  for (const { param, field } of ARRAY_PARAMS) {
+    const raw = p.get(param);
+    if (!raw) continue;
+    let vals = raw.split(",").map(s => s.trim()).filter(Boolean);
+    if (!FREE_TEXT.has(field)) {
+      vals = vals.map(v => v.toLowerCase());
+      const valid = VALID_ENUM[param];
+      if (valid) vals = vals.filter(v => valid.has(v));
+    }
+    filters[field] = vals;
+  }
+  for (const { param, field } of SCALAR_PARAMS) {
+    const raw = (p.get(param) ?? "").trim();
+    if (/^\d+$/.test(raw)) filters[field] = raw;
+  }
+  const sortRaw = p.get("sort") as SortKey | null;
+  return {
+    filters,
+    q: p.get("q") ?? "",
+    sort: sortRaw && SORT_KEYS.includes(sortRaw) ? sortRaw : "recommended",
+  };
+}
+
 export default function CarsPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,6 +110,8 @@ export default function CarsPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortKey>("recommended");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const router = useRouter();
+  const urlWriteArmed = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,26 +124,25 @@ export default function CarsPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // Pre-apply filters from the URL so the homepage "Popular vehicle styles"
-  // tiles (and the footer links) land on a filtered browse page. Body styles
-  // arrive as ?type=<bodyType>, fuel categories as ?fuel=<fuelType>; both
-  // accept comma-separated values. Validated against the known enums so a
-  // junk param can't inject a phantom filter chip.
+  // Hydrate filters / search / sort from the URL on first load, so the
+  // homepage "Popular vehicle styles" tiles, the footer body-style links, and
+  // any shared/bookmarked filtered URL all restore the right view.
   useEffect(() => {
-    const VALID_BODY = new Set(["suv","saloon","hatchback","estate","coupe","convertible","mpv","pickup"]);
-    const VALID_FUEL = new Set(["petrol","diesel","electric","hybrid","plugin_hybrid","mild_hybrid"]);
-    const params = new URLSearchParams(window.location.search);
-    const pick = (key: string, valid: Set<string>) =>
-      (params.get(key) ?? "")
-        .split(",")
-        .map(s => s.trim().toLowerCase())
-        .filter(v => valid.has(v));
-    const bodyTypes = pick("type", VALID_BODY);
-    const fuelTypes = pick("fuel", VALID_FUEL);
-    if (bodyTypes.length || fuelTypes.length) {
-      setFilters(prev => ({ ...prev, bodyTypes, fuelTypes }));
-    }
+    const { filters: f, q, sort: s } = queryToState(window.location.search);
+    setFilters(f);
+    setSearchQuery(q);
+    setSort(s);
   }, []);
+
+  // Reflect filter / search / sort changes back into the URL (shareable links).
+  // The first run is skipped so we don't overwrite the incoming URL before the
+  // hydrate effect above has applied it. replace() (not push) keeps the back
+  // button usable; scroll:false avoids jumping to the top on every toggle.
+  useEffect(() => {
+    if (!urlWriteArmed.current) { urlWriteArmed.current = true; return; }
+    const qs = filtersToQuery(filters, searchQuery, sort);
+    router.replace(qs ? `/cars?${qs}` : "/cars", { scroll: false });
+  }, [filters, searchQuery, sort, router]);
 
   // Distinct lowercased colours for the sidebar's colour pill list. Pulled
   // from the full unfiltered set so the operator can re-add a filter they
