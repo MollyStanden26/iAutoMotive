@@ -8,7 +8,9 @@ import {
   type Review,
 } from '@/lib/data/sell-reviews';
 
-const FEATURED_COUNT = 6;
+// How many reviews ride the continuous carousel. Duplicated once so the loop
+// is seamless; the full list still lives behind "See all reviews".
+const MARQUEE_COUNT = 20;
 
 function StarIcon({ filled = true, size = 20 }: { filled?: boolean; size?: number }) {
   return (
@@ -147,20 +149,58 @@ function ReviewRow({ review }: { review: Review }) {
   );
 }
 
-/* ───── Top-level reviews section (carousel + drawer trigger) ──────────── */
+/* ───── Marquee card (one tile in the continuous carousel) ─────────────── */
+
+function MarqueeCard({ review }: { review: Review }) {
+  return (
+    <div
+      style={{
+        flexShrink: 0,
+        width: 360,
+        marginRight: 24, // spacing baked into the card so translateX(-50%) loops seamlessly
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 28,
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        flexDirection: 'column',
+        whiteSpace: 'normal',
+      }}
+    >
+      <div className="mb-4">
+        <StarRow count={review.stars} size={18} />
+      </div>
+      <p className="review-quote" style={{ fontSize: 14, color: '#0F1724', lineHeight: 1.7, margin: '0 0 16px' }}>
+        &ldquo;{review.quote}&rdquo;
+      </p>
+      <div style={{ marginTop: 'auto', borderTop: '1px solid #E2E8F0', paddingTop: 14 }}>
+        <p style={{ fontSize: 14, color: '#0F1724', margin: 0 }}>
+          <span style={{ fontWeight: 600 }}>{review.name}</span>{' '}
+          <span style={{ color: '#4A556B' }}>from {review.city}</span>
+        </p>
+        <p style={{ fontSize: 12, color: '#8492A8', margin: '4px 0 0' }}>{review.date}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ───── Top-level reviews section (continuous carousel + drawer trigger) ─── */
 
 export default function CustomerReviewsSell() {
-  const [position, setPosition] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const featured = REVIEWS.slice(0, FEATURED_COUNT);
-  const maxPosition = Math.max(0, featured.length - 3);
-
-  const handlePrev = () => setPosition(prev => Math.max(0, prev - 1));
-  const handleNext = () => setPosition(prev => Math.min(maxPosition, prev + 1));
+  const reviews = REVIEWS.slice(0, MARQUEE_COUNT);
 
   return (
-    <section style={{ backgroundColor: '#F7F8F9', padding: '50px 0' }}>
+    <section style={{ backgroundColor: '#F7F8F9', padding: '50px 0', overflow: 'hidden' }}>
+      {/* Marquee keyframes + pause-on-hover + line-clamp + reduced-motion */}
+      <style>{`
+        @keyframes reviewMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .review-marquee { animation: reviewMarquee 90s linear infinite; will-change: transform; }
+        .review-marquee:hover { animation-play-state: paused; }
+        .review-quote { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; min-height: 96px; }
+        @media (prefers-reduced-motion: reduce) { .review-marquee { animation: none; } }
+      `}</style>
+
       <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10 text-center">
@@ -201,102 +241,17 @@ export default function CustomerReviewsSell() {
             See all reviews
           </button>
         </div>
+      </div>
 
-        {/* Carousel — featured 6 */}
-        <div className="relative">
-          <button
-            onClick={handlePrev}
-            disabled={position === 0}
-            className="absolute -left-3 top-1/2 z-10 hidden -translate-y-1/2 items-center justify-center lg:flex"
-            style={{
-              width: 44, height: 44, borderRadius: '50%',
-              border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF',
-              cursor: position === 0 ? 'default' : 'pointer',
-              opacity: position === 0 ? 0.4 : 1,
-            }}
-            aria-label="Previous reviews"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M10 12L6 8L10 4" stroke="#0F1724" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-
-          <button
-            onClick={handleNext}
-            disabled={position >= maxPosition}
-            className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 items-center justify-center lg:flex"
-            style={{
-              width: 44, height: 44, borderRadius: '50%',
-              border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF',
-              cursor: position >= maxPosition ? 'default' : 'pointer',
-              opacity: position >= maxPosition ? 0.4 : 1,
-            }}
-            aria-label="Next reviews"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 4L10 8L6 12" stroke="#0F1724" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-
-          <div className="overflow-hidden">
-            <div
-              className="flex gap-6 transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(-${position * (100 / 3 + 1.5)}%)` }}
-            >
-              {featured.map((review, idx) => (
-                <div
-                  key={idx}
-                  className="w-full shrink-0 sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
-                  style={{
-                    backgroundColor: '#FFFFFF', borderRadius: 12,
-                    padding: 32, border: '1px solid #E2E8F0',
-                  }}
-                >
-                  <div className="mb-4">
-                    <StarRow count={review.stars} size={20} />
-                  </div>
-                  <p style={{ fontSize: 14, color: '#0F1724', lineHeight: 1.7, margin: '0 0 12px' }}>
-                    &ldquo;{review.quote}&rdquo;
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setDrawerOpen(true)}
-                    style={{
-                      fontSize: 14, fontWeight: 500, color: '#008C7C',
-                      textDecoration: 'none', background: 'transparent',
-                      border: 'none', padding: 0, cursor: 'pointer',
-                    }}
-                  >
-                    Read more
-                  </button>
-                  <div className="mt-5" style={{ borderTop: '1px solid #E2E8F0', paddingTop: 16 }}>
-                    <p style={{ fontSize: 14, color: '#0F1724', margin: 0 }}>
-                      <span style={{ fontWeight: 600 }}>{review.name}</span>{' '}
-                      <span style={{ color: '#4A556B' }}>from {review.city}</span>
-                    </p>
-                    <p style={{ fontSize: 12, color: '#8492A8', margin: '4px 0 0' }}>{review.date}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-6 flex items-center justify-center gap-2 lg:hidden">
-            {featured.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setPosition(idx)}
-                style={{
-                  width: position === idx ? 24 : 8, height: 8,
-                  borderRadius: 4,
-                  backgroundColor: position === idx ? '#008C7C' : '#C8CDD6',
-                  border: 'none', cursor: 'pointer',
-                  transition: 'all 0.2s ease', padding: 0,
-                }}
-                aria-label={`Go to review ${idx + 1}`}
-              />
-            ))}
-          </div>
+      {/* Continuous, slowly-cycling carousel — full-bleed, pauses on hover */}
+      <div className="relative" style={{ width: '100%', overflow: 'hidden' }}>
+        {/* edge fades so cards drift in/out rather than hard-clip */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 72, background: 'linear-gradient(to right, #F7F8F9, rgba(247,248,249,0))', zIndex: 2, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 72, background: 'linear-gradient(to left, #F7F8F9, rgba(247,248,249,0))', zIndex: 2, pointerEvents: 'none' }} />
+        <div className="review-marquee" style={{ display: 'flex', width: 'max-content' }}>
+          {[...reviews, ...reviews].map((review, idx) => (
+            <MarqueeCard key={idx} review={review} />
+          ))}
         </div>
       </div>
 

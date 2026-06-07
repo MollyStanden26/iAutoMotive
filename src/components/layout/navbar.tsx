@@ -319,7 +319,7 @@ export function Navbar() {
                     <span style={{ fontWeight: 500 }}>No obligation.</span>
                   </p>
                   <Link
-                    href="/sell/offer"
+                    href="/sell"
                     className="font-body flex items-center justify-center"
                     style={{
                       width: "100%",
