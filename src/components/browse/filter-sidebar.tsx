@@ -122,13 +122,13 @@ const prefixedInputStyle: React.CSSProperties = { ...inputStyle, padding: "10px 
 
 const prefixStyle: React.CSSProperties = {
   position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
-  fontFamily: "var(--ac-font-body)", fontSize: 14, fontWeight: 500,
+  fontFamily: "var(--ac-font-body)", fontSize: 14, fontWeight: 400,
   color: "#8492A8", pointerEvents: "none",
 };
 
 const subLabel: React.CSSProperties = {
   fontFamily: "var(--ac-font-body)",
-  fontSize: 11, fontWeight: 700,
+  fontSize: 11, fontWeight: 600,
   letterSpacing: "0.06em", textTransform: "uppercase",
   color: "#8492A8",
 };
@@ -147,7 +147,7 @@ function PillButton({ label, selected, onClick }: { label: string; selected: boo
       onClick={onClick}
       style={{
         fontFamily: "var(--ac-font-body)",
-        fontSize: 13, fontWeight: 500,
+        fontSize: 13, fontWeight: 400,
         borderRadius: 8,
         border: selected ? "1px solid #008C7C" : "1px solid #EAECEF",
         backgroundColor: selected ? "#E0FAF5" : "transparent",
@@ -388,14 +388,14 @@ export function FilterSidebar({
     >
       {activeCount > 0 && (
         <div className="flex items-center justify-between" style={{ padding: "16px 24px", borderBottom: "1px solid #EAECEF" }}>
-          <span style={{ fontFamily: "var(--ac-font-body)", fontSize: 13, fontWeight: 600, color: "#008C7C" }}>
+          <span style={{ fontFamily: "var(--ac-font-body)", fontSize: 13, fontWeight: 500, color: "#008C7C" }}>
             {activeCount} filter{activeCount === 1 ? "" : "s"} active
           </span>
           <button
             type="button"
             onClick={() => onChange(DEFAULT_FILTERS)}
             style={{
-              fontFamily: "var(--ac-font-body)", fontSize: 12, fontWeight: 600,
+              fontFamily: "var(--ac-font-body)", fontSize: 12, fontWeight: 500,
               color: "#8492A8", background: "transparent", border: "none", cursor: "pointer",
             }}
           >
@@ -417,7 +417,7 @@ export function FilterSidebar({
               style={{
                 padding: "24px",
                 fontFamily: "var(--ac-font-body)",
-                fontSize: 14, fontWeight: 600,
+                fontSize: 14, fontWeight: 500,
                 color: "#0F1724",
                 backgroundColor: "transparent",
                 border: "none",

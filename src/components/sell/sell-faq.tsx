@@ -72,7 +72,7 @@ export default function SellFaq() {
             <h2
               style={{
                 fontSize: '28px',
-                fontWeight: 600,
+                fontWeight: 500,
                 color: '#0F1724',
                 fontFamily: 'var(--ac-font-heading)',
                 margin: '0 0 12px',
@@ -98,7 +98,7 @@ export default function SellFaq() {
                 padding: '0 24px',
                 backgroundColor: 'transparent',
                 fontSize: '14px',
-                fontWeight: 600,
+                fontWeight: 500,
                 color: '#0F1724',
                 cursor: 'pointer',
               }}
@@ -125,7 +125,7 @@ export default function SellFaq() {
                   <span
                     style={{
                       fontSize: '16px',
-                      fontWeight: 500,
+                      fontWeight: 400,
                       color: '#0F1724',
                       paddingRight: '16px',
                     }}

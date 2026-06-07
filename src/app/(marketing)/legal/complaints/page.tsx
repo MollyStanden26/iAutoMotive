@@ -17,7 +17,7 @@ function SectionHeading({ id, number, title }: { id: string; number: string; tit
       className="font-heading"
       style={{
         fontSize: "22px",
-        fontWeight: 700,
+        fontWeight: 600,
         color: "#0F1724",
         margin: "48px 0 16px",
         scrollMarginTop: "100px",
@@ -94,7 +94,7 @@ function StepCard({
           alignItems: "center",
           justifyContent: "center",
           fontSize: "16px",
-          fontWeight: 700,
+          fontWeight: 600,
           flexShrink: 0,
         }}
         className="font-heading"
@@ -104,7 +104,7 @@ function StepCard({
       <div style={{ flex: 1 }}>
         <h3
           className="font-heading"
-          style={{ fontSize: "17px", fontWeight: 600, color: "#0F1724", margin: "0 0 8px" }}
+          style={{ fontSize: "17px", fontWeight: 500, color: "#0F1724", margin: "0 0 8px" }}
         >
           {title}
         </h3>
@@ -154,7 +154,7 @@ export default function ComplaintsPolicyPage() {
         <div className="mx-auto max-w-[800px] px-6">
           <h1
             className="font-heading text-white"
-            style={{ fontSize: "36px", fontWeight: 800, letterSpacing: "-0.02em" }}
+            style={{ fontSize: "36px", fontWeight: 600, letterSpacing: "-0.02em" }}
           >
             Complaints Policy
           </h1>
@@ -210,7 +210,7 @@ export default function ComplaintsPolicyPage() {
         >
           <h2
             className="font-heading"
-            style={{ fontSize: "16px", fontWeight: 700, color: "#0F1724", margin: "0 0 14px" }}
+            style={{ fontSize: "16px", fontWeight: 600, color: "#0F1724", margin: "0 0 14px" }}
           >
             Contents
           </h2>
@@ -305,7 +305,7 @@ export default function ComplaintsPolicyPage() {
             >
               <p
                 className="font-heading"
-                style={{ fontSize: "14px", fontWeight: 600, color: "#0F1724", margin: "0 0 6px" }}
+                style={{ fontSize: "14px", fontWeight: 500, color: "#0F1724", margin: "0 0 6px" }}
               >
                 {ch.label}
               </p>
@@ -419,7 +419,7 @@ export default function ComplaintsPolicyPage() {
                     padding: "12px 16px",
                     backgroundColor: "#F7F8F9",
                     color: "#0F1724",
-                    fontWeight: 600,
+                    fontWeight: 500,
                     borderBottom: "2px solid #EAECEF",
                   }}
                 >
@@ -431,7 +431,7 @@ export default function ComplaintsPolicyPage() {
                     padding: "12px 16px",
                     backgroundColor: "#F7F8F9",
                     color: "#0F1724",
-                    fontWeight: 600,
+                    fontWeight: 500,
                     borderBottom: "2px solid #EAECEF",
                   }}
                 >
@@ -452,7 +452,7 @@ export default function ComplaintsPolicyPage() {
                     style={{
                       padding: "12px 16px",
                       color: "#0F1724",
-                      fontWeight: 500,
+                      fontWeight: 400,
                       borderBottom: "1px solid #EAECEF",
                       verticalAlign: "top",
                     }}
@@ -518,7 +518,7 @@ export default function ComplaintsPolicyPage() {
         >
           <p
             className="font-heading"
-            style={{ fontSize: "15px", fontWeight: 600, color: "#0F1724", margin: "0 0 8px" }}
+            style={{ fontSize: "15px", fontWeight: 500, color: "#0F1724", margin: "0 0 8px" }}
           >
             The Motor Ombudsman
           </p>
@@ -595,7 +595,7 @@ export default function ComplaintsPolicyPage() {
         >
           <p
             className="font-heading"
-            style={{ fontSize: "15px", fontWeight: 600, color: "#0F1724", margin: "0 0 8px" }}
+            style={{ fontSize: "15px", fontWeight: 500, color: "#0F1724", margin: "0 0 8px" }}
           >
             Financial Ombudsman Service
           </p>
@@ -709,7 +709,7 @@ export default function ComplaintsPolicyPage() {
                     style={{
                       padding: "12px 16px",
                       color: "#0F1724",
-                      fontWeight: 500,
+                      fontWeight: 400,
                       borderBottom: "1px solid #EAECEF",
                       verticalAlign: "top",
                       width: "200px",
@@ -745,7 +745,7 @@ export default function ComplaintsPolicyPage() {
         >
           <p
             className="font-heading"
-            style={{ fontSize: "15px", fontWeight: 600, color: "#7A4A00", margin: "0 0 8px" }}
+            style={{ fontSize: "15px", fontWeight: 500, color: "#7A4A00", margin: "0 0 8px" }}
           >
             Your statutory rights
           </p>

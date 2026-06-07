@@ -44,7 +44,7 @@ export function Navbar() {
           </span>
           <span
             className="font-heading"
-            style={{ fontSize: 22, fontWeight: 800, color: "#008C7C" }}
+            style={{ fontSize: 22, fontWeight: 600, color: "#008C7C" }}
           >
             Motive
           </span>
@@ -61,7 +61,7 @@ export function Navbar() {
                 className="font-body flex items-center transition-colors"
                 style={{
                   fontSize: 14,
-                  fontWeight: 600,
+                  fontWeight: 500,
                   color: active ? "#008C7C" : "#0F1724",
                   backgroundColor: active ? "#E0FAF5" : "transparent",
                   padding: "0 16px",
@@ -131,7 +131,7 @@ export function Navbar() {
                       backgroundColor: "#008C7C",
                       color: "#FFFFFF",
                       fontSize: 13,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       textDecoration: "none",
                     }}
                     title={user.name}
@@ -259,12 +259,12 @@ export function Navbar() {
                   <div className="flex items-center" style={{ gap: 14, marginBottom: 4 }}>
                     <div
                       className="flex items-center justify-center font-body"
-                      style={{ width: 44, height: 44, borderRadius: 99999, backgroundColor: "#008C7C", color: "#FFF", fontSize: 16, fontWeight: 700 }}
+                      style={{ width: 44, height: 44, borderRadius: 99999, backgroundColor: "#008C7C", color: "#FFF", fontSize: 16, fontWeight: 600 }}
                     >
                       {userInitial}
                     </div>
                     <div>
-                      <h2 className="font-heading" style={{ fontSize: 22, fontWeight: 700, color: "#0F1724", margin: 0 }}>
+                      <h2 className="font-heading" style={{ fontSize: 22, fontWeight: 600, color: "#0F1724", margin: 0 }}>
                         Welcome back
                       </h2>
                       <p className="font-body" style={{ fontSize: 14, color: "#8492A8", margin: 0 }}>
@@ -275,7 +275,7 @@ export function Navbar() {
                 </>
               ) : (
                 <>
-                  <h2 className="font-heading" style={{ fontSize: 24, fontWeight: 700, color: "#0F1724", margin: "0 0 4px" }}>
+                  <h2 className="font-heading" style={{ fontSize: 24, fontWeight: 600, color: "#0F1724", margin: "0 0 4px" }}>
                     Welcome to iAutoMotive
                   </h2>
                   <p className="font-body" style={{ fontSize: 14, color: "#8492A8", margin: "0 0 20px" }}>
@@ -291,7 +291,7 @@ export function Navbar() {
                       border: "1.5px solid #0F1724",
                       borderRadius: 99999,
                       fontSize: 14,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       color: "#0F1724",
                       textDecoration: "none",
                       transition: "all 200ms",
@@ -310,13 +310,13 @@ export function Navbar() {
             <div style={{ padding: "0 32px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
               {/* Get an Offer card */}
               <div>
-                <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: "#0F1724", margin: "0 0 10px" }}>
+                <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 600, color: "#0F1724", margin: "0 0 10px" }}>
                   Sell Your Car
                 </h3>
                 <div style={{ border: "1px solid #E2E8F0", borderRadius: 12, padding: 20 }}>
                   <p className="font-body" style={{ fontSize: 14, color: "#4A556B", margin: "0 0 16px", lineHeight: 1.6 }}>
                     Get a real offer in less than 2 minutes — consign, sell outright, or track your value.{" "}
-                    <span style={{ fontWeight: 600 }}>No obligation.</span>
+                    <span style={{ fontWeight: 500 }}>No obligation.</span>
                   </p>
                   <Link
                     href="/sell/offer"
@@ -327,7 +327,7 @@ export function Navbar() {
                       border: "1.5px solid #008C7C",
                       borderRadius: 99999,
                       fontSize: 14,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       color: "#008C7C",
                       textDecoration: "none",
                       transition: "all 200ms",
@@ -343,13 +343,13 @@ export function Navbar() {
 
               {/* Finance card */}
               <div>
-                <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: "#0F1724", margin: "0 0 10px" }}>
+                <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 600, color: "#0F1724", margin: "0 0 10px" }}>
                   Finance
                 </h3>
                 <div style={{ border: "1px solid #E2E8F0", borderRadius: 12, padding: 20 }}>
                   <p className="font-body" style={{ fontSize: 14, color: "#4A556B", margin: "0 0 16px", lineHeight: 1.6 }}>
                     Get pre-approved and shop with real terms.{" "}
-                    <span style={{ fontWeight: 600 }}>No hit to your credit.</span>
+                    <span style={{ fontWeight: 500 }}>No hit to your credit.</span>
                   </p>
                   <Link
                     href="/buy/finance"
@@ -360,7 +360,7 @@ export function Navbar() {
                       border: "1.5px solid #008C7C",
                       borderRadius: 99999,
                       fontSize: 14,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       color: "#008C7C",
                       textDecoration: "none",
                       transition: "all 200ms",
@@ -381,7 +381,7 @@ export function Navbar() {
                 <Link
                   href={dashboardHref}
                   className="font-body flex items-center transition-colors"
-                  style={{ padding: "14px 0", fontSize: 15, fontWeight: 500, color: "#0F1724", textDecoration: "none", gap: 12, borderBottom: "1px solid #EAECEF" }}
+                  style={{ padding: "14px 0", fontSize: 15, fontWeight: 400, color: "#0F1724", textDecoration: "none", gap: 12, borderBottom: "1px solid #EAECEF" }}
                   onClick={() => setMobileOpen(false)}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -399,7 +399,7 @@ export function Navbar() {
               <Link
                 href="/contact"
                 className="font-body flex items-center transition-colors"
-                style={{ padding: "14px 0", fontSize: 15, fontWeight: 500, color: "#0F1724", textDecoration: "none", gap: 12 }}
+                style={{ padding: "14px 0", fontSize: 15, fontWeight: 400, color: "#0F1724", textDecoration: "none", gap: 12 }}
                 onClick={() => setMobileOpen(false)}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -422,7 +422,7 @@ export function Navbar() {
                     border: "1.5px solid #EF4444",
                     borderRadius: 99999,
                     fontSize: 14,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: "#EF4444",
                     background: "none",
                     cursor: "pointer",
@@ -476,7 +476,7 @@ export function Navbar() {
           >
             {/* Header */}
             <div className="flex items-center justify-between" style={{ padding: "20px 24px", borderBottom: "1px solid #E2E8F0" }}>
-              <h2 className="font-heading" style={{ fontSize: 20, fontWeight: 700, color: "#0F1724", margin: 0 }}>
+              <h2 className="font-heading" style={{ fontSize: 20, fontWeight: 600, color: "#0F1724", margin: 0 }}>
                 Favourites
               </h2>
               <button
@@ -512,7 +512,7 @@ export function Navbar() {
                     height: 40,
                     borderRadius: 99999,
                     fontSize: 14,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     border: "none",
                     cursor: "pointer",
                     color: favoritesTab === "vehicles" ? "#0F1724" : "#8492A8",
@@ -529,7 +529,7 @@ export function Navbar() {
                     height: 40,
                     borderRadius: 99999,
                     fontSize: 14,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     border: "none",
                     cursor: "pointer",
                     color: favoritesTab === "searches" ? "#0F1724" : "#8492A8",
@@ -585,7 +585,7 @@ export function Navbar() {
                     </div>
                   </div>
 
-                  <h3 className="font-heading" style={{ fontSize: 20, fontWeight: 700, color: "#0F1724", margin: "0 0 10px" }}>
+                  <h3 className="font-heading" style={{ fontSize: 20, fontWeight: 600, color: "#0F1724", margin: "0 0 10px" }}>
                     You haven&apos;t favourited any vehicles
                   </h3>
                   <p className="font-body" style={{ fontSize: 14, color: "#8492A8", margin: "0 0 28px", lineHeight: 1.6, maxWidth: 280 }}>
@@ -602,7 +602,7 @@ export function Navbar() {
                       backgroundColor: "#008C7C",
                       color: "#FFFFFF",
                       fontSize: 15,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       textDecoration: "none",
                       transition: "background-color 200ms",
                     }}
@@ -618,7 +618,7 @@ export function Navbar() {
                       Already have an account?{" "}
                       <Link
                         href="/auth/signin"
-                        style={{ color: "#008C7C", fontWeight: 600, textDecoration: "none" }}
+                        style={{ color: "#008C7C", fontWeight: 500, textDecoration: "none" }}
                         onClick={() => setFavoritesOpen(false)}
                       >
                         Sign in
@@ -646,7 +646,7 @@ export function Navbar() {
                     </svg>
                   </div>
 
-                  <h3 className="font-heading" style={{ fontSize: 20, fontWeight: 700, color: "#0F1724", margin: "0 0 10px" }}>
+                  <h3 className="font-heading" style={{ fontSize: 20, fontWeight: 600, color: "#0F1724", margin: "0 0 10px" }}>
                     You haven&apos;t saved any searches
                   </h3>
                   <p className="font-body" style={{ fontSize: 14, color: "#8492A8", margin: "0 0 28px", lineHeight: 1.6, maxWidth: 280 }}>
@@ -663,7 +663,7 @@ export function Navbar() {
                       backgroundColor: "#008C7C",
                       color: "#FFFFFF",
                       fontSize: 15,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       textDecoration: "none",
                       transition: "background-color 200ms",
                     }}
@@ -679,7 +679,7 @@ export function Navbar() {
                       Already have an account?{" "}
                       <Link
                         href="/auth/signin"
-                        style={{ color: "#008C7C", fontWeight: 600, textDecoration: "none" }}
+                        style={{ color: "#008C7C", fontWeight: 500, textDecoration: "none" }}
                         onClick={() => setFavoritesOpen(false)}
                       >
                         Sign in

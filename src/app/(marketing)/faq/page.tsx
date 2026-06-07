@@ -221,7 +221,7 @@ function AccordionItem({
           gap: "16px",
           padding: "20px 0",
           fontSize: "16px",
-          fontWeight: 500,
+          fontWeight: 400,
           color: "#0F1724",
           background: "none",
           border: "none",
@@ -305,7 +305,7 @@ export default function FaqPage() {
         <div className="mx-auto max-w-[800px] px-6 text-center">
           <h1
             className="font-heading text-white"
-            style={{ fontSize: "40px", fontWeight: 800, letterSpacing: "-0.02em" }}
+            style={{ fontSize: "40px", fontWeight: 600, letterSpacing: "-0.02em" }}
           >
             Frequently Asked Questions
           </h1>
@@ -424,7 +424,7 @@ export default function FaqPage() {
                     padding: "10px 24px",
                     borderRadius: "100px",
                     fontSize: "14px",
-                    fontWeight: 600,
+                    fontWeight: 500,
                     border: "none",
                     cursor: "pointer",
                     transition: "all 0.2s ease",
@@ -498,7 +498,7 @@ export default function FaqPage() {
             </div>
             <p
               className="font-heading"
-              style={{ fontSize: "18px", fontWeight: 600, color: "#0F1724", margin: "0 0 8px" }}
+              style={{ fontSize: "18px", fontWeight: 500, color: "#0F1724", margin: "0 0 8px" }}
             >
               No results found
             </p>
@@ -518,7 +518,7 @@ export default function FaqPage() {
                 padding: "10px 24px",
                 borderRadius: "100px",
                 fontSize: "14px",
-                fontWeight: 600,
+                fontWeight: 500,
                 border: "none",
                 cursor: "pointer",
                 backgroundColor: "#008C7C",
@@ -542,7 +542,7 @@ export default function FaqPage() {
         >
           <h2
             className="font-heading"
-            style={{ fontSize: "24px", fontWeight: 700, color: "#0F1724", margin: "0 0 8px" }}
+            style={{ fontSize: "24px", fontWeight: 600, color: "#0F1724", margin: "0 0 8px" }}
           >
             Still have questions?
           </h2>
@@ -579,7 +579,7 @@ export default function FaqPage() {
                 padding: "12px 28px",
                 borderRadius: "100px",
                 fontSize: "14px",
-                fontWeight: 600,
+                fontWeight: 500,
                 backgroundColor: "#008C7C",
                 color: "#FFFFFF",
                 textDecoration: "none",
@@ -598,7 +598,7 @@ export default function FaqPage() {
                 padding: "12px 28px",
                 borderRadius: "100px",
                 fontSize: "14px",
-                fontWeight: 600,
+                fontWeight: 500,
                 backgroundColor: "#FFFFFF",
                 color: "#008C7C",
                 textDecoration: "none",

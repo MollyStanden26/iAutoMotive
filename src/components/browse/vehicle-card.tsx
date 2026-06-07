@@ -96,7 +96,7 @@ export function VehicleCard({
             style={{
               fontFamily: "var(--ac-font-body)",
               fontSize: "11px",
-              fontWeight: 600,
+              fontWeight: 500,
               color: "#FFFFFF",
               backgroundColor: "#008C7C",
               borderRadius: "6px",
@@ -145,7 +145,7 @@ export function VehicleCard({
           style={{
             fontFamily: "var(--ac-font-body)",
             fontSize: "18px",
-            fontWeight: 600,
+            fontWeight: 500,
             color: "#0F1724",
             lineHeight: "24px",
             margin: 0,
@@ -180,7 +180,7 @@ export function VehicleCard({
           style={{
             fontFamily: "var(--ac-font-heading)",
             fontSize: "24px",
-            fontWeight: 800,
+            fontWeight: 600,
             color: "#0F1724",
             margin: "12px 0 0",
             lineHeight: 1.2,
@@ -203,7 +203,7 @@ export function VehicleCard({
           style={{
             fontFamily: "var(--ac-font-body)",
             fontSize: "13px",
-            fontWeight: 500,
+            fontWeight: 400,
             color: "#008C7C",
             margin: 0,
             paddingTop: "12px",

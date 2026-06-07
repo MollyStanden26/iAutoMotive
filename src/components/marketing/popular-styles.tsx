@@ -134,7 +134,7 @@ export function PopularStyles() {
       <div className="mx-auto max-w-[1400px] px-6 sm:px-8">
         {/* Header */}
         <div className="flex items-center justify-between gap-4" style={{ marginBottom: 20 }}>
-          <h2 className="font-heading" style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 600, color: INK, margin: 0, letterSpacing: "-0.01em" }}>
+          <h2 className="font-heading" style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 500, color: INK, margin: 0, letterSpacing: "-0.01em" }}>
             Popular vehicle styles
           </h2>
           <div className="flex items-center gap-2 flex-shrink-0">

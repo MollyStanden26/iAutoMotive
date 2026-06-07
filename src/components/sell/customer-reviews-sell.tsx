@@ -72,12 +72,12 @@ function ReviewsDrawer({ open, onClose }: { open: boolean; onClose: () => void }
           style={{ padding: '20px 24px', borderBottom: '1px solid #EAECEF', flexShrink: 0 }}
         >
           <div>
-            <div style={{ fontFamily: 'var(--ac-font-heading)', fontSize: 18, fontWeight: 700, color: '#0F1724' }}>
+            <div style={{ fontFamily: 'var(--ac-font-heading)', fontSize: 18, fontWeight: 600, color: '#0F1724' }}>
               Customer reviews
             </div>
             <div className="mt-2 flex items-center gap-2">
               <StarRow count={5} size={16} />
-              <span style={{ fontFamily: 'var(--ac-font-heading)', fontSize: 22, fontWeight: 800, color: '#0F1724', lineHeight: 1 }}>
+              <span style={{ fontFamily: 'var(--ac-font-heading)', fontSize: 22, fontWeight: 600, color: '#0F1724', lineHeight: 1 }}>
                 {AVERAGE_RATING_LABEL}
               </span>
               <span style={{ fontFamily: 'var(--ac-font-body)', fontSize: 13, color: '#4A556B' }}>
@@ -140,7 +140,7 @@ function ReviewRow({ review }: { review: Review }) {
           margin: '10px 0 0',
         }}
       >
-        <span style={{ fontWeight: 700, color: '#0F1724' }}>{review.name}</span>
+        <span style={{ fontWeight: 600, color: '#0F1724' }}>{review.name}</span>
         {' '}from {review.city}
       </p>
     </div>
@@ -166,7 +166,7 @@ export default function CustomerReviewsSell() {
         <div className="mb-10 text-center">
           <h2
             style={{
-              fontSize: '28px', fontWeight: 600, color: '#0F1724',
+              fontSize: '28px', fontWeight: 500, color: '#0F1724',
               fontFamily: 'var(--ac-font-heading)', margin: '0 0 16px',
             }}
           >
@@ -178,7 +178,7 @@ export default function CustomerReviewsSell() {
             <StarRow count={5} size={20} />
             <span
               style={{
-                fontSize: 36, fontWeight: 700, color: '#0F1724',
+                fontSize: 36, fontWeight: 600, color: '#0F1724',
                 fontFamily: 'var(--ac-font-heading)', lineHeight: 1,
               }}
             >
@@ -194,7 +194,7 @@ export default function CustomerReviewsSell() {
             onClick={() => setDrawerOpen(true)}
             className="mt-2 inline-block bg-transparent border-none cursor-pointer p-0"
             style={{
-              fontSize: 14, fontWeight: 600,
+              fontSize: 14, fontWeight: 500,
               color: '#008C7C', textDecoration: 'none',
             }}
           >
@@ -262,7 +262,7 @@ export default function CustomerReviewsSell() {
                     type="button"
                     onClick={() => setDrawerOpen(true)}
                     style={{
-                      fontSize: 14, fontWeight: 600, color: '#008C7C',
+                      fontSize: 14, fontWeight: 500, color: '#008C7C',
                       textDecoration: 'none', background: 'transparent',
                       border: 'none', padding: 0, cursor: 'pointer',
                     }}
@@ -271,7 +271,7 @@ export default function CustomerReviewsSell() {
                   </button>
                   <div className="mt-5" style={{ borderTop: '1px solid #E2E8F0', paddingTop: 16 }}>
                     <p style={{ fontSize: 14, color: '#0F1724', margin: 0 }}>
-                      <span style={{ fontWeight: 700 }}>{review.name}</span>{' '}
+                      <span style={{ fontWeight: 600 }}>{review.name}</span>{' '}
                       <span style={{ color: '#4A556B' }}>from {review.city}</span>
                     </p>
                     <p style={{ fontSize: 12, color: '#8492A8', margin: '4px 0 0' }}>{review.date}</p>

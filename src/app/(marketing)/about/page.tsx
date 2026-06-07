@@ -251,13 +251,13 @@ export default function AboutPage() {
 
         <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-36 text-center">
           <p
-            className="text-sm font-semibold tracking-[0.2em] uppercase mb-4"
+            className="text-sm font-medium tracking-[0.2em] uppercase mb-4"
             style={{ color: "#4DD9C7" }}
           >
             About iAutoMotive
           </p>
           <h1
-            className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight"
+            className="text-4xl md:text-6xl font-semibold text-white mb-6 leading-tight"
             style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
           >
             We believe you deserve
@@ -272,14 +272,14 @@ export default function AboutPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/sell"
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-medium text-base transition-all"
               style={{ background: "#008C7C", color: "#FFFFFF" }}
             >
               Sell your car
             </Link>
             <Link
               href="/cars"
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all border-2"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-medium text-base transition-all border-2"
               style={{ borderColor: "rgba(255,255,255,0.4)", color: "#FFFFFF" }}
             >
               Browse cars
@@ -295,7 +295,7 @@ export default function AboutPage() {
             {stats.map((s) => (
               <div key={s.label}>
                 <p
-                  className="text-3xl md:text-4xl font-extrabold"
+                  className="text-3xl md:text-4xl font-semibold"
                   style={{
                     color: "#008C7C",
                     fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -321,7 +321,7 @@ export default function AboutPage() {
                 style={{ background: "#F5A623" }}
               />
               <h2
-                className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6"
+                className="text-3xl md:text-4xl font-semibold text-gray-900 mb-6"
                 style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
               >
                 The problem we&rsquo;re solving
@@ -348,13 +348,13 @@ export default function AboutPage() {
               style={{ background: "linear-gradient(135deg, #006058 0%, #008C7C 100%)" }}
             >
               <p
-                className="text-sm font-semibold tracking-[0.15em] uppercase mb-4"
+                className="text-sm font-medium tracking-[0.15em] uppercase mb-4"
                 style={{ color: "#4DD9C7" }}
               >
                 Our mission
               </p>
               <h3
-                className="text-2xl md:text-3xl font-extrabold text-white mb-6 leading-snug"
+                className="text-2xl md:text-3xl font-semibold text-white mb-6 leading-snug"
                 style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
               >
                 To make selling a car as easy as selling on eBay &mdash; but with
@@ -379,7 +379,7 @@ export default function AboutPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               How it works
@@ -404,13 +404,13 @@ export default function AboutPage() {
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <span
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white"
                       style={{ background: "#008C7C" }}
                     >
                       {step.step}
                     </span>
                     <h3
-                      className="font-bold text-gray-900"
+                      className="font-semibold text-gray-900"
                       style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
                     >
                       {step.title}
@@ -433,7 +433,7 @@ export default function AboutPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               What we stand for
@@ -456,7 +456,7 @@ export default function AboutPage() {
                   {v.icon}
                 </div>
                 <h3
-                  className="text-lg font-bold text-gray-900 mb-2"
+                  className="text-lg font-semibold text-gray-900 mb-2"
                   style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
                 >
                   {v.title}
@@ -477,7 +477,7 @@ export default function AboutPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               Our story so far
@@ -504,7 +504,7 @@ export default function AboutPage() {
                       }}
                     >
                       <span
-                        className="text-xs md:text-sm font-bold"
+                        className="text-xs md:text-sm font-semibold"
                         style={{ color: i === timeline.length - 1 ? "#FFFFFF" : "#008C7C" }}
                       >
                         {t.date.split(" ")[0]}
@@ -515,13 +515,13 @@ export default function AboutPage() {
                   {/* Content */}
                   <div className="pt-1 md:pt-3">
                     <p
-                      className="text-xs font-semibold uppercase tracking-wider mb-1"
+                      className="text-xs font-medium uppercase tracking-wider mb-1"
                       style={{ color: "#008C7C" }}
                     >
                       {t.date}
                     </p>
                     <h3
-                      className="text-lg font-bold text-gray-900 mb-1"
+                      className="text-lg font-semibold text-gray-900 mb-1"
                       style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
                     >
                       {t.title}
@@ -544,7 +544,7 @@ export default function AboutPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               Leadership team
@@ -562,19 +562,19 @@ export default function AboutPage() {
               >
                 {/* Avatar placeholder */}
                 <div
-                  className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center text-xl font-bold text-white"
+                  className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center text-xl font-semibold text-white"
                   style={{ background: person.colour }}
                 >
                   {person.initials}
                 </div>
                 <h3
-                  className="text-lg font-bold text-gray-900"
+                  className="text-lg font-semibold text-gray-900"
                   style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
                 >
                   {person.name}
                 </h3>
                 <p
-                  className="text-sm font-semibold mb-3"
+                  className="text-sm font-medium mb-3"
                   style={{ color: "#008C7C" }}
                 >
                   {person.role}
@@ -589,12 +589,12 @@ export default function AboutPage() {
       {/* ── Backed by ───────────────────────────────────────────── */}
       <section style={{ background: "#F8FAFB" }} className="py-16">
         <div className="max-w-5xl mx-auto px-6 text-center">
-          <p className="text-sm font-semibold tracking-[0.15em] uppercase text-gray-400 mb-8">
+          <p className="text-sm font-medium tracking-[0.15em] uppercase text-gray-400 mb-8">
             Backed by
           </p>
           <div className="flex flex-wrap justify-center items-center gap-12">
             {["Octopus Ventures", "Seedcamp", "Angel investors"].map((name) => (
-              <div key={name} className="text-xl md:text-2xl font-bold text-gray-300">
+              <div key={name} className="text-xl md:text-2xl font-semibold text-gray-300">
                 {name}
               </div>
             ))}
@@ -611,7 +611,7 @@ export default function AboutPage() {
       >
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2
-            className="text-3xl md:text-4xl font-extrabold text-white mb-4"
+            className="text-3xl md:text-4xl font-semibold text-white mb-4"
             style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
           >
             Ready to get more for your car?
@@ -623,14 +623,14 @@ export default function AboutPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/sell"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-base transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium text-base transition-all"
               style={{ background: "#FFFFFF", color: "#008C7C" }}
             >
               Get your free valuation
             </Link>
             <Link
               href="/careers"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-base transition-all border-2"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium text-base transition-all border-2"
               style={{ borderColor: "rgba(255,255,255,0.5)", color: "#FFFFFF" }}
             >
               We&rsquo;re hiring

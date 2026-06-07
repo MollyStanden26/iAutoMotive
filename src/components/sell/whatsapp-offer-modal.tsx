@@ -92,7 +92,7 @@ export function WhatsAppOfferModal({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 8,
-            fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11,
+            fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11,
             letterSpacing: "0.12em", textTransform: "uppercase", color: "#64748B",
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366" aria-hidden>
@@ -114,7 +114,7 @@ export function WhatsAppOfferModal({
         </div>
 
         <h2 style={{
-          fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 22,
+          fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 22,
           color: "#0D1525", textAlign: "center", margin: "4px 0 8px",
           letterSpacing: "0.02em",
         }}>
@@ -139,7 +139,7 @@ export function WhatsAppOfferModal({
           marginBottom: 18,
         }}>
           <div style={{
-            fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10,
+            fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 10,
             letterSpacing: "0.1em", textTransform: "uppercase", color: "#64748B",
             marginBottom: 6,
           }}>
@@ -162,7 +162,7 @@ export function WhatsAppOfferModal({
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
             width: "100%", height: 48, borderRadius: 9999,
             background: "#25D366", color: "#FFFFFF",
-            fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: 15,
+            fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 15,
             textDecoration: "none",
           }}
         >

@@ -23,7 +23,7 @@ export function ValuesSection() {
           className="font-heading"
           style={{
             fontSize: "36px",
-            fontWeight: 800,
+            fontWeight: 600,
             letterSpacing: "-0.025em",
             color: "#006058",
           }}

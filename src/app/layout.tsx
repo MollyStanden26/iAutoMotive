@@ -6,7 +6,8 @@ import { WhatsAppBubble } from "@/components/layout/whatsapp-bubble";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "600", "700", "800"],
+  // 500 added so headings down-shifted to medium have a real weight to use.
+  weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-heading",
   display: "swap",
 });

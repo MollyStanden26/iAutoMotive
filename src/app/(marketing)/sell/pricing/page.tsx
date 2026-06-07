@@ -242,13 +242,13 @@ export default function PricingPage() {
 
         <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-32 text-center">
           <p
-            className="text-sm font-semibold tracking-[0.2em] uppercase mb-4"
+            className="text-sm font-medium tracking-[0.2em] uppercase mb-4"
             style={{ color: "#4DD9C7" }}
           >
             Simple, transparent pricing
           </p>
           <h1
-            className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight"
+            className="text-4xl md:text-6xl font-semibold text-white mb-6 leading-tight"
             style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
           >
             No commission fee.
@@ -272,11 +272,11 @@ export default function PricingPage() {
                 className="absolute top-0 left-0 right-0 h-1.5"
                 style={{ background: "#008C7C" }}
               />
-              <p className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">
+              <p className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wider">
                 Commission fee
               </p>
               <p
-                className="text-5xl md:text-6xl font-extrabold mb-2"
+                className="text-5xl md:text-6xl font-semibold mb-2"
                 style={{
                   color: "#008C7C",
                   fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -290,11 +290,11 @@ export default function PricingPage() {
 
             {/* Upfront card */}
             <div className="rounded-2xl border border-gray-100 p-8 text-center bg-gray-50">
-              <p className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">
+              <p className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wider">
                 Upfront cost
               </p>
               <p
-                className="text-5xl md:text-6xl font-extrabold mb-2"
+                className="text-5xl md:text-6xl font-semibold mb-2"
                 style={{
                   color: "#1A1A2E",
                   fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -307,11 +307,11 @@ export default function PricingPage() {
 
             {/* Hidden fees card */}
             <div className="rounded-2xl border border-gray-100 p-8 text-center bg-gray-50">
-              <p className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">
+              <p className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wider">
                 Hidden fees
               </p>
               <p
-                className="text-5xl md:text-6xl font-extrabold mb-2"
+                className="text-5xl md:text-6xl font-semibold mb-2"
                 style={{
                   color: "#1A1A2E",
                   fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -334,7 +334,7 @@ export default function PricingPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               See what you&rsquo;d keep
@@ -348,9 +348,9 @@ export default function PricingPage() {
             {/* Slider */}
             <div className="mb-10">
               <label className="flex justify-between items-baseline mb-3">
-                <span className="text-sm font-semibold text-gray-500">Expected sale price</span>
+                <span className="text-sm font-medium text-gray-500">Expected sale price</span>
                 <span
-                  className="text-2xl font-extrabold"
+                  className="text-2xl font-semibold"
                   style={{
                     color: "#008C7C",
                     fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -381,11 +381,11 @@ export default function PricingPage() {
             {/* Results grid */}
             <div className="grid sm:grid-cols-3 gap-6">
               <div className="rounded-xl bg-gray-50 p-6 text-center">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
                   Our fee
                 </p>
                 <p
-                  className="text-2xl font-extrabold"
+                  className="text-2xl font-semibold"
                   style={{
                     color: "#E63946",
                     fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -398,11 +398,11 @@ export default function PricingPage() {
                 className="rounded-xl p-6 text-center"
                 style={{ background: "#E0F5F1" }}
               >
-                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#006058" }}>
+                <p className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: "#006058" }}>
                   You keep
                 </p>
                 <p
-                  className="text-2xl font-extrabold"
+                  className="text-2xl font-semibold"
                   style={{
                     color: "#008C7C",
                     fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -412,11 +412,11 @@ export default function PricingPage() {
                 </p>
               </div>
               <div className="rounded-xl bg-gray-50 p-6 text-center">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
                   vs trade-in est.
                 </p>
                 <p
-                  className="text-2xl font-extrabold"
+                  className="text-2xl font-semibold"
                   style={{
                     color: uplift > 0 ? "#008C7C" : "#E63946",
                     fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -444,7 +444,7 @@ export default function PricingPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               Everything&rsquo;s included
@@ -468,7 +468,7 @@ export default function PricingPage() {
                   {s.icon}
                 </div>
                 <h3
-                  className="font-bold text-gray-900 mb-1 text-sm"
+                  className="font-semibold text-gray-900 mb-1 text-sm"
                   style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
                 >
                   {s.title}
@@ -489,7 +489,7 @@ export default function PricingPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               How we compare
@@ -504,10 +504,10 @@ export default function PricingPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ background: "#F8FAFB" }}>
-                    <th className="text-left px-6 py-4 font-semibold text-gray-500 text-xs uppercase tracking-wider w-1/4">
+                    <th className="text-left px-6 py-4 font-medium text-gray-500 text-xs uppercase tracking-wider w-1/4">
                       Feature
                     </th>
-                    <th className="text-left px-6 py-4 font-bold text-xs uppercase tracking-wider" style={{ color: "#008C7C" }}>
+                    <th className="text-left px-6 py-4 font-semibold text-xs uppercase tracking-wider" style={{ color: "#008C7C" }}>
                       <div className="flex items-center gap-2">
                         <span
                           className="w-2 h-2 rounded-full inline-block"
@@ -516,10 +516,10 @@ export default function PricingPage() {
                         iAutoMotive
                       </div>
                     </th>
-                    <th className="text-left px-6 py-4 font-semibold text-gray-500 text-xs uppercase tracking-wider">
+                    <th className="text-left px-6 py-4 font-medium text-gray-500 text-xs uppercase tracking-wider">
                       Dealer trade-in
                     </th>
-                    <th className="text-left px-6 py-4 font-semibold text-gray-500 text-xs uppercase tracking-wider">
+                    <th className="text-left px-6 py-4 font-medium text-gray-500 text-xs uppercase tracking-wider">
                       Private sale
                     </th>
                   </tr>
@@ -531,8 +531,8 @@ export default function PricingPage() {
                       className="border-t border-gray-50"
                       style={{ background: i % 2 === 0 ? "#FFFFFF" : "#FAFBFC" }}
                     >
-                      <td className="px-6 py-4 font-medium text-gray-700">{row.feature}</td>
-                      <td className="px-6 py-4 font-semibold" style={{ color: "#008C7C" }}>
+                      <td className="px-6 py-4 font-normal text-gray-700">{row.feature}</td>
+                      <td className="px-6 py-4 font-medium" style={{ color: "#008C7C" }}>
                         {row.iautomotive}
                       </td>
                       <td className="px-6 py-4 text-gray-500">{row.tradeIn}</td>
@@ -555,7 +555,7 @@ export default function PricingPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               Pricing FAQs
@@ -579,13 +579,13 @@ export default function PricingPage() {
                     className="w-full flex items-center justify-between px-6 py-5 text-left"
                   >
                     <span
-                      className="font-semibold text-gray-900 pr-4"
+                      className="font-medium text-gray-900 pr-4"
                       style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
                     >
                       {item.q}
                     </span>
                     <span
-                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all text-lg font-bold"
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all text-lg font-semibold"
                       style={{
                         background: isOpen ? "#008C7C" : "#E0F5F1",
                         color: isOpen ? "#FFFFFF" : "#008C7C",
@@ -621,7 +621,7 @@ export default function PricingPage() {
       >
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2
-            className="text-3xl md:text-4xl font-extrabold text-white mb-4"
+            className="text-3xl md:text-4xl font-semibold text-white mb-4"
             style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
           >
             Ready to get more for your car?
@@ -632,14 +632,14 @@ export default function PricingPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/sell"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-base transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium text-base transition-all"
               style={{ background: "#FFFFFF", color: "#008C7C" }}
             >
               Get your free valuation
             </Link>
             <Link
               href="/faq"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-base transition-all border-2"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium text-base transition-all border-2"
               style={{ borderColor: "rgba(255,255,255,0.5)", color: "#FFFFFF" }}
             >
               More questions?

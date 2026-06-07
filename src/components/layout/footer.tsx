@@ -71,7 +71,7 @@ export function Footer() {
                 className="font-body"
                 style={{
                   fontSize: "12px",
-                  fontWeight: 600,
+                  fontWeight: 500,
                   textTransform: "uppercase",
                   letterSpacing: "0.04em",
                   color: "#8492A8",
@@ -142,7 +142,7 @@ export function Footer() {
         <div className="flex flex-col gap-2">
           <div className="font-heading" style={{ fontSize: "20px" }}>
             <span style={{ fontWeight: 300, color: "#8492A8" }}>iAuto</span>
-            <span style={{ fontWeight: 900, color: "#4DD9C7" }}>Motive</span>
+            <span style={{ fontWeight: 700, color: "#4DD9C7" }}>Motive</span>
           </div>
           <p
             className="font-body"

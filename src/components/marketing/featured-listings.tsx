@@ -41,7 +41,7 @@ export function FeaturedListings() {
           className="font-heading"
           style={{
             fontSize: "36px",
-            fontWeight: 800,
+            fontWeight: 600,
             letterSpacing: "-0.025em",
             color: "#0F1724",
           }}
@@ -130,7 +130,7 @@ export function FeaturedListings() {
                   className="font-heading"
                   style={{
                     fontSize: "18px",
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: "#0F1724",
                     margin: 0,
                   }}
@@ -152,7 +152,7 @@ export function FeaturedListings() {
                   className="font-heading"
                   style={{
                     fontSize: "28px",
-                    fontWeight: 800,
+                    fontWeight: 600,
                     color: "#0F1724",
                     margin: "8px 0 0",
                   }}
@@ -168,7 +168,7 @@ export function FeaturedListings() {
                   backgroundColor: "#F7F8F9",
                   padding: "12px 20px",
                   fontSize: "13px",
-                  fontWeight: 500,
+                  fontWeight: 400,
                   color: "#4A556B",
                 }}
               >

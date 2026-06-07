@@ -196,7 +196,7 @@ export default function CareersPage() {
             className="font-body"
             style={{
               fontSize: "13px",
-              fontWeight: 600,
+              fontWeight: 500,
               textTransform: "uppercase",
               letterSpacing: "0.1em",
               color: "#4DD9C7",
@@ -209,7 +209,7 @@ export default function CareersPage() {
             className="font-heading text-white"
             style={{
               fontSize: "clamp(32px, 6vw, 52px)",
-              fontWeight: 800,
+              fontWeight: 600,
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
             }}
@@ -335,7 +335,7 @@ export default function CareersPage() {
               padding: "14px 48px",
               borderRadius: "100px",
               fontSize: "14px",
-              fontWeight: 700,
+              fontWeight: 600,
               textTransform: "uppercase",
               letterSpacing: "0.06em",
               backgroundColor: "#008C7C",
@@ -381,7 +381,7 @@ export default function CareersPage() {
                   className="font-heading"
                   style={{
                     fontSize: "20px",
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: "#0F1724",
                     margin: "0 0 10px",
                     fontStyle: "italic",
@@ -406,7 +406,7 @@ export default function CareersPage() {
                     padding: "12px 32px",
                     borderRadius: "100px",
                     fontSize: "13px",
-                    fontWeight: 700,
+                    fontWeight: 600,
                     textTransform: "uppercase",
                     letterSpacing: "0.06em",
                     border: "2px solid #008C7C",
@@ -453,7 +453,7 @@ export default function CareersPage() {
               className="font-heading"
               style={{
                 fontSize: "clamp(28px, 5vw, 44px)",
-                fontWeight: 800,
+                fontWeight: 600,
                 color: "#0F1724",
                 lineHeight: 1.1,
               }}
@@ -517,7 +517,7 @@ export default function CareersPage() {
                     className="font-heading"
                     style={{
                       fontSize: "18px",
-                      fontWeight: 700,
+                      fontWeight: 600,
                       color: "#0F1724",
                       margin: "0 0 8px",
                       textTransform: "uppercase",
@@ -563,7 +563,7 @@ export default function CareersPage() {
               className="font-heading"
               style={{
                 fontSize: "clamp(28px, 5vw, 44px)",
-                fontWeight: 800,
+                fontWeight: 600,
                 color: "#0F1724",
                 lineHeight: 1.1,
               }}
@@ -607,7 +607,7 @@ export default function CareersPage() {
                   className="font-heading"
                   style={{
                     fontSize: "17px",
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: "#0F1724",
                     margin: "0 0 8px",
                   }}
@@ -650,7 +650,7 @@ export default function CareersPage() {
               className="font-heading"
               style={{
                 fontSize: "clamp(28px, 5vw, 44px)",
-                fontWeight: 800,
+                fontWeight: 600,
                 color: "#0F1724",
                 lineHeight: 1.1,
               }}
@@ -682,7 +682,7 @@ export default function CareersPage() {
                   className="font-heading"
                   style={{
                     fontSize: "15px",
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: "#0F1724",
                     margin: "0 0 4px",
                   }}
@@ -715,7 +715,7 @@ export default function CareersPage() {
             className="font-heading text-white"
             style={{
               fontSize: "clamp(24px, 4vw, 36px)",
-              fontWeight: 800,
+              fontWeight: 600,
               lineHeight: 1.15,
             }}
           >
@@ -755,7 +755,7 @@ export default function CareersPage() {
                 padding: "14px 36px",
                 borderRadius: "100px",
                 fontSize: "14px",
-                fontWeight: 700,
+                fontWeight: 600,
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
                 backgroundColor: "#FFFFFF",
@@ -775,7 +775,7 @@ export default function CareersPage() {
                 padding: "14px 36px",
                 borderRadius: "100px",
                 fontSize: "14px",
-                fontWeight: 700,
+                fontWeight: 600,
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
                 backgroundColor: "transparent",

@@ -75,7 +75,7 @@ export default function HowItWorksSell() {
           <h2
             style={{
               fontSize: '28px',
-              fontWeight: 600,
+              fontWeight: 500,
               color: '#0F1724',
               fontFamily: 'var(--ac-font-heading)',
               margin: '0 0 8px',
@@ -103,7 +103,7 @@ export default function HowItWorksSell() {
               <h3
                 style={{
                   fontSize: '18px',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   color: '#0F1724',
                   fontFamily: 'var(--ac-font-heading)',
                   margin: '0 0 8px',

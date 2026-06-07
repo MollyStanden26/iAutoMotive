@@ -51,7 +51,7 @@ export default function ValueTrackerBanner() {
             <span
               style={{
                 fontSize: "24px",
-                fontWeight: 700,
+                fontWeight: 600,
                 color: "#0F1724",
                 fontFamily: "var(--ac-font-heading)",
               }}
@@ -63,7 +63,7 @@ export default function ValueTrackerBanner() {
           <h2
             style={{
               fontSize: "28px",
-              fontWeight: 700,
+              fontWeight: 600,
               color: "#0F1724",
               fontFamily: "var(--ac-font-heading)",
               margin: 0,
@@ -93,7 +93,7 @@ export default function ValueTrackerBanner() {
             className="mt-3 inline-block"
             style={{
               fontSize: "14px",
-              fontWeight: 600,
+              fontWeight: 500,
               color: "#008C7C",
               textDecoration: "none",
             }}
@@ -118,7 +118,7 @@ export default function ValueTrackerBanner() {
               padding: "0 24px",
               backgroundColor: "#25D366", // WhatsApp brand green — readable atop the panel
               fontSize: "14px",
-              fontWeight: 700,
+              fontWeight: 600,
               color: "#FFFFFF",
               textDecoration: "none",
               whiteSpace: "nowrap",

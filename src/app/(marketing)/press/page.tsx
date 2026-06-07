@@ -290,13 +290,13 @@ export default function PressPage() {
 
         <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-32 text-center">
           <p
-            className="text-sm font-semibold tracking-[0.2em] uppercase mb-4"
+            className="text-sm font-medium tracking-[0.2em] uppercase mb-4"
             style={{ color: "#4DD9C7" }}
           >
             Newsroom
           </p>
           <h1
-            className="text-4xl md:text-6xl font-extrabold text-white mb-6"
+            className="text-4xl md:text-6xl font-semibold text-white mb-6"
             style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
           >
             Press &amp; Media
@@ -310,7 +310,7 @@ export default function PressPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <a
               href="mailto:press@iautomotive.co.uk"
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-medium text-base transition-all"
               style={{
                 background: "#008C7C",
                 color: "#FFFFFF",
@@ -324,7 +324,7 @@ export default function PressPage() {
             </a>
             <a
               href="#press-kit"
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all border-2"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-medium text-base transition-all border-2"
               style={{
                 borderColor: "rgba(255,255,255,0.4)",
                 color: "#FFFFFF",
@@ -348,7 +348,7 @@ export default function PressPage() {
             {companyFacts.map((f) => (
               <div key={f.label}>
                 <p
-                  className="text-2xl md:text-3xl font-extrabold"
+                  className="text-2xl md:text-3xl font-semibold"
                   style={{
                     color: "#008C7C",
                     fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)",
@@ -372,7 +372,7 @@ export default function PressPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="px-6 py-3 rounded-full text-sm font-semibold transition-all"
+                className="px-6 py-3 rounded-full text-sm font-medium transition-all"
                 style={{
                   background: isActive ? "#008C7C" : "#F1F5F9",
                   color: isActive ? "#FFFFFF" : "#64748B",
@@ -396,23 +396,23 @@ export default function PressPage() {
                   style={{ background: "#FFFFFF" }}
                 >
                   <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <time className="text-sm text-gray-400 font-medium">{pr.date}</time>
+                    <time className="text-sm text-gray-400 font-normal">{pr.date}</time>
                     <span
-                      className="text-xs font-semibold px-3 py-1 rounded-full"
+                      className="text-xs font-medium px-3 py-1 rounded-full"
                       style={{ background: tag.bg, color: tag.text }}
                     >
                       {pr.tag}
                     </span>
                   </div>
                   <h3
-                    className="text-xl md:text-2xl font-bold text-gray-900 mb-3 group-hover:text-[#008C7C] transition-colors"
+                    className="text-xl md:text-2xl font-semibold text-gray-900 mb-3 group-hover:text-[#008C7C] transition-colors"
                     style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
                   >
                     {pr.title}
                   </h3>
                   <p className="text-gray-600 leading-relaxed">{pr.excerpt}</p>
                   <button
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold transition-colors"
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-medium transition-colors"
                     style={{ color: "#008C7C" }}
                   >
                     Read full release
@@ -442,19 +442,19 @@ export default function PressPage() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <time className="text-sm text-gray-400 font-medium">{item.date}</time>
+                    <time className="text-sm text-gray-400 font-normal">{item.date}</time>
                     <span className="text-sm text-gray-500">&middot;</span>
-                    <span className="text-sm font-semibold text-gray-500">{item.outlet}</span>
+                    <span className="text-sm font-medium text-gray-500">{item.outlet}</span>
                   </div>
                   <h3
-                    className="text-xl md:text-2xl font-bold text-gray-900 mb-3 group-hover:text-[#008C7C] transition-colors"
+                    className="text-xl md:text-2xl font-semibold text-gray-900 mb-3 group-hover:text-[#008C7C] transition-colors"
                     style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
                   >
                     {item.title}
                   </h3>
                   <p className="text-gray-600 leading-relaxed">{item.excerpt}</p>
                   <span
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold transition-colors"
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-medium transition-colors"
                     style={{ color: "#008C7C" }}
                   >
                     Read article
@@ -478,7 +478,7 @@ export default function PressPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               Press kit
@@ -500,10 +500,10 @@ export default function PressPage() {
                 >
                   {asset.icon}
                 </div>
-                <h3 className="font-bold text-gray-900 mb-1">{asset.title}</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">{asset.title}</h3>
                 <p className="text-sm text-gray-500 mb-4">{asset.desc}</p>
                 <span
-                  className="inline-flex items-center gap-1 text-sm font-semibold"
+                  className="inline-flex items-center gap-1 text-sm font-medium"
                   style={{ color: "#008C7C" }}
                 >
                   Download
@@ -528,7 +528,7 @@ export default function PressPage() {
               style={{ background: "#F5A623" }}
             />
             <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+              className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
               style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
             >
               About iAutoMotive
@@ -553,13 +553,13 @@ export default function PressPage() {
             </p>
             <p className="text-gray-600 leading-relaxed">
               For more information visit{" "}
-              <Link href="/" className="font-semibold" style={{ color: "#008C7C" }}>
+              <Link href="/" className="font-medium" style={{ color: "#008C7C" }}>
                 iautomotive.co.uk
               </Link>{" "}
               or contact{" "}
               <a
                 href="mailto:press@iautomotive.co.uk"
-                className="font-semibold"
+                className="font-medium"
                 style={{ color: "#008C7C" }}
               >
                 press@iautomotive.co.uk
@@ -579,7 +579,7 @@ export default function PressPage() {
       >
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2
-            className="text-3xl md:text-4xl font-extrabold text-white mb-4"
+            className="text-3xl md:text-4xl font-semibold text-white mb-4"
             style={{ fontFamily: "var(--font-heading, 'Plus Jakarta Sans', sans-serif)" }}
           >
             Media enquiries
@@ -591,7 +591,7 @@ export default function PressPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <a
               href="mailto:press@iautomotive.co.uk"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-base transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium text-base transition-all"
               style={{ background: "#FFFFFF", color: "#008C7C" }}
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -602,7 +602,7 @@ export default function PressPage() {
             </a>
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-base transition-all border-2"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-medium text-base transition-all border-2"
               style={{ borderColor: "rgba(255,255,255,0.5)", color: "#FFFFFF" }}
             >
               Contact page

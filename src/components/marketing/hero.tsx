@@ -30,7 +30,7 @@ export function Hero() {
             className="font-heading text-white"
             style={{
               fontSize: "clamp(36px, 5vw, 64px)",
-              fontWeight: 800,
+              fontWeight: 600,
               letterSpacing: "-0.035em",
               lineHeight: 1.05,
             }}
@@ -106,7 +106,7 @@ export function Hero() {
                   borderRadius: "100px",
                   padding: "6px 14px",
                   fontSize: "13px",
-                  fontWeight: 500,
+                  fontWeight: 400,
                 }}
               >
                 <svg

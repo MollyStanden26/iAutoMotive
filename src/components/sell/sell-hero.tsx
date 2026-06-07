@@ -28,7 +28,7 @@ export default function SellHero() {
               fontFamily:
                 '"Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif',
               fontSize: 56,
-              fontWeight: 900,
+              fontWeight: 700,
               lineHeight: 1.05,
               color: "#FFFFFF",
               textTransform: "uppercase",
@@ -86,7 +86,7 @@ export default function SellHero() {
                 fontFamily:
                   '"Inter", system-ui, -apple-system, "Segoe UI", sans-serif',
                 fontSize: 16,
-                fontWeight: 500,
+                fontWeight: 400,
                 color: activeTab === "reg" ? "#0F1724" : "#8492A8",
                 background: "none",
                 border: "none",
@@ -109,7 +109,7 @@ export default function SellHero() {
                 fontFamily:
                   '"Inter", system-ui, -apple-system, "Segoe UI", sans-serif',
                 fontSize: 16,
-                fontWeight: 500,
+                fontWeight: 400,
                 color: activeTab === "vin" ? "#0F1724" : "#8492A8",
                 background: "none",
                 border: "none",
@@ -172,7 +172,7 @@ export default function SellHero() {
               backgroundColor: "#008C7C",
               color: "#FFFFFF",
               fontSize: 16,
-              fontWeight: 500,
+              fontWeight: 400,
               fontFamily:
                 '"Inter", system-ui, -apple-system, "Segoe UI", sans-serif',
               border: "none",
