@@ -54,6 +54,27 @@ export default function CarsPage() {
     return () => { cancelled = true; };
   }, []);
 
+  // Pre-apply filters from the URL so the homepage "Popular vehicle styles"
+  // tiles (and the footer links) land on a filtered browse page. Body styles
+  // arrive as ?type=<bodyType>, fuel categories as ?fuel=<fuelType>; both
+  // accept comma-separated values. Validated against the known enums so a
+  // junk param can't inject a phantom filter chip.
+  useEffect(() => {
+    const VALID_BODY = new Set(["suv","saloon","hatchback","estate","coupe","convertible","mpv","pickup"]);
+    const VALID_FUEL = new Set(["petrol","diesel","electric","hybrid","plugin_hybrid","mild_hybrid"]);
+    const params = new URLSearchParams(window.location.search);
+    const pick = (key: string, valid: Set<string>) =>
+      (params.get(key) ?? "")
+        .split(",")
+        .map(s => s.trim().toLowerCase())
+        .filter(v => valid.has(v));
+    const bodyTypes = pick("type", VALID_BODY);
+    const fuelTypes = pick("fuel", VALID_FUEL);
+    if (bodyTypes.length || fuelTypes.length) {
+      setFilters(prev => ({ ...prev, bodyTypes, fuelTypes }));
+    }
+  }, []);
+
   // Distinct lowercased colours for the sidebar's colour pill list. Pulled
   // from the full unfiltered set so the operator can re-add a filter they
   // just cleared without losing options.
