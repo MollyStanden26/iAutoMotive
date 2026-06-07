@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export function CtaBand() {
   return (
     <section style={{ backgroundColor: "#008C7C" }}>
@@ -37,9 +39,13 @@ export function CtaBand() {
           </div>
 
           {/* CTA button */}
-          <button
+          <Link
+            href="/sell"
             className="font-heading w-full shrink-0 transition-shadow duration-150 md:w-auto"
             style={{
+              display: "inline-block",
+              textAlign: "center",
+              textDecoration: "none",
               backgroundColor: "#FFFFFF",
               color: "#006058",
               fontSize: "16px",
@@ -57,7 +63,7 @@ export function CtaBand() {
             }}
           >
             Get started
-          </button>
+          </Link>
         </div>
       </div>
     </section>
