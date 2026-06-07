@@ -134,7 +134,7 @@ export function PopularStyles() {
       <div className="mx-auto max-w-[1400px] px-6 sm:px-8">
         {/* Header */}
         <div className="flex items-center justify-between gap-4" style={{ marginBottom: 20 }}>
-          <h2 className="font-heading" style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 800, color: INK, margin: 0 }}>
+          <h2 className="font-heading" style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 600, color: INK, margin: 0, letterSpacing: "-0.01em" }}>
             Popular vehicle styles
           </h2>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -202,7 +202,7 @@ export function PopularStyles() {
               </div>
               <span
                 className="font-body transition-colors"
-                style={{ marginTop: 8, fontSize: 14, fontWeight: 600, color: INK, textAlign: "center", whiteSpace: "nowrap" }}
+                style={{ marginTop: 8, fontSize: 14, fontWeight: 400, color: INK, textAlign: "center", whiteSpace: "nowrap" }}
                 onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = TEAL)}
                 onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = INK)}
               >
