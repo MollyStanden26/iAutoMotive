@@ -88,7 +88,7 @@ export function FilterChips({ className, filters, onChange }: FilterChipsProps) 
             onClick={() => onChange(chip.toggle(filters))}
             style={{
               fontFamily: 'var(--ac-font-body, "Inter", sans-serif)',
-              fontSize: 14, fontWeight: 500, lineHeight: "20px",
+              fontSize: 14, fontWeight: 400, lineHeight: "20px",
               color: isSelected ? "#008C7C" : "#0F1724",
               backgroundColor: isSelected ? "#E0FAF5" : "#FFFFFF",
               border: `1px solid ${isSelected ? "#008C7C" : "#C8CDD6"}`,

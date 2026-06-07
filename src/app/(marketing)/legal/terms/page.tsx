@@ -17,7 +17,7 @@ function SectionHeading({ id, letter, title }: { id: string; letter: string; tit
       className="font-heading"
       style={{
         fontSize: "22px",
-        fontWeight: 700,
+        fontWeight: 600,
         color: "#0F1724",
         margin: "48px 0 16px",
         scrollMarginTop: "100px",
@@ -34,7 +34,7 @@ function SubHeading({ children }: { children: React.ReactNode }) {
       className="font-heading"
       style={{
         fontSize: "17px",
-        fontWeight: 600,
+        fontWeight: 500,
         color: "#0F1724",
         margin: "32px 0 12px",
       }}
@@ -69,7 +69,7 @@ function Clause({ number, children }: { number: string; children: React.ReactNod
           fontSize: "15px",
           lineHeight: 1.75,
           color: "#008C7C",
-          fontWeight: 600,
+          fontWeight: 500,
           flexShrink: 0,
           minWidth: "28px",
         }}
@@ -106,7 +106,7 @@ function DefTable({ rows }: { rows: [string, string][] }) {
                 padding: "12px 16px",
                 backgroundColor: "#F7F8F9",
                 color: "#0F1724",
-                fontWeight: 600,
+                fontWeight: 500,
                 borderBottom: "2px solid #EAECEF",
                 width: "200px",
               }}
@@ -119,7 +119,7 @@ function DefTable({ rows }: { rows: [string, string][] }) {
                 padding: "12px 16px",
                 backgroundColor: "#F7F8F9",
                 color: "#0F1724",
-                fontWeight: 600,
+                fontWeight: 500,
                 borderBottom: "2px solid #EAECEF",
               }}
             >
@@ -134,7 +134,7 @@ function DefTable({ rows }: { rows: [string, string][] }) {
                 style={{
                   padding: "12px 16px",
                   color: "#0F1724",
-                  fontWeight: 600,
+                  fontWeight: 500,
                   borderBottom: "1px solid #EAECEF",
                   verticalAlign: "top",
                 }}
@@ -217,7 +217,7 @@ export default function TermsPage() {
             className="font-body"
             style={{
               fontSize: "13px",
-              fontWeight: 600,
+              fontWeight: 500,
               textTransform: "uppercase",
               letterSpacing: "0.06em",
               color: "rgba(255,255,255,0.6)",
@@ -228,7 +228,7 @@ export default function TermsPage() {
           </p>
           <h1
             className="font-heading text-white"
-            style={{ fontSize: "36px", fontWeight: 800, letterSpacing: "-0.02em" }}
+            style={{ fontSize: "36px", fontWeight: 600, letterSpacing: "-0.02em" }}
           >
             Terms &amp; Conditions
           </h1>
@@ -299,7 +299,7 @@ export default function TermsPage() {
         >
           <h2
             className="font-heading"
-            style={{ fontSize: "16px", fontWeight: 700, color: "#0F1724", margin: "0 0 14px" }}
+            style={{ fontSize: "16px", fontWeight: 600, color: "#0F1724", margin: "0 0 14px" }}
           >
             Contents
           </h2>
@@ -817,7 +817,7 @@ export default function TermsPage() {
         >
           <p
             className="font-heading"
-            style={{ fontSize: "16px", fontWeight: 700, color: "#00332E", margin: "0 0 10px" }}
+            style={{ fontSize: "16px", fontWeight: 600, color: "#00332E", margin: "0 0 10px" }}
           >
             Consumer Rights Act 2015 &mdash; your rights as a consumer
           </p>

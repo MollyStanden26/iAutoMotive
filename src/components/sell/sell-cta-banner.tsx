@@ -19,7 +19,7 @@ export default function SellCtaBanner() {
           <h2
             style={{
               fontSize: '32px',
-              fontWeight: 700,
+              fontWeight: 600,
               color: '#FFFFFF',
               fontFamily: 'var(--ac-font-heading)',
               margin: '0 0 12px',
@@ -48,7 +48,7 @@ export default function SellCtaBanner() {
                 padding: '0 28px',
                 backgroundColor: 'transparent',
                 fontSize: '14px',
-                fontWeight: 600,
+                fontWeight: 500,
                 color: '#FFFFFF',
                 cursor: 'pointer',
               }}

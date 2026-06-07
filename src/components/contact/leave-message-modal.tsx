@@ -23,7 +23,7 @@ const LABEL_STYLE: React.CSSProperties = {
   display: "block",
   fontFamily: "var(--font-body)",
   fontSize: "13px",
-  fontWeight: 600,
+  fontWeight: 500,
   color: "#0F1724",
   marginBottom: "6px",
 };
@@ -103,7 +103,7 @@ export function LeaveMessageModal({ open, onClose }: LeaveMessageModalProps) {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <p className="font-heading" style={{ fontSize: "20px", fontWeight: 800, color: "#0F1724", margin: 0 }}>
+            <p className="font-heading" style={{ fontSize: "20px", fontWeight: 600, color: "#0F1724", margin: 0 }}>
               Message sent
             </p>
             <p className="font-body" style={{ fontSize: "14px", color: "#4A556B", margin: "10px 0 0", lineHeight: 1.6 }}>
@@ -113,7 +113,7 @@ export function LeaveMessageModal({ open, onClose }: LeaveMessageModalProps) {
             </p>
             <button
               onClick={close}
-              style={{ marginTop: "22px", padding: "11px 22px", borderRadius: "100px", background: "#008C7C", color: "#fff", border: "none", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}
+              style={{ marginTop: "22px", padding: "11px 22px", borderRadius: "100px", background: "#008C7C", color: "#fff", border: "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "14px", cursor: "pointer" }}
             >
               Done
             </button>
@@ -121,7 +121,7 @@ export function LeaveMessageModal({ open, onClose }: LeaveMessageModalProps) {
         ) : (
           <>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "6px" }}>
-              <h3 className="font-heading" style={{ fontSize: "20px", fontWeight: 800, color: "#0F1724", margin: 0 }}>
+              <h3 className="font-heading" style={{ fontSize: "20px", fontWeight: 600, color: "#0F1724", margin: 0 }}>
                 Leave us a message
               </h3>
               <button onClick={close} aria-label="Close" style={{ background: "none", border: "none", fontSize: "22px", lineHeight: 1, color: "#8492A8", cursor: "pointer", padding: 0 }}>&times;</button>
@@ -163,7 +163,7 @@ export function LeaveMessageModal({ open, onClose }: LeaveMessageModalProps) {
               <button
                 type="submit"
                 disabled={submitting}
-                style={{ width: "100%", marginTop: "18px", padding: "13px", borderRadius: "100px", background: "#008C7C", color: "#fff", border: "none", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "15px", cursor: submitting ? "wait" : "pointer", opacity: submitting ? 0.7 : 1 }}
+                style={{ width: "100%", marginTop: "18px", padding: "13px", borderRadius: "100px", background: "#008C7C", color: "#fff", border: "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "15px", cursor: submitting ? "wait" : "pointer", opacity: submitting ? 0.7 : 1 }}
               >
                 {submitting ? "Sending…" : "Send message"}
               </button>

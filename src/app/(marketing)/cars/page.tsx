@@ -165,13 +165,13 @@ export default function CarsPage() {
 
             {/* Results bar */}
             <div className="mb-ac-5 flex flex-wrap items-center justify-between gap-ac-3">
-              <span className="font-body text-sm font-medium text-slate-600">
+              <span className="font-body text-sm font-normal text-slate-600">
                 {loading ? "Loading…" : `${sorted.length} car${sorted.length === 1 ? "" : "s"}`}
               </span>
 
               <div className="flex items-center gap-ac-4">
                 {/* Save search */}
-                <button className="flex items-center gap-1 font-body text-[13px] font-medium text-teal-600 transition-colors duration-150 hover:text-teal-800">
+                <button className="flex items-center gap-1 font-body text-[13px] font-normal text-teal-600 transition-colors duration-150 hover:text-teal-800">
                   <svg
                     width="14"
                     height="14"
@@ -195,7 +195,7 @@ export default function CarsPage() {
                   <button
                     type="button"
                     onClick={() => setSortMenuOpen(o => !o)}
-                    className="flex items-center gap-1 font-body text-sm font-semibold text-slate-900 transition-colors duration-150 hover:text-teal-600"
+                    className="flex items-center gap-1 font-body text-sm font-medium text-slate-900 transition-colors duration-150 hover:text-teal-600"
                   >
                     {SORT_LABELS[sort]}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -246,7 +246,7 @@ export default function CarsPage() {
       <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 md:hidden">
         <button
           onClick={() => setMobileFiltersOpen(true)}
-          className="flex items-center gap-ac-2 rounded-pill bg-teal-600 px-ac-6 py-ac-3 font-body text-sm font-semibold text-white shadow-lg transition-colors duration-150 hover:bg-teal-800"
+          className="flex items-center gap-ac-2 rounded-pill bg-teal-600 px-ac-6 py-ac-3 font-body text-sm font-medium text-white shadow-lg transition-colors duration-150 hover:bg-teal-800"
         >
           <svg
             width="16"
@@ -277,7 +277,7 @@ export default function CarsPage() {
           {/* Drawer from left */}
           <div className="absolute inset-y-0 left-0 w-full max-w-[320px] overflow-y-auto bg-white p-ac-6 shadow-xl">
             <div className="mb-ac-6 flex items-center justify-between">
-              <h2 className="font-heading text-lg font-semibold text-slate-900">
+              <h2 className="font-heading text-lg font-medium text-slate-900">
                 Filters
               </h2>
               <button

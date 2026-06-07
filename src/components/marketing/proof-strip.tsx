@@ -28,7 +28,7 @@ export function ProofStrip() {
                 className="font-heading"
                 style={{
                   fontSize: "24px",
-                  fontWeight: 800,
+                  fontWeight: 600,
                   color: "#4DD9C7",
                 }}
               >
@@ -38,7 +38,7 @@ export function ProofStrip() {
                 className="mt-1 font-body"
                 style={{
                   fontSize: "11px",
-                  fontWeight: 500,
+                  fontWeight: 400,
                   textTransform: "uppercase",
                   letterSpacing: "0.04em",
                   color: "#8492A8",

@@ -80,11 +80,11 @@ export default function VehicleDetailPage() {
   if (error || !car) {
     return (
       <div className="mx-auto max-w-[1400px] px-ac-6 py-ac-8">
-        <Link href="/cars" className="font-body text-sm font-medium text-teal-700 hover:text-teal-900">
+        <Link href="/cars" className="font-body text-sm font-normal text-teal-700 hover:text-teal-900">
           ← Back to all cars
         </Link>
         <div className="mt-ac-6 rounded-[12px] border border-slate-200 bg-white p-ac-6">
-          <h1 className="font-heading text-2xl font-bold text-slate-900">Vehicle not found</h1>
+          <h1 className="font-heading text-2xl font-semibold text-slate-900">Vehicle not found</h1>
           <p className="mt-ac-2 font-body text-sm text-slate-500">
             {error ?? "This listing may have been removed or sold."}
           </p>
@@ -157,7 +157,7 @@ export default function VehicleDetailPage() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url} alt="" className="h-full w-full object-cover" />
                     {i === 4 && car.photos.length > 5 && (
-                      <span className="absolute inset-0 flex items-center justify-center bg-slate-900/70 font-body text-sm font-semibold text-white">
+                      <span className="absolute inset-0 flex items-center justify-center bg-slate-900/70 font-body text-sm font-medium text-white">
                         +{car.photos.length - 5} more
                       </span>
                     )}
@@ -171,7 +171,7 @@ export default function VehicleDetailPage() {
               {["Overview", "Features", "Vehicle Details", "Pricing", "Inspection"].map((tab, i) => (
                 <button
                   key={tab}
-                  className="flex-1 rounded-pill py-1.5 font-body text-[13px] font-semibold text-center transition-colors"
+                  className="flex-1 rounded-pill py-1.5 font-body text-[13px] font-medium text-center transition-colors"
                   style={{
                     background: i === 2 ? "#E0FAF5" : "transparent",
                     color: i === 2 ? "#008C7C" : "#0F1724",
@@ -186,13 +186,13 @@ export default function VehicleDetailPage() {
             <div className="mt-ac-6 rounded-[16px] border border-slate-200 bg-white p-ac-6">
               <div className="flex items-baseline gap-ac-2">
                 <span className="h-[3px] w-[24px] rounded bg-amber-400" />
-                <h2 className="font-heading text-2xl font-bold text-slate-900">Vehicle Details</h2>
+                <h2 className="font-heading text-2xl font-semibold text-slate-900">Vehicle Details</h2>
               </div>
               <div className="mt-ac-4 grid grid-cols-1 gap-x-ac-6 gap-y-ac-3 sm:grid-cols-2 lg:grid-cols-3">
                 {detailRows.map(row => (
                   <div key={row.label} className="flex flex-col border-b border-slate-100 py-ac-2">
                     <span className="font-body text-[12px] uppercase tracking-wide text-slate-400">{row.label}</span>
-                    <span className="font-body text-[14px] font-semibold text-slate-900">{row.value}</span>
+                    <span className="font-body text-[14px] font-medium text-slate-900">{row.value}</span>
                   </div>
                 ))}
               </div>
@@ -208,17 +208,17 @@ export default function VehicleDetailPage() {
             <div className="mt-ac-6 rounded-[16px] bg-sky-50 p-ac-6">
               <div className="flex items-baseline gap-ac-2 justify-center">
                 <span className="h-[3px] w-[24px] rounded bg-amber-400" />
-                <h2 className="font-heading text-2xl font-bold text-slate-900">Price Details</h2>
+                <h2 className="font-heading text-2xl font-semibold text-slate-900">Price Details</h2>
               </div>
               <div className="mt-ac-4 mx-auto max-w-md rounded-[12px] bg-white p-ac-5">
-                <div className="font-body text-[14px] font-semibold text-slate-900">Pay once</div>
+                <div className="font-body text-[14px] font-medium text-slate-900">Pay once</div>
                 <div className="mt-ac-2">
-                  <span className="font-heading text-3xl font-bold text-slate-900">{fmt(car.price)}</span>
-                  <span className="ml-ac-2 font-body text-sm font-semibold text-emerald-600">Free shipping</span>
+                  <span className="font-heading text-3xl font-semibold text-slate-900">{fmt(car.price)}</span>
+                  <span className="ml-ac-2 font-body text-sm font-medium text-emerald-600">Free shipping</span>
                 </div>
                 <div className="mt-ac-4 space-y-ac-2 font-body text-[13px]">
                   <div className="flex justify-between"><span className="text-slate-500">Vehicle price</span><span className="text-slate-900">{fmt(car.price)}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Shipping fee</span><span className="font-semibold text-emerald-600">£0</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Shipping fee</span><span className="font-medium text-emerald-600">£0</span></div>
                 </div>
               </div>
             </div>
@@ -230,21 +230,21 @@ export default function VehicleDetailPage() {
           <aside className="lg:sticky lg:self-start" style={{ top: 95 }}>
             <div className="rounded-[16px] border border-slate-200 bg-white p-ac-5 shadow-sm">
               <div>
-                <div className="font-heading text-2xl font-bold text-slate-900">{car.title}</div>
+                <div className="font-heading text-2xl font-semibold text-slate-900">{car.title}</div>
                 <div className="mt-ac-1 font-body text-sm text-slate-500">{car.subtitle}</div>
               </div>
               <div className="mt-ac-4 flex items-baseline gap-ac-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className="font-heading text-3xl font-extrabold text-slate-900">{fmt(car.price)}</span>
+                <span className="font-heading text-3xl font-semibold text-slate-900">{fmt(car.price)}</span>
               </div>
-              <p className="mt-ac-1 font-body text-[13px] font-semibold text-emerald-600">
+              <p className="mt-ac-1 font-body text-[13px] font-medium text-emerald-600">
                 Free shipping
               </p>
               <button
                 type="button"
                 onClick={handleGetStarted}
                 disabled={userLoading}
-                className="mt-ac-4 w-full rounded-pill bg-teal-600 px-ac-4 py-3 font-heading text-base font-bold text-white transition-colors hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="mt-ac-4 w-full rounded-pill bg-teal-600 px-ac-4 py-3 font-heading text-base font-semibold text-white transition-colors hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 Get started
               </button>

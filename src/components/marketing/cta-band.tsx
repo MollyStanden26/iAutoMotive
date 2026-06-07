@@ -14,7 +14,7 @@ export function CtaBand() {
               className="font-heading"
               style={{
                 fontSize: "30px",
-                fontWeight: 800,
+                fontWeight: 600,
                 letterSpacing: "-0.015em",
                 color: "#FFFFFF",
                 margin: 0,
@@ -43,7 +43,7 @@ export function CtaBand() {
               backgroundColor: "#FFFFFF",
               color: "#006058",
               fontSize: "16px",
-              fontWeight: 800,
+              fontWeight: 600,
               padding: "15px 30px",
               borderRadius: "100px",
               border: "none",

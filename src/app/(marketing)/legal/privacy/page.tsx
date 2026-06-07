@@ -17,7 +17,7 @@ function SectionHeading({ id, number, title }: { id: string; number: string; tit
       className="font-heading"
       style={{
         fontSize: "22px",
-        fontWeight: 700,
+        fontWeight: 600,
         color: "#0F1724",
         margin: "48px 0 16px",
         scrollMarginTop: "100px",
@@ -34,7 +34,7 @@ function SubHeading({ children }: { children: React.ReactNode }) {
       className="font-heading"
       style={{
         fontSize: "17px",
-        fontWeight: 600,
+        fontWeight: 500,
         color: "#0F1724",
         margin: "32px 0 12px",
       }}
@@ -88,7 +88,7 @@ function PolicyTable({
                   padding: "12px 16px",
                   backgroundColor: "#F7F8F9",
                   color: "#0F1724",
-                  fontWeight: 600,
+                  fontWeight: 500,
                   borderBottom: "2px solid #EAECEF",
                   whiteSpace: "nowrap",
                 }}
@@ -185,7 +185,7 @@ export default function PrivacyPolicyPage() {
         <div className="mx-auto max-w-[800px] px-6">
           <h1
             className="font-heading text-white"
-            style={{ fontSize: "36px", fontWeight: 800, letterSpacing: "-0.02em" }}
+            style={{ fontSize: "36px", fontWeight: 600, letterSpacing: "-0.02em" }}
           >
             Privacy Policy
           </h1>
@@ -241,7 +241,7 @@ export default function PrivacyPolicyPage() {
         >
           <h2
             className="font-heading"
-            style={{ fontSize: "16px", fontWeight: 700, color: "#0F1724", margin: "0 0 14px" }}
+            style={{ fontSize: "16px", fontWeight: 600, color: "#0F1724", margin: "0 0 14px" }}
           >
             Contents
           </h2>
