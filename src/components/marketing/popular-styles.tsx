@@ -51,24 +51,30 @@ function CarSilhouette({ type }: { type: StyleKey }) {
 
 interface Tile {
   label: string;
-  type: StyleKey | null; // null = "Shop all"
-  image?: string;        // real photo; falls back to the SVG silhouette when absent
+  href: string;
+  image?: string;        // real photo
+  silhouette?: StyleKey; // SVG fallback shown only if no photo is set
 }
 
+const BS = "/images/body-styles";
+
+// Body styles link by ?type=<bodyType>; fuel categories (Electric, Hybrids,
+// Plug-in Hybrids) link by ?fuel=<fuelType>. Mirrors the Carvana set in UK terms
+// (sedan→Saloon, truck→Pickup, wagon→Estate, minivan→MPV).
 const TILES: Tile[] = [
-  { label: "SUVs",         type: "suv", image: "/images/body-styles/suv.webp" },
-  { label: "Saloons",      type: "saloon" },
-  { label: "Hatchbacks",   type: "hatchback" },
-  { label: "Estates",      type: "estate" },
-  { label: "Coupes",       type: "coupe" },
-  { label: "Convertibles", type: "convertible" },
-  { label: "MPVs",         type: "mpv" },
-  { label: "Shop all",     type: null },
+  { label: "SUVs",            href: "/cars?type=suv",           image: `${BS}/suv.webp`,           silhouette: "suv" },
+  { label: "Saloons",         href: "/cars?type=saloon",        image: `${BS}/saloon.webp`,        silhouette: "saloon" },
+  { label: "Pickups",         href: "/cars?type=pickup",        image: `${BS}/pickup.webp` },
+  { label: "Electric",        href: "/cars?fuel=electric",      image: `${BS}/electric.webp` },
+  { label: "Hybrids",         href: "/cars?fuel=hybrid",        image: `${BS}/hybrid.webp` },
+  { label: "Coupes",          href: "/cars?type=coupe",         image: `${BS}/coupe.webp`,         silhouette: "coupe" },
+  { label: "Hatchbacks",      href: "/cars?type=hatchback",     image: `${BS}/hatchback.webp`,     silhouette: "hatchback" },
+  { label: "Estates",         href: "/cars?type=estate",        image: `${BS}/estate.webp`,        silhouette: "estate" },
+  { label: "Convertibles",    href: "/cars?type=convertible",   image: `${BS}/convertible.webp`,   silhouette: "convertible" },
+  { label: "MPVs",            href: "/cars?type=mpv",           image: `${BS}/mpv.webp`,           silhouette: "mpv" },
+  { label: "Plug-in Hybrids", href: "/cars?fuel=plugin_hybrid", image: `${BS}/plugin-hybrid.webp` },
+  { label: "Shop all",        href: "/cars" },
 ];
-
-function hrefFor(t: Tile): string {
-  return t.type ? `/cars?type=${t.type}` : "/cars";
-}
 
 export function PopularStyles() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -152,7 +158,7 @@ export function PopularStyles() {
           {TILES.map((t) => (
             <Link
               key={t.label}
-              href={hrefFor(t)}
+              href={t.href}
               className="group flex flex-col items-center flex-shrink-0"
               style={{
                 scrollSnapAlign: "start",
@@ -175,12 +181,12 @@ export function PopularStyles() {
                     className="transition-transform duration-200 group-hover:scale-110"
                     style={{ width: 124, height: 76, objectFit: "contain" }}
                   />
-                ) : t.type ? (
+                ) : t.silhouette ? (
                   <div
                     className="flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
                     style={{ width: 120, height: 64 }}
                   >
-                    <CarSilhouette type={t.type} />
+                    <CarSilhouette type={t.silhouette} />
                   </div>
                 ) : (
                   <div
