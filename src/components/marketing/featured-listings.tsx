@@ -28,7 +28,7 @@ export function FeaturedListings() {
     setLoading(true);
     fetch("/api/vehicles")
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then(data => { if (!cancelled) setCars((data.cars ?? []).slice(0, 3)); })
+      .then(data => { if (!cancelled) setCars((data.cars ?? []).slice(0, 4)); })
       .catch(err => { if (!cancelled) console.error("[FeaturedListings] fetch failed:", err); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -55,7 +55,7 @@ export function FeaturedListings() {
           </div>
         )}
 
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {cars.map(car => (
             <Link
               key={car.id}
@@ -84,7 +84,7 @@ export function FeaturedListings() {
               <div
                 className="relative w-full"
                 style={{
-                  height: "240px",
+                  height: "200px",
                   backgroundColor: "#F7F8F9",
                 }}
               >
