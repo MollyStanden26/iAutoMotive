@@ -1,16 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth, ROLE_HOME_ROUTE } from "@/hooks/use-auth";
+import { getSavedCars, removeSavedCar, SAVED_CARS_EVENT, type SavedCar } from "@/lib/saved-cars";
 
 export function Navbar() {
   const { user, isLoading, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [favoritesTab, setFavoritesTab] = useState<"vehicles" | "searches">("vehicles");
+  const [savedCars, setSavedCars] = useState<SavedCar[]>([]);
   const pathname = usePathname();
+
+  const gbp = (n: number) =>
+    new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(n);
+
+  // Keep the favourites list in sync with localStorage. Saves happen on car
+  // pages; the drawer + heart badge reflect them live (and across tabs via the
+  // native `storage` event).
+  useEffect(() => {
+    const sync = () => setSavedCars(getSavedCars());
+    sync();
+    window.addEventListener(SAVED_CARS_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(SAVED_CARS_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
 
   const dashboardHref = user ? ROLE_HOME_ROUTE[user.role] : "/auth/signin";
   const userInitial = user?.name?.charAt(0)?.toUpperCase() ?? "";
@@ -106,15 +125,28 @@ export function Navbar() {
               <button
                 onClick={() => { setFavoritesOpen(true); setMobileOpen(false); }}
                 className="flex items-center justify-center transition-colors"
-                style={{ width: 44, height: 44, borderRadius: 99999, color: "#0F1724", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                style={{ position: "relative", width: 44, height: 44, borderRadius: 99999, color: "#0F1724", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#F7F8F9"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-                title="Favorites"
-                aria-label="Favorites"
+                title="Favourites"
+                aria-label={savedCars.length ? `Favourites (${savedCars.length})` : "Favourites"}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill={savedCars.length ? "#008C7C" : "none"} stroke={savedCars.length ? "#008C7C" : "currentColor"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
+                {savedCars.length > 0 && (
+                  <span
+                    className="font-body"
+                    style={{
+                      position: "absolute", top: 4, right: 4, minWidth: 17, height: 17,
+                      padding: "0 4px", borderRadius: 99999, backgroundColor: "#008C7C",
+                      color: "#FFFFFF", fontSize: 10, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                  >
+                    {savedCars.length}
+                  </span>
+                )}
               </button>
 
               {/* User + menu pill */}
@@ -542,8 +574,45 @@ export function Navbar() {
               </div>
             </div>
 
-            {/* Empty state content */}
-            <div className="flex flex-1 flex-col items-center justify-start" style={{ padding: "40px 32px", textAlign: "center" }}>
+            {/* Content: saved vehicles list, otherwise the empty / searches state */}
+            {favoritesTab === "vehicles" && savedCars.length > 0 ? (
+              <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {savedCars.map((c) => (
+                    <div key={c.id} style={{ position: "relative", border: "1px solid #E2E8F0", borderRadius: 12, overflow: "hidden", backgroundColor: "#FFFFFF" }}>
+                      <Link
+                        href={`/cars/${c.id}/${c.slug}`}
+                        onClick={() => setFavoritesOpen(false)}
+                        style={{ display: "flex", gap: 12, textDecoration: "none", color: "inherit" }}
+                      >
+                        <div style={{ width: 104, height: 78, flexShrink: 0, backgroundColor: "#F1F5F9" }}>
+                          {c.image && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={c.image} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          )}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0, padding: "10px 36px 10px 0" }}>
+                          <p className="font-heading" style={{ fontSize: 14, fontWeight: 600, color: "#0F1724", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</p>
+                          <p className="font-heading" style={{ fontSize: 15, fontWeight: 600, color: "#0F1724", margin: "4px 0 0" }}>{gbp(c.price)}</p>
+                        </div>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => removeSavedCar(c.id)}
+                        aria-label={`Remove ${c.title} from favourites`}
+                        title="Remove from favourites"
+                        style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 99999, backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#008C7C" stroke="#008C7C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col items-center justify-start" style={{ padding: "40px 32px", textAlign: "center" }}>
               {favoritesTab === "vehicles" ? (
                 <>
                   {/* Car illustration placeholder */}
@@ -689,7 +758,8 @@ export function Navbar() {
                   )}
                 </>
               )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Slide-in animation (shared with menu panel) */}
