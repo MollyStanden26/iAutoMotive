@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/auth/use-current-user";
 import { SignInUpModal } from "@/components/auth/sign-in-up-modal";
+import { isSaved, toggleSavedCar, SAVED_CARS_EVENT } from "@/lib/saved-cars";
 
 interface CarDetails {
   id: string;
@@ -60,30 +61,27 @@ export default function VehicleDetailPage() {
     else setAuthOpen(true);
   };
 
-  // ── Save (persisted to localStorage) + Share ──────────────────────────
-  const SAVED_KEY = "iac_saved_cars";
-
-  // Reflect whether this car is already saved when the page loads.
+  // ── Save (shared localStorage favourites) + Share ─────────────────────
+  // Reflect saved state on load, and stay in sync if it changes elsewhere
+  // (e.g. the car is removed from the Favourites drawer).
   useEffect(() => {
     if (!params?.id) return;
-    try {
-      const arr = JSON.parse(localStorage.getItem(SAVED_KEY) || "[]");
-      setSaved(Array.isArray(arr) && arr.includes(params.id));
-    } catch { setSaved(false); }
+    const sync = () => setSaved(isSaved(params.id));
+    sync();
+    window.addEventListener(SAVED_CARS_EVENT, sync);
+    return () => window.removeEventListener(SAVED_CARS_EVENT, sync);
   }, [params?.id]);
 
   const handleSave = () => {
-    if (!params?.id) return;
-    try {
-      const arr = JSON.parse(localStorage.getItem(SAVED_KEY) || "[]");
-      const set = new Set<string>(Array.isArray(arr) ? arr : []);
-      if (set.has(params.id)) set.delete(params.id);
-      else set.add(params.id);
-      localStorage.setItem(SAVED_KEY, JSON.stringify([...set]));
-      setSaved(set.has(params.id));
-      // Let other surfaces (e.g. the nav heart) react if they want to.
-      window.dispatchEvent(new Event("iac-saved-cars-changed"));
-    } catch { /* localStorage unavailable — ignore */ }
+    if (!params?.id || !car) return;
+    const image = car.photos.find(p => p.isPrimary)?.url ?? car.photos[0]?.url ?? null;
+    setSaved(toggleSavedCar({
+      id: params.id,
+      slug: params.slug,
+      title: car.title,
+      price: car.price,
+      image,
+    }));
   };
 
   const handleShare = async () => {
