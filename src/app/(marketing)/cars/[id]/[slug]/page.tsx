@@ -41,6 +41,8 @@ export default function VehicleDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [authOpen, setAuthOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [shareLabel, setShareLabel] = useState("Share");
   const router = useRouter();
   const { user, loading: userLoading } = useCurrentUser();
 
@@ -56,6 +58,47 @@ export default function VehicleDetailPage() {
     if (userLoading) return;
     if (user) startCheckout();
     else setAuthOpen(true);
+  };
+
+  // ── Save (persisted to localStorage) + Share ──────────────────────────
+  const SAVED_KEY = "iac_saved_cars";
+
+  // Reflect whether this car is already saved when the page loads.
+  useEffect(() => {
+    if (!params?.id) return;
+    try {
+      const arr = JSON.parse(localStorage.getItem(SAVED_KEY) || "[]");
+      setSaved(Array.isArray(arr) && arr.includes(params.id));
+    } catch { setSaved(false); }
+  }, [params?.id]);
+
+  const handleSave = () => {
+    if (!params?.id) return;
+    try {
+      const arr = JSON.parse(localStorage.getItem(SAVED_KEY) || "[]");
+      const set = new Set<string>(Array.isArray(arr) ? arr : []);
+      if (set.has(params.id)) set.delete(params.id);
+      else set.add(params.id);
+      localStorage.setItem(SAVED_KEY, JSON.stringify([...set]));
+      setSaved(set.has(params.id));
+      // Let other surfaces (e.g. the nav heart) react if they want to.
+      window.dispatchEvent(new Event("iac-saved-cars-changed"));
+    } catch { /* localStorage unavailable — ignore */ }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = car?.title ?? "iAutoMotive listing";
+    // Native share sheet on supported devices; otherwise copy the link.
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareLabel("Copied!");
+      setTimeout(() => setShareLabel("Share"), 2000);
+    } catch { /* clipboard blocked — ignore */ }
   };
 
   useEffect(() => {
@@ -249,8 +292,21 @@ export default function VehicleDetailPage() {
                 Get started
               </button>
               <div className="mt-ac-4 flex items-center justify-between border-t border-slate-100 pt-ac-3 font-body text-sm">
-                <button type="button" className="flex items-center gap-1 text-slate-500 hover:text-slate-900">↗ Share</button>
-                <button type="button" className="flex items-center gap-1 text-slate-500 hover:text-slate-900">♡ Save</button>
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="flex items-center gap-1 text-slate-500 transition-colors hover:text-slate-900"
+                >
+                  ↗ {shareLabel}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  aria-pressed={saved}
+                  className={`flex items-center gap-1 transition-colors ${saved ? "text-teal-600" : "text-slate-500 hover:text-slate-900"}`}
+                >
+                  {saved ? "♥ Saved" : "♡ Save"}
+                </button>
               </div>
             </div>
           </aside>
