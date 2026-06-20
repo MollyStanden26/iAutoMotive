@@ -47,7 +47,7 @@ const ALLOWED_CONTENT_TYPES = [
 
 /** Restrict the namespaces a minted token can write to. Stops a staff member
  *  reusing a token from one feature to scribble into an unrelated path. */
-const ALLOWED_PATH_PREFIXES = ["vehicles/"];
+const ALLOWED_PATH_PREFIXES = ["vehicles/", "contracts/"];
 
 export async function GET(request: NextRequest) {
   const guard = await requireStaff(request);

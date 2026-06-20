@@ -8,8 +8,9 @@
  * /api/admin/deals/[id]. Reps only see their own deals.
  */
 
-import { useEffect, useState } from "react";
-import { X, Warehouse, MapPin, Phone, Mail, ArrowLeft, UserRound, ShieldAlert } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
+import { X, Warehouse, MapPin, Phone, Mail, ArrowLeft, UserRound, ShieldAlert, FileText, Upload, Download, Trash2, Loader2 } from "lucide-react";
 
 const T = {
   bgPanel: "#0D1525", bgInput: "#0B111E", bgSection: "#111D30",
@@ -57,19 +58,26 @@ interface DealDetail {
   doNotSms: boolean;
   leadId: string | null;
   photos: string[];
+  contract: { url: string; name: string; sizeBytes: number | null; uploadedAt: string } | null;
+  documentsSignedAt: string | null;
 }
 
 const gbp = (n: number | null | undefined) => (n == null ? "—" : `£${n.toLocaleString()}`);
 const titleCase = (s: string) => s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+const fmtSize = (b: number | null | undefined) =>
+  b == null ? null : b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
 
 export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [detail, setDetail] = useState<DealDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"deal" | "seller">("deal");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (deal) { setMode("deal"); requestAnimationFrame(() => setMounted(true)); }
+    if (deal) { setMode("deal"); setUploadError(null); requestAnimationFrame(() => setMounted(true)); }
     else setMounted(false);
   }, [deal]);
 
@@ -77,6 +85,49 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
     if (detail?.doNotCall || !detail?.sellerPhone) return;
     const dial = (window as unknown as { iaDial?: (n: string) => void }).iaDial;
     if (dial) dial(detail.sellerPhone);
+  };
+
+  const uploadContract = async (file: File) => {
+    if (!deal) return;
+    if (file.type !== "application/pdf") { setUploadError("Please choose a PDF file"); return; }
+    if (file.size > 8 * 1024 * 1024) { setUploadError("PDF exceeds 8 MB"); return; }
+    setUploading(true); setUploadError(null);
+    try {
+      const probe = await fetch("/api/admin/upload").then(r => (r.ok ? r.json() : { direct: false })).catch(() => ({ direct: false }));
+      let res: Response;
+      if (probe.direct) {
+        // Prod path: stream straight to Vercel Blob, then record the URL.
+        const token = Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b => b.toString(16).padStart(2, "0")).join("");
+        const blob = await upload(`contracts/${deal.id}/${token}.pdf`, file, {
+          access: "public", handleUploadUrl: "/api/admin/upload", contentType: "application/pdf",
+        });
+        res = await fetch(`/api/admin/deals/${deal.id}/contract`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: blob.url, name: file.name, size: file.size }),
+        });
+      } else {
+        // Dev path: multipart through the function.
+        const fd = new FormData(); fd.append("file", file, file.name);
+        res = await fetch(`/api/admin/deals/${deal.id}/contract`, { method: "POST", body: fd });
+      }
+      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error || `Upload failed (${res.status})`); }
+      const data = await res.json();
+      setDetail(d => d ? { ...d, contract: data.contract, documentsSignedAt: data.contract?.uploadedAt ?? d.documentsSignedAt } : d);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Upload failed");
+    } finally { setUploading(false); }
+  };
+
+  const removeContract = async () => {
+    if (!deal) return;
+    setUploading(true); setUploadError(null);
+    try {
+      const res = await fetch(`/api/admin/deals/${deal.id}/contract`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`Remove failed (${res.status})`);
+      setDetail(d => d ? { ...d, contract: null, documentsSignedAt: null } : d);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Remove failed");
+    } finally { setUploading(false); }
   };
 
   useEffect(() => {
@@ -189,6 +240,54 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
             <DetailRow label="Was asking" value={gbp(detail?.askingPriceGbp)} />
             <DetailRow label="Buyer" value={detail?.buyer ?? "Awaiting buyer"} />
           </Section>
+
+          {/* Signed contract */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: T.textDim, marginBottom: 10 }}>Signed contract</div>
+            {detail?.contract ? (
+              <>
+                <div className="flex items-center gap-2.5" style={{ padding: "10px 12px", borderRadius: 10, background: T.bgSection, border: `1px solid ${T.border}` }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 8, background: T.tealBg, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                    <FileText size={16} style={{ color: T.teal200 }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate" style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary }}>{detail.contract.name}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>
+                      {[fmtSize(detail.contract.sizeBytes), `Uploaded ${new Date(detail.contract.uploadedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`].filter(Boolean).join(" · ")}
+                    </div>
+                  </div>
+                  <a href={detail.contract.url} target="_blank" rel="noopener noreferrer" aria-label="View contract"
+                    className="rounded-[8px] shrink-0 hover:opacity-80"
+                    style={{ width: 32, height: 32, background: T.bgPanel, border: `1px solid ${T.border}`, color: T.teal200, display: "grid", placeItems: "center" }}>
+                    <Download size={15} />
+                  </a>
+                </div>
+                <div className="flex gap-2" style={{ marginTop: 8 }}>
+                  <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-[8px] rounded-[8px] hover:opacity-90"
+                    style={{ background: T.bgSection, border: `1px solid ${T.border}`, color: T.teal200, fontWeight: 700, fontSize: 12, opacity: uploading ? 0.5 : 1, cursor: uploading ? "not-allowed" : "pointer" }}>
+                    {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />} Replace
+                  </button>
+                  <button onClick={removeContract} disabled={uploading}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-[8px] rounded-[8px] hover:opacity-90"
+                    style={{ background: T.bgSection, border: `1px solid ${T.border}`, color: T.red, fontWeight: 700, fontSize: 12, opacity: uploading ? 0.5 : 1, cursor: uploading ? "not-allowed" : "pointer" }}>
+                    <Trash2 size={13} /> Remove
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                className="w-full flex flex-col items-center justify-center gap-1.5 hover:opacity-90"
+                style={{ padding: "18px 12px", borderRadius: 10, background: T.bgSection, border: `1px dashed ${T.border}`, color: T.teal200, cursor: uploading ? "wait" : "pointer" }}>
+                {uploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{uploading ? "Uploading…" : "Upload signed contract"}</span>
+                <span style={{ fontSize: 11, color: T.textMuted }}>PDF, up to 8 MB</span>
+              </button>
+            )}
+            {uploadError && <div style={{ fontSize: 11, color: T.red, marginTop: 8 }}>{uploadError}</div>}
+            <input ref={fileInputRef} type="file" accept="application/pdf" hidden
+              onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) uploadContract(f); }} />
+          </div>
 
           {/* Origin */}
           <Section title="Origin">

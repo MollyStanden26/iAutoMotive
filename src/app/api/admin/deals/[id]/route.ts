@@ -56,6 +56,16 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     const lead = deal.lead;
     const photos = Array.isArray(lead?.scrapedImageUrls) ? (lead!.scrapedImageUrls as string[]).slice(0, 8) : [];
 
+    // Current signed contract (consignment agreement) for this deal, if any.
+    const contractDoc = await prisma.document.findFirst({
+      where: { entityType: "deal", entityId: deal.id, documentType: "consignment_agreement", isCurrent: true },
+      orderBy: { version: "desc" },
+      select: { cdnUrl: true, title: true, fileSizeBytes: true, createdAt: true },
+    });
+    const contract = contractDoc?.cdnUrl
+      ? { url: contractDoc.cdnUrl, name: contractDoc.title, sizeBytes: contractDoc.fileSizeBytes, uploadedAt: contractDoc.createdAt.toISOString() }
+      : null;
+
     return NextResponse.json({
       detail: {
         id: deal.id,
@@ -90,6 +100,9 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
         doNotSms: lead?.doNotSms ?? false,
         leadId: deal.leadId ?? null,
         photos,
+        // Signed contract
+        contract,
+        documentsSignedAt: deal.documentsSignedAt ? deal.documentsSignedAt.toISOString() : null,
       },
     });
   } catch (error) {
