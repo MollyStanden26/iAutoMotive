@@ -14,6 +14,7 @@ import {
   AT_RISK_DEALS, FUNDING_ROWS, DOC_STATUS_ROWS, COMPLIANCE_ROWS,
 } from "@/lib/admin/deals-mock-data";
 import type { Deal, DealFilter, DealStage, FundingStatus } from "@/lib/admin/deals-mock-data";
+import { commissionForDealValue } from "@/lib/admin/commission";
 
 /* ================================================================== */
 /*  DESIGN TOKENS                                                      */
@@ -53,7 +54,7 @@ function Topbar({ selectedCount, onNewDeal }: { selectedCount: number; onNewDeal
 /* ================================================================== */
 /*  KPI STRIP                                                          */
 /* ================================================================== */
-function KpiStrip({ liveCount, pipelineValue }: { liveCount: number; pipelineValue: number }) {
+function KpiStrip({ liveCount, pipelineValue, commission }: { liveCount: number; pipelineValue: number; commission: number }) {
   const K = DEALS_KPIS;
   const pipelineLabel = pipelineValue <= 0 ? "—"
     : pipelineValue >= 1000 ? `£${Math.round(pipelineValue / 1000)}k`
@@ -61,7 +62,7 @@ function KpiStrip({ liveCount, pipelineValue }: { liveCount: number; pipelineVal
   const cards = [
     { label: "LIVE DEALS", value: liveCount.toString(), valueColor: liveCount > 0 ? T.textPrimary : T.textMuted, delta: liveCount > 0 ? "Active pipeline" : "No data yet", deltaColor: T.textMuted },
     { label: "PIPELINE VALUE", value: pipelineLabel, valueColor: pipelineValue > 0 ? T.teal200 : T.textMuted, delta: "Gross vehicle value", deltaColor: T.textMuted },
-    { label: "EST. PLATFORM FEE", value: K.estPlatformFee > 0 ? `£${(K.estPlatformFee / 1000).toFixed(1)}k` : "£0", valueColor: T.green, delta: "No commission fee", deltaColor: T.green },
+    { label: "EST. COMMISSION", value: `£${commission.toLocaleString()}`, valueColor: commission > 0 ? T.green : T.textMuted, delta: "Projected · open deals", deltaColor: T.textMuted },
     { label: "AT RISK", value: K.atRisk.toString(), valueColor: K.atRisk > 0 ? T.red : T.textMuted, delta: K.atRisk > 0 ? "AI health score <50" : "None flagged", deltaColor: K.atRisk > 0 ? T.red : T.textMuted },
     { label: "CLOSED TODAY", value: K.closedToday.toString(), valueColor: K.closedToday > 0 ? T.teal200 : T.textMuted, delta: K.closedTodayRevenue > 0 ? `£${(K.closedTodayRevenue / 1000).toFixed(1)}k revenue` : "—", deltaColor: K.closedToday > 0 ? T.green : T.textMuted },
   ];
@@ -454,6 +455,10 @@ export default function DealsPage() {
   }, []);
 
   const pipelineValue = deals.reduce((sum, d) => sum + (d.salePrice || 0), 0);
+  // Projected commission from open (non-closed) deals, per the contract tiers.
+  const pipelineCommission = deals
+    .filter(d => d.stageKey !== "closed")
+    .reduce((sum, d) => sum + commissionForDealValue(d.salePrice || 0), 0);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
@@ -461,7 +466,7 @@ export default function DealsPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar selectedCount={selectedDeals.length} onNewDeal={() => setNewDealOpen(true)} />
         <div className="flex-1 flex flex-col gap-[10px] overflow-x-hidden" style={{ padding: "14px 20px" }}>
-          <KpiStrip liveCount={deals.length} pipelineValue={pipelineValue} />
+          <KpiStrip liveCount={deals.length} pipelineValue={pipelineValue} commission={pipelineCommission} />
           <PipelineStrip />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 296px", gap: 10 }}>
             <DealsTable
