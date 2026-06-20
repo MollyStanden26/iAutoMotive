@@ -43,6 +43,7 @@ export interface LeadDetail {
 
 interface LeadExtra {
   scoutScore: number; scoutTier: string | null; status: string;
+  askingPriceGbp: number | null; estimatedRetailGbp: number | null;
   doNotCall: boolean; doNotSms: boolean; source: string;
   listingUrl: string | null; photos: string[];
   daysListedAtImport: number | null; importedAt: string; ownerName: string | null;
@@ -69,7 +70,7 @@ const METHOD_OPTIONS = [{ v: "phone_call", l: "Call" }, { v: "sms", l: "SMS" }, 
 interface EditForm {
   firstName: string; lastName: string; phone: string; email: string; locationPostcode: string;
   vehicleReg: string; vehicleYear: string; vehicleMake: string; vehicleModel: string;
-  vehicleTrim: string; vehicleMileage: string; askingPriceGbp: string; notes: string;
+  vehicleTrim: string; vehicleMileage: string; askingPriceGbp: string; estimatedRetailGbp: string; notes: string;
   pipelineStage: string;
 }
 function toForm(l: LeadDetail): EditForm {
@@ -79,7 +80,7 @@ function toForm(l: LeadDetail): EditForm {
     vehicleYear: l.vehicleYear ? String(l.vehicleYear) : "", vehicleMake: l.vehicleMake ?? "",
     vehicleModel: l.vehicleModel ?? "", vehicleTrim: l.vehicleTrim ?? "",
     vehicleMileage: l.vehicleMileage ? String(l.vehicleMileage) : "",
-    askingPriceGbp: l.askingPriceGbp ? String(l.askingPriceGbp) : "", notes: l.notes ?? "",
+    askingPriceGbp: l.askingPriceGbp ? String(l.askingPriceGbp) : "", estimatedRetailGbp: "", notes: l.notes ?? "",
     pipelineStage: l.pipelineStage,
   };
 }
@@ -151,6 +152,12 @@ export function LeadDetailDrawer({ lead, onClose, onUpdated }: {
     if (dial && current.phone) dial(current.phone);
   };
 
+  // Estimated retail lives on the detail fetch, so seed it into the edit form here.
+  const enterEdit = () => {
+    setForm({ ...toForm(current), estimatedRetailGbp: detail?.estimatedRetailGbp ? String(detail.estimatedRetailGbp) : "" });
+    setMode("edit");
+  };
+
   const submitLog = async () => {
     setLogging(true); setError(null);
     try {
@@ -185,6 +192,7 @@ export function LeadDetailDrawer({ lead, onClose, onUpdated }: {
         notes: form.notes.trim() || null, pipelineStage: form.pipelineStage,
       };
       setCurrent(updated); setMode("view"); onUpdated(updated);
+      setDetail(d => d ? { ...d, estimatedRetailGbp: form.estimatedRetailGbp ? parseInt(form.estimatedRetailGbp, 10) : null } : d);
     } catch (e) { setError(e instanceof Error ? e.message : "Save failed"); }
     finally { setSaving(false); }
   };
@@ -239,6 +247,47 @@ export function LeadDetailDrawer({ lead, onClose, onUpdated }: {
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
           {mode === "view" ? (
             <>
+              {/* Valuation hero — the consignment pitch */}
+              {detail && (() => {
+                const retail = detail.estimatedRetailGbp;
+                const asking = current.askingPriceGbp ?? detail.askingPriceGbp;
+                if (!retail) {
+                  return (
+                    <div className="flex items-center justify-between gap-2" style={{ marginBottom: 16, padding: "10px 12px", borderRadius: 10, background: T.bgSection, border: `1px dashed ${T.border}` }}>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>Add an estimated retail price to show the pitch</span>
+                      <button onClick={enterEdit} style={{ fontSize: 12, fontWeight: 700, color: T.teal200, background: "none", border: "none", cursor: "pointer" }}>Add</button>
+                    </div>
+                  );
+                }
+                const nets = asking != null ? retail - asking : null;
+                const win = nets != null && nets > 0;
+                return (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                      <div style={{ background: T.bgSection, borderRadius: 8, padding: "9px 10px" }}>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Est. retail</div>
+                        <div style={{ fontSize: 17, fontWeight: 700, color: T.textPrimary }}>{gbp(retail)}</div>
+                      </div>
+                      <div style={{ background: T.bgSection, borderRadius: 8, padding: "9px 10px" }}>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Their asking</div>
+                        <div style={{ fontSize: 17, fontWeight: 700, color: T.textPrimary }}>{gbp(asking)}</div>
+                      </div>
+                      <div style={{ background: win ? T.greenBg : T.bgSection, borderRadius: 8, padding: "9px 10px" }}>
+                        <div style={{ fontSize: 10, color: win ? T.green : T.textMuted }}>Seller nets</div>
+                        <div style={{ fontSize: 17, fontWeight: 700, color: win ? T.green : T.textSecondary }}>
+                          {nets == null ? "—" : `${nets > 0 ? "+" : ""}${gbp(nets)}`}
+                        </div>
+                      </div>
+                    </div>
+                    {win && (
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>
+                        ~{gbp(nets)} more than their current plan · 0% commission
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Compliance strip */}
               {detail && (
                 <div className="flex items-center gap-2" style={{ marginBottom: 16, padding: "8px 11px", borderRadius: 8,
@@ -378,7 +427,10 @@ export function LeadDetailDrawer({ lead, onClose, onUpdated }: {
                   <Field label="Trim"><Input value={form.vehicleTrim} onChange={v => upd("vehicleTrim", v)} /></Field>
                   <Field label="Mileage"><Input value={form.vehicleMileage} onChange={v => upd("vehicleMileage", v)} type="number" /></Field>
                 </Row>
-                <Field label="Asking price (£)"><Input value={form.askingPriceGbp} onChange={v => upd("askingPriceGbp", v)} type="number" /></Field>
+                <Row>
+                  <Field label="Asking price (£)"><Input value={form.askingPriceGbp} onChange={v => upd("askingPriceGbp", v)} type="number" /></Field>
+                  <Field label="Est. retail (£)"><Input value={form.estimatedRetailGbp} onChange={v => upd("estimatedRetailGbp", v)} type="number" /></Field>
+                </Row>
               </Section>
               <Section title="Pipeline">
                 <Field label="Stage">
@@ -411,7 +463,7 @@ export function LeadDetailDrawer({ lead, onClose, onUpdated }: {
                   opacity: current.phone && !detail?.doNotCall ? 1 : 0.45, cursor: current.phone && !detail?.doNotCall ? "pointer" : "not-allowed" }}>
                 <Phone size={14} /> Call
               </button>
-              <button onClick={() => { setForm(toForm(current)); setMode("edit"); }}
+              <button onClick={enterEdit}
                 className="flex items-center gap-1.5 px-4 py-[7px] rounded-[8px] hover:opacity-90"
                 style={{ background: T.tealBg, border: `1px solid ${T.teal}`, color: T.teal200, fontWeight: 700, fontSize: 13 }}>
                 <Pencil size={14} /> Edit

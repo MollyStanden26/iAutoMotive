@@ -134,6 +134,8 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       scoutScore: lead.scoutScore ?? 0,
       scoutTier: lead.scoutTier ?? null,
       status: lead.status,
+      askingPriceGbp: lead.askingPriceGbp ? Math.round(lead.askingPriceGbp / 100) : null,
+      estimatedRetailGbp: lead.estimatedRetailGbp ? Math.round(lead.estimatedRetailGbp / 100) : null,
       doNotCall: lead.doNotCall,
       doNotSms: lead.doNotSms,
       source: isAutoTrader ? "AutoTrader" : "Manual",
@@ -211,6 +213,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (body.askingPriceGbp !== undefined) {
     const pounds = toInt(body.askingPriceGbp);
     data.askingPriceGbp = pounds === null || pounds === undefined ? null : pounds * 100;
+  }
+  if (body.estimatedRetailGbp !== undefined) {
+    const pounds = toInt(body.estimatedRetailGbp);
+    data.estimatedRetailGbp = pounds === null || pounds === undefined ? null : pounds * 100;
   }
 
   if (Object.keys(data).length === 0) {

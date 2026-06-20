@@ -973,6 +973,10 @@ model Lead {
   vehicleTransmission      String?     @map("vehicle_transmission")
   /// In pence
   askingPriceGbp           Int?        @map("asking_price_gbp")
+  /// Estimated retail price (pence) — what iAutoMotive expects to sell it for.
+  /// Drives the consignment pitch (retail vs asking → seller's uplift). Set by
+  /// a scout/admin today; a valuation API (Cazana) can auto-populate it later.
+  estimatedRetailGbp       Int?        @map("estimated_retail_gbp")
   listingDescription       String?     @map("listing_description")
   locationPostcode         String?     @map("location_postcode")
   /// Array of AutoTrader image URLs at time of scrape
