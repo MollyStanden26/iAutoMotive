@@ -41,6 +41,8 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
             vehicleModel: true, vehicleTrim: true, vehicleMileage: true,
             vehicleBodyType: true, vehicleFuelType: true, vehicleTransmission: true,
             locationPostcode: true, scrapedImageUrls: true,
+            sellerFirstName: true, sellerLastName: true, sellerPhone: true, sellerEmail: true,
+            doNotCall: true, doNotSms: true,
           },
         },
       },
@@ -78,9 +80,14 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
         bodyType: lead?.vehicleBodyType ?? null,
         fuelType: lead?.vehicleFuelType ?? null,
         transmission: lead?.vehicleTransmission ?? null,
-        // Origin
-        sellerName: deal.sellerName ?? null,
+        // Seller (the collected lead is now the consignor on this deal)
+        sellerName: deal.sellerName
+          ?? ([lead?.sellerFirstName, lead?.sellerLastName].filter(Boolean).join(" ") || null),
         sellerArea: lead?.locationPostcode ?? null,
+        sellerPhone: lead?.sellerPhone ?? null,
+        sellerEmail: lead?.sellerEmail ?? null,
+        doNotCall: lead?.doNotCall ?? false,
+        doNotSms: lead?.doNotSms ?? false,
         leadId: deal.leadId ?? null,
         photos,
       },

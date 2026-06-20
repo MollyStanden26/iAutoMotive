@@ -9,13 +9,14 @@
  */
 
 import { useEffect, useState } from "react";
-import { X, Warehouse, MapPin, ExternalLink } from "lucide-react";
+import { X, Warehouse, MapPin, Phone, Mail, ArrowLeft, UserRound, ShieldAlert } from "lucide-react";
 
 const T = {
   bgPanel: "#0D1525", bgInput: "#0B111E", bgSection: "#111D30",
   border: "#1E2D4A", textPrimary: "#F1F5F9", textSecondary: "#8492A8",
   textMuted: "#6B7A90", textDim: "#4A556B", teal: "#008C7C", teal200: "#4DD9C7",
   tealBg: "#0A2A26", green: "#34D399", greenBg: "#0B2B1A",
+  red: "#F87171", redBg: "#2B0F0F",
 };
 
 export interface DealSummary {
@@ -50,6 +51,10 @@ interface DealDetail {
   transmission: string | null;
   sellerName: string | null;
   sellerArea: string | null;
+  sellerPhone: string | null;
+  sellerEmail: string | null;
+  doNotCall: boolean;
+  doNotSms: boolean;
   leadId: string | null;
   photos: string[];
 }
@@ -61,11 +66,18 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
   const [mounted, setMounted] = useState(false);
   const [detail, setDetail] = useState<DealDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"deal" | "seller">("deal");
 
   useEffect(() => {
-    if (deal) requestAnimationFrame(() => setMounted(true));
+    if (deal) { setMode("deal"); requestAnimationFrame(() => setMounted(true)); }
     else setMounted(false);
   }, [deal]);
+
+  const call = () => {
+    if (detail?.doNotCall || !detail?.sellerPhone) return;
+    const dial = (window as unknown as { iaDial?: (n: string) => void }).iaDial;
+    if (dial) dial(detail.sellerPhone);
+  };
 
   useEffect(() => {
     if (!deal) { setDetail(null); return; }
@@ -88,6 +100,9 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
     : null;
   const mileage = detail?.mileage != null ? `${detail.mileage.toLocaleString()} mi` : "—";
   const vehicleSub = [detail?.trim, detail?.bodyType].filter(Boolean).join(" · ") || null;
+  const canCall = !!detail?.sellerPhone && !detail?.doNotCall;
+  const callTitle = detail?.doNotCall ? "Seller is flagged do-not-call"
+    : !detail?.sellerPhone ? "No phone number on file" : undefined;
 
   return (
     <>
@@ -126,6 +141,8 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
 
         {/* Body */}
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
+          {mode === "deal" ? (
+          <>
           {/* Inventory & location hero */}
           <div style={{ marginBottom: 18, padding: "12px 14px", borderRadius: 10, background: T.bgSection, border: `1px solid ${T.border}` }}>
             <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
@@ -178,18 +195,74 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
             <DetailRow label="Seller" value={detail?.sellerName ?? "—"} />
             <DetailRow label="Collected from" value={detail?.sellerArea ?? "—"} />
           </Section>
+          </>
+          ) : (
+          <>
+            {/* Seller contact — the collected lead is now the consignor */}
+            <div className="flex items-center gap-2.5" style={{ marginBottom: 16, padding: 14, borderRadius: 10, background: T.bgSection, border: `1px solid ${T.border}` }}>
+              <div style={{ width: 38, height: 38, borderRadius: 999, background: T.tealBg, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <UserRound size={18} style={{ color: T.teal200 }} />
+              </div>
+              <div className="min-w-0">
+                <div className="truncate" style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>{detail?.sellerName ?? "Seller"}</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>Seller · consignor on this deal</div>
+              </div>
+            </div>
+
+            {detail?.doNotCall && (
+              <div className="flex items-center gap-1.5" style={{ marginBottom: 14, padding: "8px 10px", borderRadius: 8, background: T.redBg, color: T.red, fontSize: 12, fontWeight: 600 }}>
+                <ShieldAlert size={13} /> Marked do not call
+              </div>
+            )}
+
+            <Section title="Contact">
+              <DetailRow label="Phone" value={detail?.sellerPhone ?? "—"} />
+              <DetailRow label="Email" value={detail?.sellerEmail ?? "—"} />
+              <DetailRow label="Area" value={detail?.sellerArea ?? "—"} />
+            </Section>
+
+            <div className="flex gap-2">
+              <button onClick={call} disabled={!canCall} title={callTitle}
+                aria-label={callTitle ? `Call seller — ${callTitle}` : "Call seller"}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-[9px] rounded-[8px] hover:opacity-90"
+                style={{ background: T.greenBg, border: `1px solid ${T.green}33`, color: T.green, fontWeight: 700, fontSize: 13,
+                  opacity: canCall ? 1 : 0.45, cursor: canCall ? "pointer" : "not-allowed" }}>
+                <Phone size={14} /> Call
+              </button>
+              {detail?.sellerEmail ? (
+                <a href={`mailto:${detail.sellerEmail}`} aria-label="Email seller"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-[9px] rounded-[8px] hover:opacity-90"
+                  style={{ background: T.bgSection, border: `1px solid ${T.border}`, color: T.teal200, fontWeight: 700, fontSize: 13 }}>
+                  <Mail size={14} /> Email
+                </a>
+              ) : (
+                <button disabled title="No email address on file" aria-label="Email seller — no email address on file"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-[9px] rounded-[8px]"
+                  style={{ background: T.bgSection, border: `1px solid ${T.border}`, color: T.teal200, fontWeight: 700, fontSize: 13, opacity: 0.45, cursor: "not-allowed" }}>
+                  <Mail size={14} /> Email
+                </button>
+              )}
+            </div>
+          </>
+          )}
         </div>
 
         {/* Footer */}
         <footer className="flex items-center justify-between gap-2"
           style={{ padding: "12px 20px", borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
-          {detail?.leadId ? (
-            <a href={`/admin/crm?lead=${detail.leadId}`}
+          {mode === "deal" ? (
+            <button onClick={() => setMode("seller")}
               className="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-[8px] hover:opacity-90"
               style={{ background: T.bgSection, border: `1px solid ${T.border}`, color: T.teal200, fontWeight: 700, fontSize: 13 }}>
-              View lead <ExternalLink size={13} />
-            </a>
-          ) : <span />}
+              <UserRound size={14} /> View seller
+            </button>
+          ) : (
+            <button onClick={() => setMode("deal")}
+              className="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-[8px] hover:opacity-90"
+              style={{ background: T.bgSection, border: `1px solid ${T.border}`, color: T.teal200, fontWeight: 700, fontSize: 13 }}>
+              <ArrowLeft size={14} /> Back to deal
+            </button>
+          )}
           <button onClick={onClose}
             className="px-4 py-[7px] rounded-[8px] hover:opacity-90"
             style={{ background: T.tealBg, border: `1px solid ${T.teal}`, color: T.teal200, fontWeight: 700, fontSize: 13 }}>
