@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
 import { AddDealDrawer } from "@/components/admin/add-deal-drawer";
+import { DealDetailDrawer } from "@/components/crm/deal-detail-drawer";
 import {
   DEALS_KPIS, PIPELINE_STAGES,
   AT_RISK_DEALS, FUNDING_ROWS, DOC_STATUS_ROWS, COMPLIANCE_ROWS,
@@ -156,20 +157,19 @@ const filterPills: { label: string; value: DealFilter }[] = [
 ];
 
 function DealsTable({
-  deals,
+  deals, onOpenDeal,
   activeFilter, setActiveFilter,
   searchQuery, setSearchQuery,
   sortKey, setSortKey, sortDir, setSortDir,
   selectedDeals, setSelectedDeals,
 }: {
-  deals: Deal[];
+  deals: Deal[]; onOpenDeal: (d: Deal) => void;
   activeFilter: DealFilter; setActiveFilter: (f: DealFilter) => void;
   searchQuery: string; setSearchQuery: (s: string) => void;
   sortKey: SortKey; setSortKey: (k: SortKey) => void;
   sortDir: SortDir; setSortDir: (d: SortDir) => void;
   selectedDeals: string[]; setSelectedDeals: (ids: string[]) => void;
 }) {
-  const router = useRouter();
   const selectAllRef = useRef<HTMLInputElement>(null);
 
   // Filter
@@ -258,7 +258,7 @@ function DealsTable({
               <tr key={deal.id} className="cursor-pointer transition-colors duration-150"
                 onMouseEnter={e => e.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = T.bgHover))}
                 onMouseLeave={e => e.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = "transparent"))}
-                onClick={() => { console.log("navigate deal", deal.id); router.push(`/admin/deals/${deal.id}`); }}
+                onClick={() => onOpenDeal(deal)}
               >
                 <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: idx < sorted.length - 1 ? `1px solid ${T.border2}` : "none" }} onClick={e => e.stopPropagation()}>
                   <input type="checkbox" checked={selectedDeals.includes(deal.id)} onChange={() => toggleOne(deal.id)} style={{ accentColor: T.teal }} />
@@ -439,6 +439,7 @@ export default function DealsPage() {
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [openDeal, setOpenDeal] = useState<Deal | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -459,7 +460,7 @@ export default function DealsPage() {
           <PipelineStrip />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 296px", gap: 10 }}>
             <DealsTable
-              deals={deals}
+              deals={deals} onOpenDeal={setOpenDeal}
               activeFilter={activeFilter} setActiveFilter={setActiveFilter}
               searchQuery={searchQuery} setSearchQuery={setSearchQuery}
               sortKey={sortKey} setSortKey={setSortKey}
@@ -476,6 +477,7 @@ export default function DealsPage() {
         </div>
       </div>
       <AddDealDrawer open={newDealOpen} onClose={() => setNewDealOpen(false)} />
+      <DealDetailDrawer deal={openDeal} onClose={() => setOpenDeal(null)} />
     </div>
   );
 }

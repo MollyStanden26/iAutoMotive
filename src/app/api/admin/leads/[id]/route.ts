@@ -235,6 +235,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (data.pipelineStage === "collected" && lead.pipelineStage !== "collected") {
     const existing = await prisma.deal.findFirst({ where: { leadId: lead.id }, select: { id: true } });
     if (!existing) {
+      // The collected car goes into inventory at the primary lot.
+      const lot = await prisma.lot.findFirst({
+        where: { status: "active" },
+        orderBy: { createdAt: "asc" },
+        select: { name: true, city: true },
+      });
+      const location = lot ? [lot.name, lot.city].filter(Boolean).join(", ") : null;
       await prisma.deal.create({
         data: {
           leadId: lead.id,
@@ -244,6 +251,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           vehicleYear: lead.vehicleYear,
           askingPriceGbp: lead.askingPriceGbp,
           salePriceGbp: lead.estimatedRetailGbp ?? lead.askingPriceGbp,
+          location,
           status: "reserved",
           assignedTo: lead.assignedTo,
         },

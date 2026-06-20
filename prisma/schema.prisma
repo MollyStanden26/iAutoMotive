@@ -1232,6 +1232,8 @@ model Deal {
   askingPriceGbp        Int?       @map("asking_price_gbp")
   /// Final agreed sale price in pence (target retail until a buyer is set).
   salePriceGbp          Int?       @map("sale_price_gbp")
+  /// Where the collected car is now stored (lot label) — set at collection.
+  location              String?    @map("location")
   status                DealStatus @default(reserved)
   reservationFeeGbp     Int?       @map("reservation_fee_gbp")
   reservationPaidAt     DateTime?  @map("reservation_paid_at")
