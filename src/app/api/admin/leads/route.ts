@@ -21,11 +21,15 @@ interface CrmLeadRow {
   lastName: string | null;
   phone: string | null;
   email: string | null;
+  vehicleReg: string | null;
   vehicleMake: string | null;
   vehicleModel: string | null;
   vehicleYear: number | null;
+  vehicleTrim: string | null;
+  vehicleMileage: number | null;
   location: string | null;
   askingPriceGbp: number | null;
+  notes: string | null;
   // Raw DB status (used by sellers-management filters which speak in
   // pipeline-stage terms, not CRM display terms)
   rawStatus: string;
@@ -53,7 +57,8 @@ const CRM_DISPLAY_STATUS: Record<string, CrmLeadRow["status"]> = {
 };
 
 function toCrmRow(lead: any): CrmLeadRow {
-  const seller = [lead.sellerFirstName, lead.sellerLastName].filter(Boolean).join(" ") || "Unknown seller";
+  // Name is optional when a rep adds a lead — fall back to a friendly placeholder.
+  const seller = [lead.sellerFirstName, lead.sellerLastName].filter(Boolean).join(" ") || "New lead";
   const vehicleParts = [
     lead.vehicleYear,
     lead.vehicleMake,
@@ -79,10 +84,14 @@ function toCrmRow(lead: any): CrmLeadRow {
     lastName: lead.sellerLastName ?? null,
     phone: lead.sellerPhone ?? null,
     email: lead.sellerEmail ?? null,
+    vehicleReg: lead.vehicleReg ?? null,
     vehicleMake: lead.vehicleMake ?? null,
     vehicleModel: lead.vehicleModel ?? null,
     vehicleYear: lead.vehicleYear ?? null,
+    vehicleTrim: lead.vehicleTrim ?? null,
+    vehicleMileage: lead.vehicleMileage ?? null,
     location: lead.locationPostcode ?? null,
+    notes: lead.listingDescription ?? null,
     askingPriceGbp: askingPounds,
     rawStatus: lead.status,
     ageLabel: ageLabelFor(lead.importedAt),
@@ -139,8 +148,11 @@ export async function POST(request: NextRequest) {
       autotraderListingId,
     } = body ?? {};
 
-    if (!firstName || !phone) {
-      return NextResponse.json({ error: "First name and phone are required" }, { status: 400 });
+    // Name is optional (reps often add a lead before they have it) — it falls
+    // back to a "New lead" placeholder. A phone number is still required so the
+    // lead is actually callable.
+    if (!phone) {
+      return NextResponse.json({ error: "A phone number is required" }, { status: 400 });
     }
 
     const toInt = (v: unknown): number | undefined => {
@@ -158,7 +170,7 @@ export async function POST(request: NextRequest) {
     const lead = await prisma.lead.create({
       data: {
         autotraderListingId: autotraderListingId || null,
-        sellerFirstName: firstName,
+        sellerFirstName: firstName || null,
         sellerLastName: lastName || null,
         sellerPhone: phone,
         sellerEmail: email || null,

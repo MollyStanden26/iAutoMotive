@@ -10,12 +10,45 @@ import {
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
 import { CrmTopbar } from "@/components/admin/crm-topbar";
-import {
-  DIALLER_QUEUE,
-  DIALLER_SESSION,
-  scriptSections,
-} from "@/lib/admin/dialler-mock-data";
+import { useCurrentUser } from "@/lib/auth/use-current-user";
+import { scriptSections } from "@/lib/admin/dialler-mock-data";
 import type { DiallerLead } from "@/lib/admin/dialler-mock-data";
+
+/* ── Pipeline → dialler queue mapping ── */
+// Order leads so the freshest/actionable ones are dialled first; "collected"
+// (closed) leads are excluded from the calling queue.
+const STAGE_ORDER: Record<string, number> = {
+  new_lead: 0, call_back: 1, contacted: 2, contract_sent: 3, handover_scheduled: 4, collected: 5,
+};
+const STAGE_OUTCOME_LABEL: Record<string, string> = {
+  new_lead: "New", call_back: "Callback", contacted: "Contacted",
+  contract_sent: "Contract sent", handover_scheduled: "Handover", collected: "Collected",
+};
+
+interface ApiLeadRow {
+  id: string; seller: string; phone: string | null; score: number;
+  vehicleYear: number | null; vehicleMake: string | null; vehicleModel: string | null;
+  vehicleTrim: string | null; vehicleMileage: number | null;
+  askingPriceGbp: number | null; lastContact: string | null; pipelineStage: string;
+}
+
+function toDiallerLead(r: ApiLeadRow): DiallerLead {
+  return {
+    id: r.id,
+    sellerName: r.seller || "Unknown seller",
+    sellerPhone: r.phone ?? "",
+    vehicleYear: r.vehicleYear ?? 0,
+    vehicleMake: r.vehicleMake ?? "",
+    vehicleModel: r.vehicleModel ?? "",
+    vehicleTrim: r.vehicleTrim ?? "",
+    askingPrice: r.askingPriceGbp ? `£${Number(r.askingPriceGbp).toLocaleString()}` : "—",
+    mileage: r.vehicleMileage ? `${Math.round(r.vehicleMileage / 1000)}k mi` : "—",
+    scoutScore: r.score ?? 0,
+    priorContacts: 0,
+    lastContactDate: r.lastContact ?? "—",
+    lastOutcome: STAGE_OUTCOME_LABEL[r.pipelineStage] ?? "New",
+  };
+}
 
 /* ================================================================== */
 /*  DESIGN TOKENS                                                      */
@@ -76,13 +109,15 @@ const DTMF_KEYS = ["1","2","3","4","5","6","7","8","9","*","0","#"];
 /*  SESSION HEADER                                                     */
 /* ================================================================== */
 function SessionHeader({
-  sessionElapsed, sessionPaused, stats, onPause, onEnd,
+  sessionElapsed, sessionPaused, stats, onPause, onEnd, repName, queueLength,
 }: {
   sessionElapsed: number;
   sessionPaused: boolean;
   stats: { dialled: number; contacted: number; signed: number };
   onPause: () => void;
   onEnd: () => void;
+  repName: string;
+  queueLength: number;
 }) {
   return (
     <div
@@ -101,10 +136,7 @@ function SessionHeader({
           {sessionPaused ? "Paused" : "Session active"}
         </span>
         <span className="font-heading text-[13px] sm:text-[14px] font-bold truncate" style={{ color: T.textPrimary }}>
-          {DIALLER_SESSION.repName}
-        </span>
-        <span className="hidden sm:inline font-mono text-[12px]" style={{ color: T.textMuted }}>
-          {DIALLER_SESSION.repPhone}
+          {repName}
         </span>
       </div>
 
@@ -118,7 +150,7 @@ function SessionHeader({
         {/* Stat pills */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="font-body text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: T.bgRow, color: T.textSecondary }}>
-            {stats.dialled}/{DIALLER_QUEUE.length} dialled
+            {stats.dialled}/{queueLength} dialled
           </span>
           <span className="font-body text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: T.bgRow, color: T.green }}>
             {stats.contacted} contacted
@@ -663,8 +695,8 @@ function CallControlArea({
 /* ================================================================== */
 /*  QUEUE BAR (bottom)                                                 */
 /* ================================================================== */
-function QueueBar({ currentIdx, stats }: { currentIdx: number; stats: { dialled: number; contacted: number } }) {
-  const nextLead = currentIdx + 1 < DIALLER_QUEUE.length ? DIALLER_QUEUE[currentIdx + 1] : null;
+function QueueBar({ currentIdx, queue, stats }: { currentIdx: number; queue: DiallerLead[]; stats: { dialled: number; contacted: number } }) {
+  const nextLead = currentIdx + 1 < queue.length ? queue[currentIdx + 1] : null;
 
   return (
     <div
@@ -679,7 +711,7 @@ function QueueBar({ currentIdx, stats }: { currentIdx: number; stats: { dialled:
         className="font-body text-[11px] sm:text-[12px] font-bold px-2.5 py-1 rounded-full shrink-0"
         style={{ background: T.teal, color: "#fff" }}
       >
-        {currentIdx + 1} of {DIALLER_QUEUE.length}
+        {currentIdx + 1} of {queue.length}
       </span>
 
       {/* Next preview */}
@@ -830,8 +862,10 @@ function SessionCompletePanel({
 /* ================================================================== */
 export default function CrmDiallerPage() {
   const router = useRouter();
+  const { user } = useCurrentUser();
 
   /* ---- State ---- */
+  const [queue, setQueue] = useState<DiallerLead[]>([]);
   const [phase, setPhase] = useState<CallPhase>("pre-call");
   const [currentIdx, setCurrentIdx] = useState(0);
   const [sessionPaused, setSessionPaused] = useState(false);
@@ -851,8 +885,25 @@ export default function CrmDiallerPage() {
   const [lastCallDuration, setLastCallDuration] = useState(0);
 
   const ringingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const currentLead = DIALLER_QUEUE[currentIdx];
-  const queueEmpty = DIALLER_QUEUE.length === 0;
+  const currentLead = queue[currentIdx];
+  const queueEmpty = queue.length === 0;
+
+  /* ---- Load the rep's leads into the calling queue ---- */
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/leads", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then((data: { leads?: ApiLeadRow[] }) => {
+        if (cancelled) return;
+        const mapped = (data.leads ?? [])
+          .filter(l => l.pipelineStage !== "collected") // closed deals aren't dialled
+          .sort((a, b) => (STAGE_ORDER[a.pipelineStage] ?? 9) - (STAGE_ORDER[b.pipelineStage] ?? 9))
+          .map(toDiallerLead);
+        setQueue(mapped);
+      })
+      .catch(err => { if (!cancelled) console.error("[Dialler] queue fetch failed:", err); });
+    return () => { cancelled = true; };
+  }, []);
 
   /* ---- Session timer ---- */
   useEffect(() => {
@@ -910,7 +961,7 @@ export default function CrmDiallerPage() {
 
   const handleSkip = useCallback(() => {
     resetCallState();
-    if (currentIdx + 1 >= DIALLER_QUEUE.length) {
+    if (currentIdx + 1 >= queue.length) {
       setPhase("session-complete");
     } else {
       setCurrentIdx(i => i + 1);
@@ -923,7 +974,7 @@ export default function CrmDiallerPage() {
       setSessionStats(s => ({ ...s, signed: s.signed + 1 }));
     }
     resetCallState();
-    if (currentIdx + 1 >= DIALLER_QUEUE.length) {
+    if (currentIdx + 1 >= queue.length) {
       setPhase("session-complete");
     } else {
       setCurrentIdx(i => i + 1);
@@ -937,7 +988,7 @@ export default function CrmDiallerPage() {
     }
     resetCallState();
     setSessionPaused(true);
-    if (currentIdx + 1 >= DIALLER_QUEUE.length) {
+    if (currentIdx + 1 >= queue.length) {
       setPhase("session-complete");
     } else {
       setCurrentIdx(i => i + 1);
@@ -1008,6 +1059,8 @@ export default function CrmDiallerPage() {
               stats={sessionStats}
               onPause={() => setSessionPaused(p => !p)}
               onEnd={handleEndSession}
+              repName={user?.name ?? "Your session"}
+              queueLength={queue.length}
             />
           )}
 
@@ -1078,7 +1131,7 @@ export default function CrmDiallerPage() {
               </div>
 
               {/* Queue bar */}
-              <QueueBar currentIdx={currentIdx} stats={sessionStats} />
+              <QueueBar currentIdx={currentIdx} queue={queue} stats={sessionStats} />
             </>
           )}
         </div>

@@ -14,6 +14,7 @@
  */
 
 import { usePathname, useRouter } from "next/navigation";
+import { useCurrentUser } from "@/lib/auth/use-current-user";
 
 const T = {
   bgSidebar: "#070D18", bgCard: "#0D1525", bgRow: "#111D30", bgHover: "#0C1428",
@@ -45,6 +46,12 @@ export interface CrmTopbarProps {
 export function CrmTopbar({ title, actions, badges, showLive = true }: CrmTopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useCurrentUser();
+
+  // Sales reps don't assign leads (admins route them), so drop the Assignment tab.
+  const tabs = user?.role === "sales"
+    ? CRM_TABS.filter(t => t.href !== "/admin/crm/assign")
+    : CRM_TABS;
 
   const isActive = (href: string) =>
     href === "/admin/crm" ? pathname === "/admin/crm" : pathname.startsWith(href);
@@ -95,7 +102,7 @@ export function CrmTopbar({ title, actions, badges, showLive = true }: CrmTopbar
           screens so all six tabs stay reachable; centred on desktop. */}
       <nav className="flex-1 flex justify-start lg:justify-center overflow-x-auto -mx-3 px-3 sm:-mx-4 sm:px-4 lg:mx-0 lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex rounded-[10px] p-[3px] shrink-0" style={{ background: T.bgRow }}>
-          {CRM_TABS.map(tab => {
+          {tabs.map(tab => {
             const active = isActive(tab.href);
             return (
               <button

@@ -84,7 +84,7 @@ export function AddLeadDrawer({ open, onClose, onCreated }: AddLeadDrawerProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.firstName || !form.phone) { setError("First name and phone are required."); return; }
+    if (!form.phone) { setError("A phone number is required."); return; }
     setSubmitting(true);
     setError(null);
     try {
@@ -127,8 +127,8 @@ export function AddLeadDrawer({ open, onClose, onCreated }: AddLeadDrawerProps) 
           <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
             <Section title="Contact">
               <Row>
-                <Field label="First name" required>
-                  <Input value={form.firstName} onChange={v => update("firstName", v)} />
+                <Field label="First name">
+                  <Input value={form.firstName} onChange={v => update("firstName", v)} placeholder="Optional — defaults to “New lead”" />
                 </Field>
                 <Field label="Last name">
                   <Input value={form.lastName} onChange={v => update("lastName", v)} />
