@@ -1009,6 +1009,7 @@ model Lead {
   lastCallSession          CallSession? @relation("LeadLastCall", fields: [lastCallSessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   outreachLogs             LeadOutreachLog[]
   offers                   LeadOffer[]
+  deals                    Deal[]      @relation("LeadDeal")
   callSessions             CallSession[] @relation("LeadCallSessions")
   smsThreads               SmsThread[] @relation("LeadSmsThreads")
   diallerQueueItems        DiallerQueueItem[] @relation("QueueItemLead")
@@ -1217,11 +1218,20 @@ model ReconWorkItem {
 /// return_window_expires_at = funded_at + 7 days.
 model Deal {
   id                    String     @id @default(auto()) @map("_id") @db.ObjectId
-  vehicleId             String     @map("vehicle_id") @db.ObjectId
-  consignmentId         String     @map("consignment_id") @db.ObjectId
-  buyerId               String     @map("buyer_id") @db.ObjectId
-  /// Final agreed sale price in pence
-  salePriceGbp          Int        @map("sale_price_gbp")
+  vehicleId             String?    @map("vehicle_id") @db.ObjectId
+  consignmentId         String?    @map("consignment_id") @db.ObjectId
+  buyerId               String?    @map("buyer_id") @db.ObjectId
+  /// Set when the deal originated from a lead reaching the Collected stage.
+  leadId                String?    @map("lead_id") @db.ObjectId
+  /// Car/seller snapshot for collected-lead deals that don't yet have Vehicle/
+  /// Consignment/buyer records — lets the Deals list render standalone.
+  vehicleMake           String?    @map("vehicle_make")
+  vehicleModel          String?    @map("vehicle_model")
+  vehicleYear           Int?       @map("vehicle_year")
+  sellerName            String?    @map("seller_name")
+  askingPriceGbp        Int?       @map("asking_price_gbp")
+  /// Final agreed sale price in pence (target retail until a buyer is set).
+  salePriceGbp          Int?       @map("sale_price_gbp")
   status                DealStatus @default(reserved)
   reservationFeeGbp     Int?       @map("reservation_fee_gbp")
   reservationPaidAt     DateTime?  @map("reservation_paid_at")
@@ -1238,9 +1248,10 @@ model Deal {
   createdAt             DateTime   @default(now()) @map("created_at")
   updatedAt             DateTime   @updatedAt @map("updated_at")
 
-  vehicle               Vehicle    @relation("DealVehicle", fields: [vehicleId], references: [id])
-  consignment           Consignment @relation("ConsignmentDeals", fields: [consignmentId], references: [id])
-  buyer                 BuyerProfile @relation("DealBuyer", fields: [buyerId], references: [id])
+  vehicle               Vehicle?    @relation("DealVehicle", fields: [vehicleId], references: [id])
+  consignment           Consignment? @relation("ConsignmentDeals", fields: [consignmentId], references: [id])
+  buyer                 BuyerProfile? @relation("DealBuyer", fields: [buyerId], references: [id])
+  lead                  Lead?       @relation("LeadDeal", fields: [leadId], references: [id])
   assignedRep           User?      @relation("DealAssignedTo", fields: [assignedTo], references: [id])
   financeApplication    FinanceApplication?
   escrowConditions      EscrowCondition[]

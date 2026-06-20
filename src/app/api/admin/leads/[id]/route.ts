@@ -170,7 +170,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   const lead = await prisma.lead.findUnique({
     where: { id: params.id },
-    select: { id: true, assignedTo: true },
+    select: {
+      id: true, assignedTo: true, pipelineStage: true,
+      sellerFirstName: true, sellerLastName: true,
+      vehicleMake: true, vehicleModel: true, vehicleYear: true,
+      askingPriceGbp: true, estimatedRetailGbp: true,
+    },
   });
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
@@ -224,5 +229,27 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 
   await prisma.lead.update({ where: { id: params.id }, data });
+
+  // When a lead reaches "Collected", spin up a Deal for that car (once) so it
+  // surfaces on the Deals page. The car has no buyer yet — that's filled later.
+  if (data.pipelineStage === "collected" && lead.pipelineStage !== "collected") {
+    const existing = await prisma.deal.findFirst({ where: { leadId: lead.id }, select: { id: true } });
+    if (!existing) {
+      await prisma.deal.create({
+        data: {
+          leadId: lead.id,
+          sellerName: [lead.sellerFirstName, lead.sellerLastName].filter(Boolean).join(" ") || "New lead",
+          vehicleMake: lead.vehicleMake,
+          vehicleModel: lead.vehicleModel,
+          vehicleYear: lead.vehicleYear,
+          askingPriceGbp: lead.askingPriceGbp,
+          salePriceGbp: lead.estimatedRetailGbp ?? lead.askingPriceGbp,
+          status: "reserved",
+          assignedTo: lead.assignedTo,
+        },
+      });
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

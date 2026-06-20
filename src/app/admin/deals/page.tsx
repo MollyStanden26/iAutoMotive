@@ -9,7 +9,7 @@ import {
 import { IconSidebar } from "@/components/admin/icon-sidebar";
 import { AddDealDrawer } from "@/components/admin/add-deal-drawer";
 import {
-  DEALS_KPIS, PIPELINE_STAGES, DEALS,
+  DEALS_KPIS, PIPELINE_STAGES,
   AT_RISK_DEALS, FUNDING_ROWS, DOC_STATUS_ROWS, COMPLIANCE_ROWS,
 } from "@/lib/admin/deals-mock-data";
 import type { Deal, DealFilter, DealStage, FundingStatus } from "@/lib/admin/deals-mock-data";
@@ -52,10 +52,10 @@ function Topbar({ selectedCount, onNewDeal }: { selectedCount: number; onNewDeal
 /* ================================================================== */
 /*  KPI STRIP                                                          */
 /* ================================================================== */
-function KpiStrip() {
+function KpiStrip({ liveCount }: { liveCount: number }) {
   const K = DEALS_KPIS;
   const cards = [
-    { label: "LIVE DEALS", value: K.liveDeals.toString(), valueColor: K.liveDeals > 0 ? T.textPrimary : T.textMuted, delta: K.liveDeals > 0 ? "Active pipeline" : "No data yet", deltaColor: T.textMuted },
+    { label: "LIVE DEALS", value: liveCount.toString(), valueColor: liveCount > 0 ? T.textPrimary : T.textMuted, delta: liveCount > 0 ? "Active pipeline" : "No data yet", deltaColor: T.textMuted },
     { label: "PIPELINE VALUE", value: K.pipelineValue > 0 ? `£${Math.round(K.pipelineValue / 1000)}k` : "—", valueColor: K.pipelineValue > 0 ? T.teal200 : T.textMuted, delta: "Gross vehicle value", deltaColor: T.textMuted },
     { label: "EST. PLATFORM FEE", value: K.estPlatformFee > 0 ? `£${(K.estPlatformFee / 1000).toFixed(1)}k` : "£0", valueColor: T.green, delta: "No commission fee", deltaColor: T.green },
     { label: "AT RISK", value: K.atRisk.toString(), valueColor: K.atRisk > 0 ? T.red : T.textMuted, delta: K.atRisk > 0 ? "AI health score <50" : "None flagged", deltaColor: K.atRisk > 0 ? T.red : T.textMuted },
@@ -156,11 +156,13 @@ const filterPills: { label: string; value: DealFilter }[] = [
 ];
 
 function DealsTable({
+  deals,
   activeFilter, setActiveFilter,
   searchQuery, setSearchQuery,
   sortKey, setSortKey, sortDir, setSortDir,
   selectedDeals, setSelectedDeals,
 }: {
+  deals: Deal[];
   activeFilter: DealFilter; setActiveFilter: (f: DealFilter) => void;
   searchQuery: string; setSearchQuery: (s: string) => void;
   sortKey: SortKey; setSortKey: (k: SortKey) => void;
@@ -171,7 +173,7 @@ function DealsTable({
   const selectAllRef = useRef<HTMLInputElement>(null);
 
   // Filter
-  let filtered = DEALS;
+  let filtered = deals;
   if (activeFilter === "risk") filtered = filtered.filter(d => d.healthScore < 50);
   else if (activeFilter === "fund") filtered = filtered.filter(d => ["pending", "wait", "declined"].includes(d.fundingKey));
   else if (activeFilter === "docs") filtered = filtered.filter(d => ["docs", "sign"].includes(d.stageKey));
@@ -436,6 +438,16 @@ export default function DealsPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
   const [newDealOpen, setNewDealOpen] = useState(false);
+  const [deals, setDeals] = useState<Deal[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/deals", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(d => { if (!cancelled) setDeals(d.deals ?? []); })
+      .catch(err => { if (!cancelled) console.error("[DealsPage] fetch failed:", err); });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
@@ -443,10 +455,11 @@ export default function DealsPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar selectedCount={selectedDeals.length} onNewDeal={() => setNewDealOpen(true)} />
         <div className="flex-1 flex flex-col gap-[10px] overflow-x-hidden" style={{ padding: "14px 20px" }}>
-          <KpiStrip />
+          <KpiStrip liveCount={deals.length} />
           <PipelineStrip />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 296px", gap: 10 }}>
             <DealsTable
+              deals={deals}
               activeFilter={activeFilter} setActiveFilter={setActiveFilter}
               searchQuery={searchQuery} setSearchQuery={setSearchQuery}
               sortKey={sortKey} setSortKey={setSortKey}
