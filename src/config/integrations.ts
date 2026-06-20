@@ -1,7 +1,7 @@
 // Third-party integration configuration
 // Stripe Connect — buyer collection + seller payouts
 // DocuSign — e-signatures
-// Twilio — SMS + calls
+// Telnyx — CRM voice (WebRTC softphone) + SMS. See src/lib/telnyx/*.
 // SendGrid — email
 // Anthropic Claude API — all AI agents
 // Cazana / Glass's Guide / Cap HPI — valuations

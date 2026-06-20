@@ -216,6 +216,18 @@ enum LeadStatus {
   archived
 }
 
+/// Stages of the sales rep's Kanban pipeline (CRM Overview board).
+/// Distinct from LeadStatus: this tracks the rep's deal progression from
+/// first contact through to the vehicle being collected.
+enum LeadPipelineStage {
+  new_lead
+  contacted
+  call_back
+  contract_sent
+  handover_scheduled
+  collected
+}
+
 enum ScoutTier {
   hot
   warm
@@ -636,6 +648,14 @@ model StaffProfile {
   dailyCallTarget        Int?      @map("daily_call_target")
   /// Sales reps only. Tracked weekly against converted leads.
   weeklyConversionTarget Int?      @map("weekly_conversion_target")
+  /// Telnyx telephony-credential ID for this rep's WebRTC softphone.
+  /// Minted once against the WebRTC credential connection; the /api/voice/token
+  /// endpoint generates short-lived JWTs from it. Null until first sign-in to
+  /// the dialler.
+  telnyxCredentialId     String?   @map("telnyx_credential_id")
+  /// SIP username on that credential. Inbound calls to the rep's DID are routed
+  /// to sip:<this>@sip.telnyx.com so callbacks ring this rep's softphone.
+  telnyxSipUsername      String?   @map("telnyx_sip_username")
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @updatedAt @map("updated_at")
 
@@ -963,6 +983,9 @@ model Lead {
   scoutScore               Int?        @map("scout_score")
   scoutTier                ScoutTier?  @map("scout_tier")
   status                   LeadStatus  @default(new)
+  /// Sales Kanban stage. Null on legacy/scraped rows → treated as new_lead in
+  /// the CRM board. Set when a rep drags a card or adds a lead.
+  pipelineStage            LeadPipelineStage? @map("pipeline_stage")
   assignedTo               String?     @map("assigned_to") @db.ObjectId
   /// Set at conversion. Links lead to the vehicle record created.
   convertedToVehicleId     String?     @map("converted_to_vehicle_id") @db.ObjectId

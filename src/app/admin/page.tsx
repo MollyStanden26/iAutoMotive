@@ -382,7 +382,7 @@ export default function AdminCommandCentre() {
   useEffect(() => { setMounted(true); }, []);
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#0B111E" }}>
+    <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: "#0B111E" }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-[1024px]">
         <Topbar />

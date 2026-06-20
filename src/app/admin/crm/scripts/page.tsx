@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
 import {
   FileText, MessageSquare, Phone, ChevronDown, ChevronRight,
   Copy, Edit3, Check, X, Eye, Zap, Hash, Clock, Shield,
-  ArrowLeft,
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { CrmTopbar } from "@/components/admin/crm-topbar";
 import {
   callScripts,
   smsTemplates,
@@ -18,7 +16,6 @@ import {
   SMS_CATEGORY_COLORS,
   VARIABLE_REFERENCE,
 } from "@/lib/admin/scripts-mock-data";
-import type { ScriptCategory, SmsCategory } from "@/lib/admin/scripts-mock-data";
 
 /* ================================================================== */
 /*  DESIGN TOKENS                                                      */
@@ -49,75 +46,6 @@ const T = {
 };
 
 /* ================================================================== */
-/*  TOPBAR                                                             */
-/* ================================================================== */
-const crmTabs = [
-  { label: "Pipeline",    href: "/admin/crm" },
-  { label: "Dialler",     href: "/admin/crm/dialler" },
-  { label: "Calls",       href: "/admin/crm/calls" },
-  { label: "Scripts",     href: "/admin/crm/scripts" },
-  { label: "Performance", href: "/admin/crm/performance" },
-];
-
-function ScriptsTopbar() {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  return (
-    <div
-      className="flex items-center gap-3 px-[22px]"
-      style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}
-    >
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 mr-3">
-        <span className="cursor-pointer font-body text-[13px]" style={{ color: T.textDim }} onClick={() => router.push("/admin")}>
-          Admin
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="cursor-pointer font-body text-[13px]" style={{ color: T.textDim }} onClick={() => router.push("/admin/crm")}>
-          CRM
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="font-heading font-[800] text-[17px]" style={{ color: T.textPrimary }}>Scripts</span>
-      </div>
-
-      {/* Tab nav */}
-      <div className="flex-1 flex justify-center">
-        <div className="flex rounded-[10px] p-[3px]" style={{ background: T.bgRow }}>
-          {crmTabs.map(tab => {
-            const active = pathname === tab.href || (tab.href !== "/admin/crm" && pathname.startsWith(tab.href));
-            return (
-              <button
-                key={tab.label}
-                onClick={() => router.push(tab.href)}
-                className="px-3 py-1.5 rounded-[8px] font-body text-[12px] font-semibold transition-colors duration-150"
-                style={{
-                  background: active ? T.bgCard : "transparent",
-                  color: active ? T.textPrimary : T.textMuted,
-                  border: "none", cursor: "pointer",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Back link */}
-      <Link
-        href="/admin/crm"
-        className="flex items-center gap-1.5 font-body text-[12px] font-semibold no-underline"
-        style={{ color: T.textMuted }}
-      >
-        <ArrowLeft size={14} />
-        Back to CRM
-      </Link>
-    </div>
-  );
-}
-
-/* ================================================================== */
 /*  KPI ROW                                                            */
 /* ================================================================== */
 function ScriptsKpiRow() {
@@ -132,12 +60,12 @@ function ScriptsKpiRow() {
   ];
 
   return (
-    <div className="flex items-center gap-4 px-[22px] py-[10px]" style={{ borderBottom: `1px solid ${T.border2}` }}>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:gap-x-4 px-3 sm:px-4 lg:px-[22px] py-[10px]" style={{ borderBottom: `1px solid ${T.border2}` }}>
       {stats.map((s, i) => (
         <div key={i} className="flex items-center gap-1.5">
           <span style={{ color: T.teal200 }}>{s.icon}</span>
-          <span className="font-body text-[12px] font-semibold" style={{ color: T.textSecondary }}>{s.label}</span>
-          {i < stats.length - 1 && <span className="ml-3" style={{ color: T.border, fontSize: 11 }}>|</span>}
+          <span className="font-body text-[11px] sm:text-[12px] font-semibold" style={{ color: T.textSecondary }}>{s.label}</span>
+          {i < stats.length - 1 && <span className="ml-1 sm:ml-3 hidden sm:inline" style={{ color: T.border, fontSize: 11 }}>|</span>}
         </div>
       ))}
     </div>
@@ -251,41 +179,41 @@ function CallScriptCard({
     >
       {/* Header */}
       <div
-        className="flex items-center gap-2 px-[14px] py-[11px] cursor-pointer"
+        className="flex items-center gap-2 px-3 sm:px-[14px] py-[11px] cursor-pointer"
         style={{ borderBottom: isExpanded ? `1px solid ${T.border}` : "none" }}
         onClick={onToggle}
       >
-        <span style={{ color: T.textMuted }}>
+        <span className="shrink-0" style={{ color: T.textMuted }}>
           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </span>
         {isEditing && editData ? (
           <input
-            className="font-body font-bold text-[13px] flex-1 rounded px-1"
+            className="font-body font-bold text-[13px] flex-1 min-w-0 rounded px-1"
             style={{ color: T.textPrimary, background: T.bgRow, border: `1px solid ${T.teal}`, outline: "none" }}
             value={editData.name}
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => onEditChange({ ...editData, name: e.target.value })}
           />
         ) : (
-          <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+          <span className="font-body font-bold text-[12px] sm:text-[13px] flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>
             {script.name}
           </span>
         )}
         {/* Category badge */}
         <span
-          className="rounded-full px-2 py-0.5 font-body text-[10px] font-bold"
+          className="shrink-0 rounded-full px-2 py-0.5 font-body text-[10px] font-bold"
           style={{ background: cat.bg, color: cat.text }}
         >
           {SCRIPT_CATEGORY_LABELS[script.category]}
         </span>
         {/* Usage */}
-        <span className="flex items-center gap-1 font-mono text-[10px]" style={{ color: T.textMuted }}>
+        <span className="hidden sm:flex shrink-0 items-center gap-1 font-mono text-[10px]" style={{ color: T.textMuted }}>
           <Hash size={10} />
           {script.usageCount} uses
         </span>
         {/* Active indicator */}
         <span
-          className="w-[8px] h-[8px] rounded-full"
+          className="shrink-0 w-[8px] h-[8px] rounded-full"
           style={{ background: script.isActive ? T.green : T.textMuted }}
           title={script.isActive ? "Active" : "Inactive"}
         />
@@ -343,7 +271,7 @@ function CallScriptCard({
             {script.variables.map((v, i) => (
               <span
                 key={i}
-                className="rounded-full px-2 py-0.5 font-mono text-[9px]"
+                className="rounded-full px-2 py-0.5 font-mono text-[10px]"
                 style={{ background: T.bgRow, color: T.teal200, border: `1px solid ${T.border2}` }}
               >
                 [{v}]
@@ -352,12 +280,12 @@ function CallScriptCard({
           </div>
 
           {/* Footer: meta + actions */}
-          <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: `1px solid ${T.border2}` }}>
-            <span className="font-body text-[10px]" style={{ color: T.textDim }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 pt-2" style={{ borderTop: `1px solid ${T.border2}` }}>
+            <span className="font-body text-[10px] min-w-0 truncate" style={{ color: T.textDim }}>
               <Clock size={10} className="inline mr-1" style={{ verticalAlign: "middle" }} />
               Edited {formatDate(script.lastEdited)} by {script.createdBy}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {isEditing ? (
                 <>
                   <button
@@ -438,19 +366,19 @@ function SmsTemplateCard({
     >
       {/* Header */}
       <div
-        className="flex items-center gap-2 px-[14px] py-[10px] cursor-pointer"
+        className="flex items-center gap-2 px-3 sm:px-[14px] py-[10px] cursor-pointer"
         style={{ borderBottom: isExpanded ? `1px solid ${T.border}` : "none" }}
         onClick={onToggle}
       >
-        <span style={{ color: T.textMuted }}>
+        <span className="shrink-0" style={{ color: T.textMuted }}>
           {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
         </span>
-        <span className="font-body font-bold text-[12px] flex-1" style={{ color: T.textPrimary }}>
+        <span className="font-body font-bold text-[12px] flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>
           {template.name}
         </span>
         {/* Category badge */}
         <span
-          className="rounded-full px-2 py-0.5 font-body text-[9px] font-bold"
+          className="shrink-0 rounded-full px-2 py-0.5 font-body text-[10px] font-bold"
           style={{ background: cat.bg, color: cat.text }}
         >
           {SMS_CATEGORY_LABELS[template.category]}
@@ -483,13 +411,13 @@ function SmsTemplateCard({
           </div>
 
           {/* Char count + segment */}
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
             <span className="flex items-center gap-1 font-mono text-[10px]" style={{ color: T.textMuted }}>
               <Hash size={10} />
               {template.characterCount} chars
             </span>
             <span
-              className="rounded-full px-2 py-0.5 font-mono text-[9px] font-bold"
+              className="rounded-full px-2 py-0.5 font-mono text-[10px] font-bold"
               style={{
                 background: segments === 1 ? T.greenBg : T.amberBg,
                 color: segments === 1 ? T.green : T.amber,
@@ -527,7 +455,7 @@ function SmsTemplateCard({
             {template.variables.map((v, i) => (
               <span
                 key={i}
-                className="rounded-full px-2 py-0.5 font-mono text-[9px]"
+                className="rounded-full px-2 py-0.5 font-mono text-[10px]"
                 style={{ background: T.bgRow, color: T.teal200, border: `1px solid ${T.border2}` }}
               >
                 {`{{${v}}}`}
@@ -536,11 +464,11 @@ function SmsTemplateCard({
           </div>
 
           {/* Footer actions */}
-          <div className="flex items-center justify-between pt-2" style={{ borderTop: `1px solid ${T.border2}` }}>
-            <span className="font-body text-[10px]" style={{ color: T.textDim }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2" style={{ borderTop: `1px solid ${T.border2}` }}>
+            <span className="font-body text-[10px] min-w-0 truncate" style={{ color: T.textDim }}>
               By {template.createdBy}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {isEditing ? (
                 <>
                   <button
@@ -608,17 +536,14 @@ function VariableReferencePanel({ isOpen, onToggle }: { isOpen: boolean; onToggl
         </span>
       </div>
       {isOpen && (
-        <div className="px-[14px] pb-[12px]" style={{ borderTop: `1px solid ${T.border}` }}>
-          <div
-            className="grid gap-y-1 mt-2"
-            style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: "4px 12px" }}
-          >
+        <div className="px-3 sm:px-[14px] pb-[12px]" style={{ borderTop: `1px solid ${T.border}` }}>
+          <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr] gap-x-3 gap-y-2 sm:gap-y-1 mt-2">
             {VARIABLE_REFERENCE.map((v, i) => (
               <React.Fragment key={i}>
-                <span className="font-mono text-[10px] font-semibold" style={{ color: T.teal200 }}>
+                <span className="font-mono text-[10px] font-semibold break-all" style={{ color: T.teal200 }}>
                   {`{{${v.key}}}`}
                 </span>
-                <span className="font-body text-[10px]" style={{ color: T.textMuted }}>
+                <span className="font-body text-[10px] -mt-1 sm:mt-0" style={{ color: T.textMuted }}>
                   {v.description}
                 </span>
               </React.Fragment>
@@ -637,9 +562,9 @@ export default function CrmScriptsPage() {
   /* State */
   const [scriptFilter, setScriptFilter] = useState("all");
   const [smsFilter, setSmsFilter] = useState("all");
-  const [expandedScript, setExpandedScript] = useState<string | null>(callScripts[0].id);
+  const [expandedScript, setExpandedScript] = useState<string | null>(callScripts[0]?.id ?? null);
   const [expandedSection, setExpandedSection] = useState(0);
-  const [expandedSms, setExpandedSms] = useState<string | null>(smsTemplates[0].id);
+  const [expandedSms, setExpandedSms] = useState<string | null>(smsTemplates[0]?.id ?? null);
   const [showVarRef, setShowVarRef] = useState(false);
 
   /* Editable script data — mutable copies */
@@ -714,34 +639,34 @@ export default function CrmScriptsPage() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: T.bgPage }}>
+    <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden" style={{ background: T.bgPage }}>
       <IconSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <ScriptsTopbar />
+        <CrmTopbar title="Scripts" />
         <ScriptsKpiRow />
 
         {/* Main content */}
-        <div className="flex-1 overflow-auto p-[22px]">
-          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 16 }}>
+        <div className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-3 lg:gap-4">
 
             {/* ======== LEFT: Call Script Library ======== */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 min-w-0">
               {/* Section header */}
               <div className="flex items-center gap-2 mb-1">
-                <FileText size={15} style={{ color: T.teal200 }} />
-                <span className="font-heading font-bold text-[15px]" style={{ color: T.textPrimary }}>
+                <FileText size={15} className="shrink-0" style={{ color: T.teal200 }} />
+                <span className="font-heading font-bold text-[14px] sm:text-[15px]" style={{ color: T.textPrimary }}>
                   Call Script Library
                 </span>
               </div>
 
               {/* Filter tabs */}
-              <div className="flex flex-wrap gap-1.5 mb-1">
+              <div className="flex flex-nowrap sm:flex-wrap gap-1.5 mb-1 overflow-x-auto sm:overflow-visible -mx-3 px-3 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {scriptFilterTabs.map(tab => (
                   <button
                     key={tab.value}
                     onClick={() => setScriptFilter(tab.value)}
-                    className="rounded-full px-2.5 py-1 font-body text-[11px] font-semibold cursor-pointer transition-colors duration-150"
+                    className="shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 font-body text-[11px] font-semibold cursor-pointer transition-colors duration-150"
                     style={{
                       background: scriptFilter === tab.value ? T.teal : T.bgRow,
                       color: scriptFilter === tab.value ? "#FFFFFF" : T.textMuted,
@@ -783,7 +708,7 @@ export default function CrmScriptsPage() {
                   className="rounded-[14px] px-[14px] py-[20px] text-center font-body text-[12px]"
                   style={{ background: T.bgCard, border: `1px solid ${T.border}`, color: T.textMuted }}
                 >
-                  No scripts in this category
+                  {scriptsData.length === 0 ? "No scripts yet" : "No scripts in this category"}
                 </div>
               )}
 
@@ -792,11 +717,11 @@ export default function CrmScriptsPage() {
             </div>
 
             {/* ======== RIGHT: SMS Template Library ======== */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 min-w-0">
               {/* Section header */}
               <div className="flex items-center gap-2 mb-1">
-                <MessageSquare size={15} style={{ color: T.teal200 }} />
-                <span className="font-heading font-bold text-[15px]" style={{ color: T.textPrimary }}>
+                <MessageSquare size={15} className="shrink-0" style={{ color: T.teal200 }} />
+                <span className="font-heading font-bold text-[14px] sm:text-[15px]" style={{ color: T.textPrimary }}>
                   SMS Template Library
                 </span>
               </div>
@@ -806,13 +731,12 @@ export default function CrmScriptsPage() {
                 <select
                   value={smsFilter}
                   onChange={e => setSmsFilter(e.target.value)}
-                  className="rounded-[8px] px-2.5 py-1.5 font-body text-[11px] font-semibold cursor-pointer appearance-none"
+                  className="w-full sm:w-auto sm:min-w-[160px] rounded-[8px] px-2.5 py-1.5 font-body text-[11px] font-semibold cursor-pointer appearance-none"
                   style={{
                     background: T.bgRow,
                     color: T.textSecondary,
                     border: `1px solid ${T.border2}`,
                     outline: "none",
-                    minWidth: 160,
                   }}
                 >
                   {smsCategoryOptions.map(opt => (
@@ -842,7 +766,7 @@ export default function CrmScriptsPage() {
                   className="rounded-[14px] px-[14px] py-[20px] text-center font-body text-[12px]"
                   style={{ background: T.bgCard, border: `1px solid ${T.border}`, color: T.textMuted }}
                 >
-                  No templates in this category
+                  {smsData.length === 0 ? "No templates yet" : "No templates in this category"}
                 </div>
               )}
             </div>

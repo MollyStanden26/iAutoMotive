@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutGrid, BarChart3, Phone, Clock, CalendarCheck, Home,
   CreditCard, Shield, FileText, Users, Settings, Headphones, Image as ImageIcon,
+  Menu, X,
 } from "lucide-react";
 import { crmDashboardData } from "@/lib/admin/crm-mock-data";
 import { PAYOUT_QUEUE } from "@/lib/admin/payouts-mock-data";
@@ -71,10 +72,14 @@ export function IconSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useCurrentUser();
   const settingsActive = pathname.startsWith("/admin/settings");
   const collapsedW = 56;
   const expandedW = 210;
+
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   // Hide nav entries the current role isn't allowed to see. Dividers are
   // pruned alongside their cluster so the sidebar doesn't end up with two
@@ -95,11 +100,20 @@ export function IconSidebar() {
     return filtered;
   })();
 
+  // Role-appropriate home: the first nav item the user can see (CRM for sales,
+  // Command centre for admins). Used by the logo + avatar so they never point a
+  // restricted role at a page it can't open.
+  const firstItem = visibleItems.find(
+    (i): i is Extract<SidebarItem, { type: "item" }> => i.type === "item"
+  );
+  const homeHref = firstItem?.href ?? "/admin";
+
   return (
+    <>
     <aside
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
-      className="flex flex-col flex-shrink-0 py-4 gap-1"
+      className="hidden lg:flex flex-col flex-shrink-0 py-4 gap-1"
       style={{
         width: expanded ? expandedW : collapsedW,
         minWidth: expanded ? expandedW : collapsedW,
@@ -117,7 +131,7 @@ export function IconSidebar() {
       <div
         className="flex items-center gap-2.5 cursor-pointer mb-3"
         style={{ padding: "0 8px", minHeight: 36 }}
-        onClick={() => router.push("/admin")}
+        onClick={() => router.push(homeHref)}
       >
         <div
           className="flex items-center justify-center flex-shrink-0"
@@ -233,7 +247,7 @@ export function IconSidebar() {
       {/* Avatar — pulled live from /api/auth/me */}
       <div className="flex items-center gap-2.5" style={{ padding: "0 8px", marginTop: 8 }}>
         <Link
-          href="/admin"
+          href={homeHref}
           className="flex items-center justify-center flex-shrink-0"
           style={{
             width: 36, height: 36, borderRadius: 999,
@@ -259,5 +273,145 @@ export function IconSidebar() {
         </div>
       </div>
     </aside>
+
+    {/* ── Mobile top bar (replaces the rail below lg) ── */}
+    <div
+      className="lg:hidden sticky top-0 z-30 flex items-center justify-between h-[52px] px-4 flex-shrink-0"
+      style={{ background: S.bgSidebar, borderBottom: `1px solid ${S.border}` }}
+    >
+      <button
+        className="flex items-center gap-2.5"
+        onClick={() => router.push(homeHref)}
+        style={{ background: "none", border: "none", cursor: "pointer" }}
+      >
+        <span
+          className="flex items-center justify-center flex-shrink-0"
+          style={{ width: 32, height: 32, borderRadius: 9, background: S.teal }}
+        >
+          <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 13, color: "#fff" }}>AC</span>
+        </span>
+        <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 15, color: S.teal200 }}>
+          iAutoMotive
+        </span>
+      </button>
+
+      <button
+        aria-label="Open menu"
+        onClick={() => setMenuOpen(true)}
+        className="flex items-center justify-center"
+        style={{ width: 40, height: 40, borderRadius: 10, background: S.hoverBg, border: "none", cursor: "pointer" }}
+      >
+        <Menu size={20} style={{ color: S.teal200 }} />
+      </button>
+    </div>
+
+    {/* ── Mobile drawer + backdrop ── */}
+    {menuOpen && (
+      <div className="lg:hidden fixed inset-0 z-50">
+        <div
+          className="absolute inset-0"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={() => setMenuOpen(false)}
+        />
+        <nav
+          className="absolute left-0 top-0 bottom-0 flex flex-col py-4 gap-1 overflow-y-auto"
+          style={{ width: 264, maxWidth: "85vw", background: S.bgSidebar, borderRight: `1px solid ${S.border}` }}
+        >
+          {/* Drawer header */}
+          <div className="flex items-center justify-between mb-2" style={{ padding: "0 12px" }}>
+            <div className="flex items-center gap-2.5">
+              <span className="flex items-center justify-center flex-shrink-0"
+                style={{ width: 32, height: 32, borderRadius: 9, background: S.teal }}>
+                <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 13, color: "#fff" }}>AC</span>
+              </span>
+              <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 15, color: S.teal200 }}>
+                iAutoMotive
+              </span>
+            </div>
+            <button aria-label="Close menu" onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-center"
+              style={{ width: 36, height: 36, borderRadius: 9, background: "none", border: "none", cursor: "pointer" }}>
+              <X size={20} style={{ color: S.textSecondary }} />
+            </button>
+          </div>
+
+          {/* Nav items */}
+          {visibleItems.map((item, i) => {
+            if (item.type === "divider") {
+              return <div key={`md${i}`} style={{ height: 1, background: S.border, margin: "6px 16px" }} />;
+            }
+            const Icon = item.icon;
+            const active = isActive(pathname, item.href, item.exact);
+            const badgeCount = getBadgeCount(item.href);
+            return (
+              <button
+                key={item.href}
+                onClick={() => router.push(item.href)}
+                className="relative flex items-center gap-3"
+                style={{
+                  margin: "0 8px", padding: "0 12px", height: 46, borderRadius: 10,
+                  background: active ? S.activeBg : "transparent",
+                  border: "none", cursor: "pointer", textAlign: "left",
+                }}
+              >
+                <Icon size={19} style={{ color: active ? S.teal200 : S.textSecondary, flexShrink: 0 }} />
+                <span style={{
+                  fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14,
+                  color: active ? S.teal200 : S.textSecondary,
+                }}>
+                  {item.label}
+                </span>
+                {badgeCount > 0 && (
+                  <span className="ml-auto flex items-center justify-center"
+                    style={{ minWidth: 18, height: 18, borderRadius: 999, padding: "0 5px",
+                      background: S.red, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9, color: "#fff" }}>
+                    {badgeCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+
+          <div style={{ height: 1, background: S.border, margin: "6px 16px" }} />
+
+          {/* Settings */}
+          <button
+            onClick={() => router.push("/admin/settings")}
+            className="flex items-center gap-3"
+            style={{
+              margin: "0 8px", padding: "0 12px", height: 46, borderRadius: 10,
+              background: settingsActive ? S.indigo : "transparent",
+              border: "none", cursor: "pointer", textAlign: "left",
+            }}
+          >
+            <Settings size={19} style={{ color: settingsActive ? S.teal200 : S.textSecondary, flexShrink: 0 }} />
+            <span style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14,
+              color: settingsActive ? S.teal200 : S.textSecondary }}>
+              Settings
+            </span>
+          </button>
+
+          <div className="flex-1" />
+
+          {/* User */}
+          <div className="flex items-center gap-2.5" style={{ padding: "8px 16px 0" }}>
+            <span className="flex items-center justify-center flex-shrink-0"
+              style={{ width: 36, height: 36, borderRadius: 999, background: S.greenBg, border: `1px solid ${S.green}`,
+                fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: S.green }}>
+              {user ? initialsFromName(user.name) : "··"}
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <div className="truncate" style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: S.teal200 }}>
+                {user?.name ?? "Not signed in"}
+              </div>
+              <div style={{ fontFamily: "var(--font-body)", fontSize: 10, color: S.textDim }}>
+                {roleLabel(user?.role ?? null)}
+              </div>
+            </div>
+          </div>
+        </nav>
+      </div>
+    )}
+    </>
   );
 }

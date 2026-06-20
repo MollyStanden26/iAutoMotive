@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { crmDashboardData as D } from "@/lib/admin/crm-mock-data";
-import type { Lead, LeadStatus } from "@/lib/admin/crm-mock-data";
 import { Phone, SkipForward } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { CrmTopbar } from "@/components/admin/crm-topbar";
 import { AddLeadDrawer } from "@/components/admin/add-lead-drawer";
 import { ScraperDrawer } from "@/components/admin/scraper-drawer";
+import { LeadPipeline } from "@/components/crm/lead-pipeline";
+import { useCurrentUser } from "@/lib/auth/use-current-user";
 
 /* ================================================================== */
 /*  DESIGN TOKENS (inline — matches Command Centre dark admin theme)  */
@@ -38,109 +40,6 @@ const T = {
 };
 
 /* ================================================================== */
-/*  CRM TOPBAR                                                         */
-/* ================================================================== */
-const crmTabs = [
-  { label: "Overview",    href: "/admin/crm",             active: true },
-  { label: "Dialler",     href: "/admin/crm/dialler",     active: false },
-  { label: "Assignment",  href: "/admin/crm/assign",      active: false },
-  { label: "Calls log",   href: "/admin/crm/calls",       active: false },
-  { label: "Performance", href: "/admin/crm/performance", active: false },
-  { label: "Scripts",     href: "/admin/crm/scripts",     active: false },
-];
-
-function CrmTopbar({ onAddLead, onOpenScraper }: { onAddLead: () => void; onOpenScraper: () => void }) {
-  const router = useRouter();
-  const overdueCount = D.callbacks.filter(c => c.status === "overdue").length;
-
-  return (
-    <div
-      className="flex items-center gap-3 px-[22px]"
-      style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}` }}
-    >
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 mr-3">
-        <span
-          className="cursor-pointer font-body text-[13px]"
-          style={{ color: T.textDim }}
-          onClick={() => router.push("/admin")}
-        >
-          Admin
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="font-heading font-[800] text-[17px]" style={{ color: T.textPrimary }}>CRM</span>
-      </div>
-
-      {/* Live badge */}
-      <span
-        className="flex items-center gap-1.5 rounded-pill px-2.5 py-1 font-body text-[11px] font-bold"
-        style={{ background: T.bgHover, color: T.teal200 }}
-      >
-        <span className="w-[6px] h-[6px] rounded-full animate-pulse" style={{ background: T.green }} />
-        Live
-      </span>
-
-      {/* Overdue badge */}
-      {overdueCount > 0 && (
-        <span
-          className="rounded-pill px-2.5 py-1 font-body text-[11px] font-bold"
-          style={{ background: T.redBg, color: T.red }}
-        >
-          {overdueCount === 1 ? "1 callback overdue" : `${overdueCount} callbacks overdue`}
-        </span>
-      )}
-
-      {/* Tab nav */}
-      <div className="flex-1 flex justify-center">
-        <div className="flex rounded-[10px] p-[3px]" style={{ background: T.bgRow }}>
-          {crmTabs.map(tab => (
-            <button
-              key={tab.label}
-              onClick={() => !tab.active && router.push(tab.href)}
-              className="px-3 py-1.5 rounded-[8px] font-body text-[12px] font-semibold transition-colors duration-150"
-              style={{
-                background: tab.active ? T.bgCard : "transparent",
-                color: tab.active ? T.textPrimary : T.textMuted,
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Scrape AT button — bulk import listings */}
-      <button
-        onClick={onOpenScraper}
-        className="px-[14px] py-[6px] rounded-[8px] transition-colors hover:opacity-80"
-        style={{ background: "#101A2E", color: T.textPrimary, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }}
-        title="Bulk-import listings from AutoTrader URLs"
-      >
-        ⤓ Scrape AT
-      </button>
-
-      {/* Add lead button */}
-      <button
-        onClick={onAddLead}
-        className="px-[14px] py-[6px] rounded-[8px] transition-colors hover:opacity-80"
-        style={{ background: "#0A2A26", color: T.teal200, border: "1px solid #0A1A2E", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }}
-      >
-        + Add lead
-      </button>
-
-      {/* Open dialler button */}
-      <button
-        onClick={() => router.push("/admin/crm/dialler")}
-        className="font-heading font-[800] text-[13px] text-white rounded-[8px] px-4 py-1.5 transition-opacity hover:opacity-90"
-        style={{ background: T.teal }}
-      >
-        Open dialler →
-      </button>
-    </div>
-  );
-}
-
-/* ================================================================== */
 /*  KPI STRIP                                                          */
 /* ================================================================== */
 const kpiColors: Record<string, string> = {
@@ -160,21 +59,21 @@ const deltaColors: Record<string, string> = {
 
 function CrmKpiRow() {
   return (
-    <div className="grid grid-cols-5 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {D.kpis.map(kpi => (
         <div
           key={kpi.label}
-          className="rounded-[14px] px-[15px] py-[13px] transition-colors duration-200"
+          className="rounded-[14px] px-3 py-3 sm:px-[15px] sm:py-[13px] transition-colors duration-200"
           style={{ background: T.bgCard, border: `1px solid ${T.border}` }}
         >
           <div
-            className="font-body font-bold text-[10px] uppercase tracking-widest mb-[7px]"
+            className="font-body font-bold text-[10px] uppercase tracking-widest mb-[7px] truncate"
             style={{ color: T.textDim }}
           >
             {kpi.label}
           </div>
           <div
-            className="font-heading font-black text-[30px] leading-none tracking-tight mb-1"
+            className="font-heading font-black text-2xl sm:text-3xl leading-none tracking-tight mb-1"
             style={{ color: kpiColors[kpi.label] || T.textPrimary }}
           >
             {kpi.value}
@@ -191,315 +90,6 @@ function CrmKpiRow() {
   );
 }
 
-/* ================================================================== */
-/*  LEAD QUEUE                                                         */
-/* ================================================================== */
-const statusConfig: Record<LeadStatus, { label: string; bg: string; color: string }> = {
-  new:         { label: "New",         bg: T.bgHover,  color: T.teal200 },
-  contacted:   { label: "Contacted",   bg: T.amberBg,  color: T.amber },
-  negotiating: { label: "Negotiating", bg: T.indigoBg,  color: T.indigo },
-  offer_sent:  { label: "Offer sent",  bg: T.greenBg,  color: T.green },
-  signed:      { label: "Signed",      bg: "#0A1A0D",  color: "#34D399" },
-};
-
-const LEADS_PER_PAGE = 10;
-
-function LeadQueue({ refreshKey }: { refreshKey: number }) {
-  const router = useRouter();
-  const [selectedCaller, setSelectedCaller] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [assignModal, setAssignModal] = useState<Lead | null>(null);
-  const [assignCaller, setAssignCaller] = useState("Sarah K.");
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetch("/api/admin/leads")
-      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then(data => { if (!cancelled) setLeads(data.leads ?? []); })
-      .catch(err => { if (!cancelled) console.error("[LeadQueue] fetch failed:", err); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [refreshKey]);
-
-  const callerOptions = ["All callers", "Sarah K.", "James T.", "Jordan M.", "Aisha T."];
-  const statusOptions = ["All statuses", "New", "Contacted", "Negotiating", "Offer sent"];
-
-  const filteredLeads = leads.filter(l => {
-    const callerMatch = selectedCaller === "all" || l.assignee === selectedCaller;
-    const statusMatch = selectedStatus === "all" || l.status === selectedStatus;
-    return callerMatch && statusMatch;
-  });
-
-  // Reset to page 1 whenever filters trim the list shorter than the current page
-  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / LEADS_PER_PAGE));
-  const safePage = Math.min(page, totalPages);
-  if (safePage !== page) {
-    // schedule state update without triggering during render
-    setTimeout(() => setPage(safePage), 0);
-  }
-  const pageStart = (safePage - 1) * LEADS_PER_PAGE;
-  const pagedLeads = filteredLeads.slice(pageStart, pageStart + LEADS_PER_PAGE);
-
-  const handleAssign = () => {
-    if (!assignModal) return;
-    setLeads(prev =>
-      prev.map(l => l.id === assignModal.id ? { ...l, assignee: assignCaller } : l)
-    );
-    setAssignModal(null);
-  };
-
-  const selectStyle: React.CSSProperties = {
-    background: T.bgRow,
-    border: `1px solid ${T.border}`,
-    borderRadius: 8,
-    padding: "4px 8px",
-    fontSize: 12,
-    color: T.textSecondary,
-    outline: "none",
-  };
-
-  return (
-    <>
-      <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-        {/* Header */}
-        <div
-          className="flex items-center px-[15px] py-[11px] gap-2"
-          style={{ borderBottom: `1px solid ${T.border}` }}
-        >
-          <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
-            Lead queue — today
-          </span>
-          <select
-            style={selectStyle}
-            value={selectedCaller}
-            onChange={e => { setSelectedCaller(e.target.value); setPage(1); }}
-          >
-            {callerOptions.map(opt => (
-              <option key={opt} value={opt === "All callers" ? "all" : opt}>{opt}</option>
-            ))}
-          </select>
-          <select
-            style={selectStyle}
-            value={selectedStatus}
-            onChange={e => { setSelectedStatus(e.target.value); setPage(1); }}
-          >
-            {statusOptions.map(opt => (
-              <option key={opt} value={opt === "All statuses" ? "all" : opt.toLowerCase().replace(" ", "_")}>{opt}</option>
-            ))}
-          </select>
-          <button
-            className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer"
-            style={{ color: T.teal200 }}
-            onClick={() => console.log("Bulk assign clicked")}
-          >
-            Bulk assign
-          </button>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-        <table className="w-full border-collapse" style={{ tableLayout: "fixed", minWidth: 680 }}>
-          <colgroup>
-            <col style={{ width: "38%" }} />
-            <col style={{ width: "9%" }} />
-            <col style={{ width: "16%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "10%" }} />
-          </colgroup>
-          <thead>
-            <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-              {["Seller", "Score", "Status", "Assigned", "Last contact", "Action"].map((h, i) => (
-                <th
-                  key={h}
-                  className="font-body font-bold text-[10px] uppercase tracking-widest text-left pb-2 pt-2 px-[10px]"
-                  style={{ color: T.textDim, paddingLeft: i === 0 ? 14 : undefined }}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredLeads.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-8">
-                  <span className="font-body text-[13px]" style={{ color: T.textDim }}>
-                    {loading ? "Loading…" : leads.length === 0 ? "No leads yet" : "No leads match this filter"}
-                  </span>
-                </td>
-              </tr>
-            ) : (
-              pagedLeads.map((lead, i) => {
-                const st = statusConfig[lead.status];
-                const scoreColor = lead.score >= 75 ? T.green : lead.score >= 60 ? T.amber : T.red;
-                const scoreBg = lead.score >= 75 ? T.greenBg : lead.score >= 60 ? T.amberBg : T.redBg;
-                return (
-                  <tr
-                    key={lead.id}
-                    className="cursor-pointer transition-colors duration-150"
-                    style={{ borderBottom: i < pagedLeads.length - 1 ? `1px solid ${T.border2}` : "none" }}
-                    onClick={() => router.push(`/admin/crm/leads/${lead.id}`)}
-                    onMouseEnter={e => (e.currentTarget.style.background = T.bgHover)}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <td className="py-[9px] px-[10px] pl-[14px]">
-                      <div className="font-body font-semibold text-[13px]" style={{ color: T.textPrimary }}>{lead.seller}</div>
-                      <div className="font-body text-[11px]" style={{ color: T.textMuted }}>{lead.vehicle}</div>
-                    </td>
-                    <td className="py-[9px] px-[10px]">
-                      <span
-                        className="inline-flex items-center justify-center rounded-pill font-body font-bold text-[11px]"
-                        style={{ width: 32, height: 18, background: scoreBg, color: scoreColor }}
-                      >
-                        {lead.score}
-                      </span>
-                    </td>
-                    <td className="py-[9px] px-[10px]">
-                      <span
-                        className="inline-block rounded-pill px-2 py-0.5 font-body font-semibold text-[11px]"
-                        style={{ background: st.bg, color: st.color }}
-                      >
-                        {st.label}
-                      </span>
-                    </td>
-                    <td className="py-[9px] px-[10px]">
-                      <span className="font-body text-[12px]" style={{ color: lead.assignee ? T.textMuted : T.textDim }}>
-                        {lead.assignee || "Unassigned"}
-                      </span>
-                    </td>
-                    <td className="py-[9px] px-[10px]">
-                      <span className="font-body text-[11px]" style={{ color: T.textDim }}>
-                        {lead.lastContact || "—"}
-                      </span>
-                    </td>
-                    <td className="py-[9px] px-[10px]">
-                      <button
-                        className="rounded-[6px] px-[9px] py-1 font-body font-semibold text-[11px] transition-all duration-150"
-                        style={{ background: T.bgRow, color: lead.assignee ? T.textSecondary : T.teal200 }}
-                        onClick={e => {
-                          e.stopPropagation();
-                          if (lead.assignee) {
-                            router.push(`/admin/crm/leads/${lead.id}`);
-                          } else {
-                            setAssignModal(lead);
-                          }
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = T.bgHover; e.currentTarget.style.color = T.teal200; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = T.bgRow; e.currentTarget.style.color = lead.assignee ? T.textSecondary : T.teal200; }}
-                      >
-                        {lead.assignee ? "View" : "Assign"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-        </div>
-
-        {/* Pagination footer */}
-        {filteredLeads.length > 0 && (
-          <div
-            className="flex items-center justify-between px-[15px] py-[10px]"
-            style={{ borderTop: `1px solid ${T.border}` }}
-          >
-            <span className="font-body text-[12px]" style={{ color: T.textMuted }}>
-              {`${pageStart + 1}–${Math.min(pageStart + LEADS_PER_PAGE, filteredLeads.length)} of ${filteredLeads.length}`}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={safePage <= 1}
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                className="rounded-[6px] px-2.5 py-1 font-body font-semibold text-[11px]"
-                style={{
-                  background: T.bgRow,
-                  border: `1px solid ${T.border}`,
-                  color: safePage <= 1 ? T.textDim : T.textSecondary,
-                  cursor: safePage <= 1 ? "not-allowed" : "pointer",
-                  opacity: safePage <= 1 ? 0.5 : 1,
-                }}
-              >
-                ← Prev
-              </button>
-              <span className="font-body text-[12px]" style={{ color: T.textSecondary }}>
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                type="button"
-                disabled={safePage >= totalPages}
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                className="rounded-[6px] px-2.5 py-1 font-body font-semibold text-[11px]"
-                style={{
-                  background: T.bgRow,
-                  border: `1px solid ${T.border}`,
-                  color: safePage >= totalPages ? T.textDim : T.textSecondary,
-                  cursor: safePage >= totalPages ? "not-allowed" : "pointer",
-                  opacity: safePage >= totalPages ? 0.5 : 1,
-                }}
-              >
-                Next →
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Assign Modal (slide-in sheet) */}
-      {assignModal && (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setAssignModal(null)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.5)" }} />
-          <div
-            className="relative w-[360px] h-full flex flex-col p-6 gap-4 animate-slide-in"
-            style={{ background: T.bgCard, borderLeft: `1px solid ${T.border}` }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-heading font-[800] text-[17px]" style={{ color: T.textPrimary }}>Assign lead</span>
-              <button className="font-body text-[13px]" style={{ color: T.textDim }} onClick={() => setAssignModal(null)}>✕</button>
-            </div>
-            <div className="rounded-[10px] p-3" style={{ background: T.bgRow }}>
-              <div className="font-body font-semibold text-[14px] mb-1" style={{ color: T.textPrimary }}>{assignModal.seller}</div>
-              <div className="font-body text-[12px]" style={{ color: T.textMuted }}>{assignModal.vehicle}</div>
-              <div className="flex gap-1.5 mt-2">
-                <span className="rounded-pill px-2 py-0.5 font-body font-bold text-[10px]" style={{ background: T.greenBg, color: T.green }}>Score {assignModal.score}</span>
-                <span className="rounded-pill px-2 py-0.5 font-body font-bold text-[10px]" style={{ background: statusConfig[assignModal.status].bg, color: statusConfig[assignModal.status].color }}>{statusConfig[assignModal.status].label}</span>
-              </div>
-            </div>
-            <div>
-              <label className="font-body font-bold text-[10px] uppercase tracking-widest mb-2 block" style={{ color: T.textDim }}>
-                Assign to caller
-              </label>
-              <select
-                className="w-full rounded-[8px] px-3 py-2 font-body text-[13px] outline-none"
-                style={{ background: T.bgRow, border: `1px solid ${T.border}`, color: T.textPrimary }}
-                value={assignCaller}
-                onChange={e => setAssignCaller(e.target.value)}
-              >
-                {["Sarah K.", "James T.", "Jordan M.", "Aisha T."].map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-            <button
-              className="w-full rounded-[8px] py-2.5 font-heading font-[800] text-[14px] text-white transition-opacity hover:opacity-90"
-              style={{ background: T.teal }}
-              onClick={handleAssign}
-            >
-              Assign lead
-            </button>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
 
 /* ================================================================== */
 /*  DIALLER SNAPSHOT                                                   */
@@ -511,18 +101,18 @@ function DiallerSnapshot() {
   if (!lead) {
     return (
       <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-        <div className="flex items-center px-[15px] py-[11px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <div className="flex items-center px-3 py-[11px] sm:px-[15px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
           <span className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: T.textDim }} />
-          <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>Live dialler — idle</span>
+          <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>Live dialler — idle</span>
           <button
-            className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer"
+            className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer flex-shrink-0"
             style={{ color: T.teal200 }}
             onClick={() => router.push("/admin/crm/dialler")}
           >
             Open dialler →
           </button>
         </div>
-        <div className="px-[15px] py-8 text-center font-body text-[12px]" style={{ color: T.textMuted }}>
+        <div className="px-3 sm:px-[15px] py-8 text-center font-body text-[12px]" style={{ color: T.textMuted }}>
           No active call. Open the dialler to start working the queue.
         </div>
       </div>
@@ -546,13 +136,13 @@ function DiallerSnapshot() {
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
       {/* Header */}
-      <div className="flex items-center px-[15px] py-[11px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+      <div className="flex items-center px-3 py-[11px] sm:px-[15px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
         <span className="w-[7px] h-[7px] rounded-full flex-shrink-0 animate-pulse" style={{ background: T.green }} />
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>
           Live dialler — {lead.activeCaller}
         </span>
         <button
-          className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer"
+          className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer flex-shrink-0"
           style={{ color: T.teal200 }}
           onClick={() => router.push("/admin/crm/dialler")}
         >
@@ -638,15 +228,15 @@ function CallbackQueue() {
 
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[15px] py-[11px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex items-center px-3 py-[11px] sm:px-[15px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0" style={{ color: T.textPrimary }}>
           Callbacks today
         </span>
-        <span className="font-body font-bold text-[11px]" style={{ color: T.red }}>
+        <span className="font-body font-bold text-[11px] flex-shrink-0" style={{ color: T.red }}>
           {overdueCount} overdue
         </span>
       </div>
-      <div className="px-[15px] py-[8px]">
+      <div className="px-3 sm:px-[15px] py-[8px]">
         {D.callbacks.length === 0 && (
           <div className="font-body text-[12px] text-center py-6" style={{ color: T.textMuted }}>No callbacks scheduled.</div>
         )}
@@ -690,19 +280,19 @@ function CallerLeaderboard() {
 
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[15px] py-[11px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex items-center px-3 py-[11px] sm:px-[15px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0" style={{ color: T.textPrimary }}>
           Caller leaderboard
         </span>
         <button
-          className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer"
+          className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer flex-shrink-0"
           style={{ color: T.teal200 }}
           onClick={() => router.push("/admin/crm/performance")}
         >
           Full stats →
         </button>
       </div>
-      <div className="px-[15px] py-[6px]">
+      <div className="px-3 sm:px-[15px] py-[6px]">
         {D.callers.length === 0 && (
           <div className="font-body text-[12px] text-center py-6" style={{ color: T.textMuted }}>No callers tracked yet.</div>
         )}
@@ -793,20 +383,20 @@ function TeamTargets() {
 
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[15px] py-[11px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex items-center px-3 py-[11px] sm:px-[15px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0" style={{ color: T.textPrimary }}>
           Team targets
         </span>
-        <span className="font-body font-bold text-[11px]" style={{ color: hasTargets ? T.green : T.textMuted }}>
+        <span className="font-body font-bold text-[11px] flex-shrink-0" style={{ color: hasTargets ? T.green : T.textMuted }}>
           {hasTargets ? `${onTrackCount} of 4 on track` : "No targets set"}
         </span>
       </div>
-      <div className="px-[15px] py-[10px]">
+      <div className="px-3 sm:px-[15px] py-[10px]">
         {!hasTargets && (
           <div className="font-body text-[12px] text-center py-6" style={{ color: T.textMuted }}>No targets set yet.</div>
         )}
         {hasTargets && D.targets.map((t, i) => {
-          const pct = Math.min((t.actual / t.target) * 100, 100);
+          const pct = t.target > 0 ? Math.min((t.actual / t.target) * 100, 100) : 0;
           const isCallbacks = t.label === "Callbacks cleared";
           const isFailing = t.actual < t.target;
           const isOver = t.actual >= t.target;
@@ -898,12 +488,12 @@ function CallScript() {
 
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[15px] py-[11px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex items-center px-3 py-[11px] sm:px-[15px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0" style={{ color: T.textPrimary }}>
           Active call script
         </span>
         <button
-          className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer"
+          className="font-body font-semibold text-[11px] bg-transparent border-none cursor-pointer flex-shrink-0"
           style={{ color: T.teal200 }}
           onClick={() => router.push("/admin/crm/scripts")}
         >
@@ -911,6 +501,9 @@ function CallScript() {
         </button>
       </div>
       <div className="p-[12px]">
+        {D.scriptSections.length === 0 && (
+          <div className="font-body text-[12px] text-center py-6" style={{ color: T.textMuted }}>No script saved yet.</div>
+        )}
         {D.scriptSections.map((section, i) => (
           <div
             key={i}
@@ -934,35 +527,83 @@ function CallScript() {
 /*  PAGE ASSEMBLY                                                      */
 /* ================================================================== */
 export default function CrmPage() {
+  const router = useRouter();
+  const { user } = useCurrentUser();
   const [addLeadOpen, setAddLeadOpen] = useState(false);
   const [scraperOpen, setScraperOpen] = useState(false);
   const [leadsRefreshKey, setLeadsRefreshKey] = useState(0);
+
+  // Sales reps don't source leads — hide the AutoTrader scrape entry point.
+  const isSales = user?.role === "sales";
+  const overdueCount = D.callbacks.filter(c => c.status === "overdue").length;
+
   return (
-    <div className="flex min-h-screen" style={{ background: T.bgPage }}>
+    <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-      <CrmTopbar onAddLead={() => setAddLeadOpen(true)} onOpenScraper={() => setScraperOpen(true)} />
-      <div className="flex-1 flex flex-col gap-3 p-[18px_22px] overflow-y-auto overflow-x-hidden">
+      <CrmTopbar
+        title="Overview"
+        badges={
+          overdueCount > 0 ? (
+            <span
+              className="rounded-pill px-2.5 py-1 font-body text-[11px] font-bold"
+              style={{ background: T.redBg, color: T.red }}
+            >
+              {overdueCount === 1 ? "1 callback overdue" : `${overdueCount} callbacks overdue`}
+            </span>
+          ) : undefined
+        }
+        actions={
+          <>
+            {!isSales && (
+              <button
+                onClick={() => setScraperOpen(true)}
+                className="px-2.5 py-1.5 sm:px-[14px] sm:py-[6px] text-xs rounded-[8px] transition-colors hover:opacity-80 flex-shrink-0"
+                style={{ background: "#101A2E", color: T.textPrimary, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600 }}
+                title="Bulk-import listings from AutoTrader URLs"
+              >
+                ⤓<span className="hidden sm:inline"> Scrape AT</span>
+              </button>
+            )}
+            <button
+              onClick={() => setAddLeadOpen(true)}
+              className="px-2.5 py-1.5 sm:px-[14px] sm:py-[6px] text-xs rounded-[8px] transition-colors hover:opacity-80 flex-shrink-0"
+              style={{ background: "#0A2A26", color: T.teal200, border: "1px solid #0A1A2E", fontFamily: "var(--font-body)", fontWeight: 600 }}
+              title="Add lead"
+            >
+              +<span className="hidden sm:inline"> Add lead</span>
+            </button>
+            <button
+              onClick={() => router.push("/admin/crm/dialler")}
+              className="font-heading font-[800] text-xs sm:text-[13px] text-white rounded-[8px] px-2.5 py-1.5 sm:px-4 transition-opacity hover:opacity-90 flex-shrink-0"
+              style={{ background: T.teal }}
+            >
+              Open dialler<span className="hidden sm:inline"> →</span>
+            </button>
+          </>
+        }
+      />
+      <div className="flex-1 flex flex-col gap-3 lg:gap-4 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden">
         {/* KPI Strip */}
         <CrmKpiRow />
 
-        {/* Main row: Lead queue (wide) + Right column (dialler + callbacks) */}
-        <div className="grid gap-3" style={{ gridTemplateColumns: "1fr 280px" }}>
-          <div className="min-w-0">
-            <LeadQueue refreshKey={leadsRefreshKey} />
-          </div>
-          <div className="flex flex-col gap-3 min-w-0">
-            <DiallerSnapshot />
-            <CallbackQueue />
-          </div>
-        </div>
+        {/* Pipeline — the rep's deal board (full width) */}
+        <LeadPipeline refreshKey={leadsRefreshKey} />
 
-        {/* Bottom row: Leaderboard · Targets · Script */}
-        <div className="grid grid-cols-3 gap-3">
-          <CallerLeaderboard />
-          <TeamTargets />
+        {/* Calls-focused row: dialler snapshot + callbacks + script */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+          <DiallerSnapshot />
+          <CallbackQueue />
           <CallScript />
         </div>
+
+        {/* Team row — hidden for sales reps (their portal is calls + their deals) */}
+        {!isSales && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
+            <CallerLeaderboard />
+            <TeamTargets />
+          </div>
+        )}
       </div>
       </div>
       <AddLeadDrawer

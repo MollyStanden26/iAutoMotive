@@ -1,21 +1,20 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
 import {
   TrendingUp, TrendingDown, Trophy, Target, BarChart3,
-  Users, Phone, Clock, AlertTriangle, ChevronDown, ChevronRight,
-  ArrowLeft, Calendar, Award, Flag,
+  Users, Phone, AlertTriangle, ChevronDown, ChevronRight,
+  Calendar, Award, Flag,
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { CrmTopbar } from "@/components/admin/crm-topbar";
 import {
   repPerformance,
   teamTargets,
   weeklyHistory,
   outcomeDistribution,
 } from "@/lib/admin/performance-mock-data";
-import type { RepPerformance, TeamTarget } from "@/lib/admin/performance-mock-data";
+import type { TeamTarget } from "@/lib/admin/performance-mock-data";
 
 /* ================================================================== */
 /*  DESIGN TOKENS                                                      */
@@ -75,6 +74,21 @@ function barColorFn(pct: number): string {
 }
 
 /* ================================================================== */
+/*  EMPTY STATE                                                        */
+/* ================================================================== */
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div
+      className="flex flex-col items-center justify-center text-center py-[28px]"
+      style={{ color: T.textMuted }}
+    >
+      <BarChart3 size={22} style={{ color: T.textDim, marginBottom: 8, opacity: 0.6 }} />
+      <span className="font-body text-[12px]" style={{ color: T.textMuted }}>{message}</span>
+    </div>
+  );
+}
+
+/* ================================================================== */
 /*  OUTCOME COLORS                                                     */
 /* ================================================================== */
 const OUTCOME_COLORS: Record<string, string> = {
@@ -90,80 +104,13 @@ const OUTCOME_COLORS: Record<string, string> = {
 };
 
 /* ================================================================== */
-/*  CRM TOPBAR                                                         */
-/* ================================================================== */
-const crmTabs = [
-  { label: "Pipeline",    href: "/admin/crm" },
-  { label: "Dialler",     href: "/admin/crm/dialler" },
-  { label: "Calls",       href: "/admin/crm/calls" },
-  { label: "Scripts",     href: "/admin/crm/scripts" },
-  { label: "Performance", href: "/admin/crm/performance" },
-];
-
-function PerformanceTopbar() {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  return (
-    <div
-      className="flex items-center gap-3 px-[22px]"
-      style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}
-    >
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 mr-3">
-        <span className="cursor-pointer font-body text-[13px]" style={{ color: T.textDim }} onClick={() => router.push("/admin")}>
-          Admin
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="cursor-pointer font-body text-[13px]" style={{ color: T.textDim }} onClick={() => router.push("/admin/crm")}>
-          CRM
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="font-heading font-[800] text-[17px]" style={{ color: T.textPrimary }}>Performance</span>
-      </div>
-
-      {/* Tab nav */}
-      <div className="flex-1 flex justify-center">
-        <div className="flex rounded-[10px] p-[3px]" style={{ background: T.bgRow }}>
-          {crmTabs.map(tab => {
-            const active = pathname === tab.href || (tab.href !== "/admin/crm" && pathname.startsWith(tab.href));
-            return (
-              <button
-                key={tab.label}
-                onClick={() => router.push(tab.href)}
-                className="px-3 py-1.5 rounded-[8px] font-body text-[12px] font-semibold transition-colors duration-150"
-                style={{
-                  background: active ? T.bgCard : "transparent",
-                  color: active ? T.textPrimary : T.textMuted,
-                  border: "none", cursor: "pointer",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Back link */}
-      <Link
-        href="/admin/crm"
-        className="flex items-center gap-1.5 font-body text-[12px] font-semibold no-underline"
-        style={{ color: T.textMuted }}
-      >
-        <ArrowLeft size={14} />
-        Back to CRM
-      </Link>
-    </div>
-  );
-}
-
-/* ================================================================== */
 /*  KPI ROW                                                            */
 /* ================================================================== */
 function PerformanceKpiRow() {
   const totalDialsToday = repPerformance.reduce((s, r) => s + r.dialsToday, 0);
-  const avgContactRate = Math.round(repPerformance.reduce((s, r) => s + r.contactRate, 0) / repPerformance.length);
+  const avgContactRate = repPerformance.length === 0
+    ? 0
+    : Math.round(repPerformance.reduce((s, r) => s + r.contactRate, 0) / repPerformance.length);
   const offersWeek = repPerformance.reduce((s, r) => s + r.offersWeek, 0);
   const signedWeek = repPerformance.reduce((s, r) => s + r.signedWeek, 0);
   const revenueWeek = repPerformance.reduce((s, r) => s + r.revenueWeek, 0);
@@ -177,7 +124,7 @@ function PerformanceKpiRow() {
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {kpis.map(kpi => {
         const Icon = kpi.icon;
         const deltaColor = kpi.deltaType === "up" ? T.green : T.red;
@@ -185,21 +132,21 @@ function PerformanceKpiRow() {
         return (
           <div
             key={kpi.label}
-            className="rounded-[14px] px-[16px] py-[14px]"
+            className="rounded-[14px] px-3 py-3 sm:px-4 sm:py-[14px] min-w-0"
             style={{ background: T.bgCard, border: `1px solid ${T.border}` }}
           >
-            <div className="flex items-center gap-2 mb-[6px]">
-              <Icon size={14} style={{ color: T.textMuted }} />
-              <span className="font-body font-semibold text-[11px] uppercase tracking-wider" style={{ color: T.textMuted }}>
+            <div className="flex items-center gap-2 mb-[6px] min-w-0">
+              <Icon size={14} style={{ color: T.textMuted, flexShrink: 0 }} />
+              <span className="font-body font-semibold text-[11px] uppercase tracking-wider truncate" style={{ color: T.textMuted }}>
                 {kpi.label}
               </span>
             </div>
-            <div className="font-heading font-[800] text-[26px] leading-none mb-[4px]" style={{ color: T.textPrimary }}>
+            <div className="font-heading font-[800] text-2xl sm:text-3xl leading-none mb-[4px]" style={{ color: T.textPrimary }}>
               {kpi.value}
             </div>
-            <div className="flex items-center gap-1">
-              <DeltaIcon size={12} style={{ color: deltaColor }} />
-              <span className="font-body text-[11px] font-semibold" style={{ color: deltaColor }}>
+            <div className="flex items-center gap-1 min-w-0">
+              <DeltaIcon size={12} style={{ color: deltaColor, flexShrink: 0 }} />
+              <span className="font-body text-[11px] font-semibold truncate" style={{ color: deltaColor }}>
                 {kpi.delta}
               </span>
             </div>
@@ -259,18 +206,18 @@ function RepLeaderboard() {
   ];
 
   function rateColor(val: number, target: number): string {
-    const pct = (val / target) * 100;
+    const pct = target > 0 ? (val / target) * 100 : 0;
     if (pct >= 90) return T.green;
     if (pct >= 70) return T.amber;
     return T.red;
   }
 
   return (
-    <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
+    <div className="rounded-[14px] overflow-hidden min-w-0" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
       {/* Header */}
-      <div className="flex items-center px-[16px] py-[12px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <Trophy size={15} style={{ color: T.amber }} />
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex flex-wrap items-center px-3 sm:px-4 py-3 gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <Trophy size={15} style={{ color: T.amber, flexShrink: 0 }} />
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>
           Rep Leaderboard
         </span>
         <div className="flex rounded-[8px] p-[2px]" style={{ background: T.bgRow }}>
@@ -278,7 +225,7 @@ function RepLeaderboard() {
             <button
               key={tr.key}
               onClick={() => setTimeRange(tr.key)}
-              className="px-2.5 py-1 rounded-[6px] font-body text-[11px] font-semibold"
+              className="px-2 sm:px-2.5 py-1 rounded-[6px] font-body text-[11px] font-semibold whitespace-nowrap"
               style={{
                 background: timeRange === tr.key ? T.bgCard : "transparent",
                 color: timeRange === tr.key ? T.textPrimary : T.textMuted,
@@ -291,9 +238,12 @@ function RepLeaderboard() {
         </div>
       </div>
 
+      {/* Scrollable table region */}
+      <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="min-w-[640px]">
       {/* Column headers */}
       <div
-        className="px-[16px] py-[8px]"
+        className="px-3 sm:px-4 py-[8px]"
         style={{
           display: "grid",
           gridTemplateColumns: columns.map(c => c.w).join(" "),
@@ -317,7 +267,8 @@ function RepLeaderboard() {
       </div>
 
       {/* Rows */}
-      <div className="px-[16px]">
+      <div className="px-3 sm:px-4">
+        {sorted.length === 0 && <EmptyState message="No rep performance data yet" />}
         {sorted.map((rep, idx) => {
           const isExpanded = expandedId === rep.id;
           const dialPct = pctOf(rep.dialsToday, rep.dailyDialTarget);
@@ -422,7 +373,7 @@ function RepLeaderboard() {
                   }}
                 >
                   {/* Weekly stats grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }} className="mb-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
                     {[
                       { label: "Dials (week)", val: rep.dialsWeek.toString(), color: T.teal200 },
                       { label: "Contacts (week)", val: rep.contactsWeek.toString(), color: T.textPrimary },
@@ -439,7 +390,7 @@ function RepLeaderboard() {
                   {/* Targets progress */}
                   <div className="mb-3">
                     <div className="font-body font-bold text-[10px] uppercase tracking-widest mb-2" style={{ color: T.textDim }}>Targets vs Actual</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {/* Daily dial target */}
                       <div>
                         <div className="flex justify-between mb-1">
@@ -527,6 +478,8 @@ function RepLeaderboard() {
           );
         })}
       </div>
+      </div>
+      </div>
     </div>
   );
 }
@@ -536,7 +489,7 @@ function RepLeaderboard() {
 /* ================================================================== */
 function TeamTargetsPanel() {
   const onTrackCount = teamTargets.filter(t => {
-    const pct = (t.actual / t.target) * 100;
+    const pct = t.target > 0 ? (t.actual / t.target) * 100 : 0;
     return pct >= 90;
   }).length;
 
@@ -548,16 +501,17 @@ function TeamTargetsPanel() {
 
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[16px] py-[12px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <Target size={15} style={{ color: T.teal200 }} />
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex items-center px-3 sm:px-4 py-3 gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <Target size={15} style={{ color: T.teal200, flexShrink: 0 }} />
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>
           Team Targets
         </span>
-        <span className="font-body font-bold text-[11px]" style={{ color: T.green }}>
+        <span className="font-body font-bold text-[11px] whitespace-nowrap" style={{ color: T.green }}>
           {onTrackCount} of {teamTargets.length} on track
         </span>
       </div>
-      <div className="px-[16px] py-[12px]">
+      <div className="px-3 sm:px-4 py-3">
+        {teamTargets.length === 0 && <EmptyState message="No team targets set yet" />}
         {teamTargets.map((t, i) => {
           const pct = pctOf(t.actual, t.target);
           const bColor = barColorFn(pct);
@@ -591,24 +545,27 @@ function TeamTargetsPanel() {
 /*  OUTCOME BREAKDOWN                                                  */
 /* ================================================================== */
 function OutcomeBreakdown() {
-  const maxCount = Math.max(...outcomeDistribution.map(o => o.count));
+  const maxCount = outcomeDistribution.length === 0
+    ? 0
+    : Math.max(...outcomeDistribution.map(o => o.count));
 
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[16px] py-[12px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <BarChart3 size={15} style={{ color: T.teal200 }} />
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex items-center px-3 sm:px-4 py-3 gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <BarChart3 size={15} style={{ color: T.teal200, flexShrink: 0 }} />
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>
           Call Outcome Distribution
         </span>
-        <span className="font-body text-[11px]" style={{ color: T.textMuted }}>This week</span>
+        <span className="font-body text-[11px] whitespace-nowrap" style={{ color: T.textMuted }}>This week</span>
       </div>
-      <div className="px-[16px] py-[12px]">
+      <div className="px-3 sm:px-4 py-3">
+        {outcomeDistribution.length === 0 && <EmptyState message="No call outcomes yet" />}
         {outcomeDistribution.map((o, i) => {
           const width = maxCount > 0 ? (o.count / maxCount) * 100 : 0;
           const color = OUTCOME_COLORS[o.outcome] || T.textMuted;
           return (
-            <div key={o.outcome} className={`flex items-center gap-3 ${i < outcomeDistribution.length - 1 ? "mb-[8px]" : ""}`}>
-              <span className="font-body text-[11px] w-[160px] flex-shrink-0 text-right" style={{ color: T.textMuted }}>
+            <div key={o.outcome} className={`flex items-center gap-2 sm:gap-3 ${i < outcomeDistribution.length - 1 ? "mb-[8px]" : ""}`}>
+              <span className="font-body text-[11px] w-[100px] sm:w-[160px] flex-shrink-0 text-right truncate" style={{ color: T.textMuted }}>
                 {o.outcome}
               </span>
               <div className="flex-1 h-[14px] rounded-[3px] overflow-hidden" style={{ background: T.bgRow }}>
@@ -635,8 +592,10 @@ function OutcomeBreakdown() {
 /*  WEEKLY TRENDS                                                      */
 /* ================================================================== */
 function WeeklyTrends() {
-  const maxDials = Math.max(...weeklyHistory.flatMap(w => w.reps.map(r => r.dials)));
+  const allDials = weeklyHistory.flatMap(w => w.reps.map(r => r.dials));
+  const maxDials = allDials.length === 0 ? 0 : Math.max(...allDials);
   const barMaxH = 48;
+  const weekCount = weeklyHistory.length;
 
   const REP_COLORS: Record<string, string> = {
     "Sarah K.": T.teal200,
@@ -647,15 +606,18 @@ function WeeklyTrends() {
 
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[16px] py-[12px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <Calendar size={15} style={{ color: T.teal200 }} />
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex items-center px-3 sm:px-4 py-3 gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <Calendar size={15} style={{ color: T.teal200, flexShrink: 0 }} />
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>
           Weekly Trends
         </span>
       </div>
-      <div className="px-[16px] py-[12px]">
+      <div className="px-3 sm:px-4 py-3">
+        {weekCount === 0 && <EmptyState message="No weekly history yet" />}
+        {weekCount > 0 && (
+        <>
         {/* Legend */}
-        <div className="flex gap-4 mb-3">
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-3">
           {Object.entries(REP_COLORS).map(([name, color]) => (
             <div key={name} className="flex items-center gap-1.5">
               <div className="w-[8px] h-[8px] rounded-[2px]" style={{ background: color }} />
@@ -665,7 +627,7 @@ function WeeklyTrends() {
         </div>
 
         {/* Bars per week */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        <div className="grid grid-cols-4 gap-2 sm:gap-4">
           {weeklyHistory.map(wk => {
             const weekTotal = wk.reps.reduce((s, r) => s + r.dials, 0);
             return (
@@ -699,7 +661,7 @@ function WeeklyTrends() {
 
         {/* Summary row */}
         <div className="mt-3 pt-[10px]" style={{ borderTop: `1px solid ${T.border}` }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+          <div className="grid grid-cols-3 gap-2.5">
             {[
               {
                 label: "Total Signed (4wk)",
@@ -713,7 +675,7 @@ function WeeklyTrends() {
               },
               {
                 label: "Avg Revenue/Wk",
-                val: formatCurrencyShort(Math.round(weeklyHistory.reduce((s, w) => s + w.reps.reduce((ss, r) => ss + r.revenue, 0), 0) / 4)),
+                val: formatCurrencyShort(weekCount === 0 ? 0 : Math.round(weeklyHistory.reduce((s, w) => s + w.reps.reduce((ss, r) => ss + r.revenue, 0), 0) / weekCount)),
                 color: T.amber,
               },
             ].map(s => (
@@ -724,6 +686,8 @@ function WeeklyTrends() {
             ))}
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
@@ -734,20 +698,20 @@ function WeeklyTrends() {
 /* ================================================================== */
 function CoachingAlerts() {
   const flagged = repPerformance.filter(r => r.coachingFlag !== "none");
-  if (flagged.length === 0) return null;
 
   return (
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[16px] py-[12px] gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <AlertTriangle size={15} style={{ color: T.amber }} />
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+      <div className="flex items-center px-3 sm:px-4 py-3 gap-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <AlertTriangle size={15} style={{ color: T.amber, flexShrink: 0 }} />
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0 truncate" style={{ color: T.textPrimary }}>
           Coaching Alerts
         </span>
-        <span className="font-body text-[11px]" style={{ color: T.textMuted }}>
+        <span className="font-body text-[11px] whitespace-nowrap" style={{ color: T.textMuted }}>
           {flagged.length} flag{flagged.length !== 1 ? "s" : ""}
         </span>
       </div>
-      <div className="px-[16px] py-[10px]">
+      <div className="px-3 sm:px-4 py-[10px]">
+        {flagged.length === 0 && <EmptyState message="No coaching flags yet" />}
         {flagged.map((rep, i) => (
           <div
             key={rep.id}
@@ -763,12 +727,12 @@ function CoachingAlerts() {
             </div>
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
                 <span className="font-body font-semibold text-[13px]" style={{ color: T.textPrimary }}>
                   {rep.name}
                 </span>
                 <span
-                  className="font-body font-bold text-[10px] px-[6px] py-[2px] rounded-[4px]"
+                  className="font-body font-bold text-[10px] px-[6px] py-[2px] rounded-[4px] whitespace-nowrap"
                   style={{
                     background: rep.coachingFlag === "positive" ? T.greenBg : T.redBg,
                     color: rep.coachingFlag === "positive" ? T.green : T.red,
@@ -802,30 +766,30 @@ function CoachingAlerts() {
 /* ================================================================== */
 export default function PerformancePage() {
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: T.bgPage }}>
+    <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <PerformanceTopbar />
-        <div className="flex-1 overflow-y-auto px-[22px] py-[18px]">
+        <CrmTopbar title="Performance" />
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
           {/* KPI Row */}
-          <div className="mb-[18px]">
+          <div className="mb-3 lg:mb-4">
             <PerformanceKpiRow />
           </div>
 
           {/* Main Grid: Leaderboard + Targets */}
-          <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }} className="mb-[18px]">
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-3 lg:gap-4 mb-3 lg:mb-4">
             <RepLeaderboard />
             <TeamTargetsPanel />
           </div>
 
           {/* Secondary Grid: Outcomes + Weekly Trends */}
-          <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }} className="mb-[18px]">
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-3 lg:gap-4 mb-3 lg:mb-4">
             <OutcomeBreakdown />
             <WeeklyTrends />
           </div>
 
           {/* Coaching Alerts */}
-          <div className="mb-[18px]">
+          <div className="mb-3 lg:mb-4">
             <CoachingAlerts />
           </div>
         </div>

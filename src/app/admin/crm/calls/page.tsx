@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
 import {
-  ArrowLeft, Phone, PhoneIncoming, PhoneOutgoing, Search,
+  Phone, PhoneIncoming, PhoneOutgoing, Search,
   Play, ChevronDown, ChevronRight, PhoneOff,
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { CrmTopbar } from "@/components/admin/crm-topbar";
 import {
   CALL_LOG,
   CALLER_PROFILES,
@@ -85,75 +84,6 @@ function isThisMonth(iso: string): boolean {
 }
 
 /* ================================================================== */
-/*  CRM TOPBAR (calls variant)                                         */
-/* ================================================================== */
-const crmTabs = [
-  { label: "Pipeline",    href: "/admin/crm" },
-  { label: "Dialler",     href: "/admin/crm/dialler" },
-  { label: "Calls",       href: "/admin/crm/calls" },
-  { label: "Scripts",     href: "/admin/crm/scripts" },
-  { label: "Performance", href: "/admin/crm/performance" },
-];
-
-function CallsTopbar() {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  return (
-    <div
-      className="flex items-center gap-3 px-[22px]"
-      style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}
-    >
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 mr-3">
-        <span className="cursor-pointer font-body text-[13px]" style={{ color: T.textDim }} onClick={() => router.push("/admin")}>
-          Admin
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="cursor-pointer font-body text-[13px]" style={{ color: T.textDim }} onClick={() => router.push("/admin/crm")}>
-          CRM
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="font-heading font-[800] text-[17px]" style={{ color: T.textPrimary }}>Calls</span>
-      </div>
-
-      {/* Tab nav */}
-      <div className="flex-1 flex justify-center">
-        <div className="flex rounded-[10px] p-[3px]" style={{ background: T.bgRow }}>
-          {crmTabs.map(tab => {
-            const active = pathname === tab.href || (tab.href !== "/admin/crm" && pathname.startsWith(tab.href));
-            return (
-              <button
-                key={tab.label}
-                onClick={() => router.push(tab.href)}
-                className="px-3 py-1.5 rounded-[8px] font-body text-[12px] font-semibold transition-colors duration-150"
-                style={{
-                  background: active ? T.bgCard : "transparent",
-                  color: active ? T.textPrimary : T.textMuted,
-                  border: "none", cursor: "pointer",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Back link */}
-      <Link
-        href="/admin/crm"
-        className="flex items-center gap-1.5 font-body text-[12px] font-semibold no-underline"
-        style={{ color: T.textMuted }}
-      >
-        <ArrowLeft size={14} />
-        Back to CRM
-      </Link>
-    </div>
-  );
-}
-
-/* ================================================================== */
 /*  KPI ROW                                                            */
 /* ================================================================== */
 function CallsKpiRow({ data }: { data: CallLogRecord[] }) {
@@ -178,27 +108,27 @@ function CallsKpiRow({ data }: { data: CallLogRecord[] }) {
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {kpis.map(kpi => (
         <div
           key={kpi.label}
-          className="rounded-[14px] px-[15px] py-[13px]"
+          className="rounded-[14px] px-3 py-3 sm:px-[15px] sm:py-[13px] min-w-0"
           style={{ background: T.bgCard, border: `1px solid ${T.border}` }}
         >
           <div
-            className="font-body font-bold text-[10px] uppercase tracking-widest mb-[7px]"
+            className="font-body font-bold text-[10px] uppercase tracking-widest mb-[7px] truncate"
             style={{ color: T.textDim }}
           >
             {kpi.label}
           </div>
           <div
-            className="font-heading font-black text-[30px] leading-none tracking-tight mb-1"
+            className="font-heading font-black text-2xl sm:text-3xl leading-none tracking-tight mb-1"
             style={{ color: kpi.color }}
           >
             {kpi.value}
           </div>
           <div
-            className="font-body font-semibold text-[11px]"
+            className="font-body font-semibold text-[11px] truncate"
             style={{ color: T.textMuted }}
           >
             {kpi.delta}
@@ -244,35 +174,37 @@ function CallsFilterBar({
 
   return (
     <div
-      className="rounded-[14px] px-[15px] py-[11px] flex items-center gap-2 flex-wrap"
+      className="rounded-[14px] px-3 py-3 sm:px-[15px] sm:py-[11px] flex flex-col lg:flex-row lg:items-center gap-2.5 lg:gap-2"
       style={{ background: T.bgCard, border: `1px solid ${T.border}` }}
     >
       {/* Selects */}
-      <select style={selectStyle} value={callerFilter} onChange={e => setCallerFilter(e.target.value)}>
-        <option value="all">All callers</option>
-        {CALLER_PROFILES.map(cp => (
-          <option key={cp.initials} value={cp.name}>{cp.name}</option>
-        ))}
-      </select>
+      <div className="flex flex-wrap items-center gap-2">
+        <select className="flex-1 min-w-[120px] lg:flex-none" style={selectStyle} value={callerFilter} onChange={e => setCallerFilter(e.target.value)}>
+          <option value="all">All callers</option>
+          {CALLER_PROFILES.map(cp => (
+            <option key={cp.initials} value={cp.name}>{cp.name}</option>
+          ))}
+        </select>
 
-      <select style={selectStyle} value={outcomeFilter} onChange={e => setOutcomeFilter(e.target.value)}>
-        <option value="all">All outcomes</option>
-        {Object.entries(OUTCOME_LABELS).map(([key, label]) => (
-          <option key={key} value={key}>{label}</option>
-        ))}
-      </select>
+        <select className="flex-1 min-w-[120px] lg:flex-none" style={selectStyle} value={outcomeFilter} onChange={e => setOutcomeFilter(e.target.value)}>
+          <option value="all">All outcomes</option>
+          {Object.entries(OUTCOME_LABELS).map(([key, label]) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
+        </select>
 
-      <select style={selectStyle} value={directionFilter} onChange={e => setDirectionFilter(e.target.value)}>
-        <option value="all">All directions</option>
-        <option value="outbound">Outbound</option>
-        <option value="inbound">Inbound</option>
-      </select>
+        <select className="flex-1 min-w-[120px] lg:flex-none" style={selectStyle} value={directionFilter} onChange={e => setDirectionFilter(e.target.value)}>
+          <option value="all">All directions</option>
+          <option value="outbound">Outbound</option>
+          <option value="inbound">Inbound</option>
+        </select>
+      </div>
 
       {/* Divider */}
-      <div style={{ width: 1, height: 20, background: T.border, margin: "0 4px" }} />
+      <div className="hidden lg:block" style={{ width: 1, height: 20, background: T.border, margin: "0 4px" }} />
 
       {/* Date pills */}
-      <div className="flex gap-1">
+      <div className="flex flex-wrap gap-1">
         {datePills.map(pill => (
           <button
             key={pill.key}
@@ -291,18 +223,18 @@ function CallsFilterBar({
       </div>
 
       {/* Spacer */}
-      <div className="flex-1" />
+      <div className="hidden lg:block flex-1" />
 
       {/* Search */}
-      <div className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1" style={{ background: T.bgRow, border: `1px solid ${T.border}` }}>
-        <Search size={13} style={{ color: T.textDim }} />
+      <div className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 w-full lg:w-auto" style={{ background: T.bgRow, border: `1px solid ${T.border}` }}>
+        <Search size={13} style={{ color: T.textDim, flexShrink: 0 }} />
         <input
           type="text"
           placeholder="Search seller or phone..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="bg-transparent border-none outline-none font-body text-[12px]"
-          style={{ color: T.textSecondary, width: 170 }}
+          className="bg-transparent border-none outline-none font-body text-[12px] w-full min-w-0 lg:w-[170px]"
+          style={{ color: T.textSecondary }}
         />
       </div>
     </div>
@@ -320,7 +252,7 @@ function ExpandedCallRow({ call }: { call: CallLogRecord }) {
   return (
     <tr>
       <td colSpan={9} style={{ background: T.bgRow, padding: 0 }}>
-        <div className="px-[18px] py-[14px] flex flex-col gap-3">
+        <div className="px-3 py-3 sm:px-[18px] sm:py-[14px] flex flex-col gap-3">
           {/* Full notes */}
           <div>
             <div className="font-body font-bold text-[10px] uppercase tracking-widest mb-1" style={{ color: T.textDim }}>
@@ -381,7 +313,7 @@ function ExpandedCallRow({ call }: { call: CallLogRecord }) {
                   <div key={step} className="flex items-center">
                     <div className="flex flex-col items-center">
                       <div
-                        className="flex items-center justify-center rounded-full font-body font-bold text-[9px]"
+                        className="flex items-center justify-center rounded-full font-body font-bold text-[10px]"
                         style={{
                           width: 22, height: 22,
                           background: active ? T.teal : T.bgCard,
@@ -431,22 +363,28 @@ function ExpandedCallRow({ call }: { call: CallLogRecord }) {
 /* ================================================================== */
 /*  EMPTY STATE                                                        */
 /* ================================================================== */
-function EmptyState({ onReset }: { onReset: () => void }) {
+function EmptyState({ onReset, hasSource }: { onReset: () => void; hasSource: boolean }) {
   return (
     <tr>
       <td colSpan={9} className="text-center py-16">
         <div className="flex flex-col items-center gap-2">
           <PhoneOff size={32} style={{ color: T.textDim }} />
           <span className="font-body text-[14px] font-semibold" style={{ color: T.textMuted }}>
-            No calls match your filters
+            {hasSource ? "No calls match your filters" : "No calls yet"}
           </span>
-          <button
-            onClick={onReset}
-            className="font-body text-[12px] font-semibold bg-transparent border-none cursor-pointer"
-            style={{ color: T.teal200 }}
-          >
-            Reset filters
-          </button>
+          {hasSource ? (
+            <button
+              onClick={onReset}
+              className="font-body text-[12px] font-semibold bg-transparent border-none cursor-pointer"
+              style={{ color: T.teal200 }}
+            >
+              Reset filters
+            </button>
+          ) : (
+            <span className="font-body text-[12px]" style={{ color: T.textDim }}>
+              Logged calls will appear here.
+            </span>
+          )}
         </div>
       </td>
     </tr>
@@ -483,19 +421,19 @@ function CallsTable({
     <div className="rounded-[14px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
       {/* Header */}
       <div
-        className="flex items-center px-[15px] py-[11px]"
+        className="flex items-center px-3 py-3 sm:px-[15px] sm:py-[11px]"
         style={{ borderBottom: `1px solid ${T.border}` }}
       >
-        <span className="font-body font-bold text-[13px] flex-1" style={{ color: T.textPrimary }}>
+        <span className="font-body font-bold text-[13px] sm:text-sm flex-1 min-w-0" style={{ color: T.textPrimary }}>
           Call Log
         </span>
-        <span className="font-body text-[11px]" style={{ color: T.textMuted }}>
+        <span className="font-body text-[11px] whitespace-nowrap" style={{ color: T.textMuted }}>
           {data.length} {data.length === 1 ? "record" : "records"}
         </span>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <table className="w-full border-collapse" style={{ tableLayout: "fixed", minWidth: 860 }}>
           <colgroup>
             {columns.map(col => (
@@ -517,7 +455,7 @@ function CallsTable({
           </thead>
           <tbody>
             {data.length === 0 ? (
-              <EmptyState onReset={onReset} />
+              <EmptyState onReset={onReset} hasSource={CALL_LOG.length > 0} />
             ) : (
               data.map((call, i) => {
                 const isExpanded = expandedRow === call.id;
@@ -559,7 +497,7 @@ function CallsTable({
                       <td className="py-[9px] px-[10px]">
                         <div className="flex items-center gap-1.5">
                           <div
-                            className="flex items-center justify-center rounded-full font-body font-bold text-[9px]"
+                            className="flex items-center justify-center rounded-full font-body font-bold text-[10px]"
                             style={{
                               width: 28, height: 28, minWidth: 28,
                               background: call.callerBg,
@@ -691,11 +629,11 @@ export default function CrmCallsPage() {
   };
 
   return (
-    <div className="flex min-h-screen" style={{ background: T.bgPage }}>
+    <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <CallsTopbar />
-        <div className="flex-1 flex flex-col gap-3 p-[18px_22px] overflow-y-auto overflow-x-hidden">
+        <CrmTopbar title="Calls log" />
+        <div className="flex-1 flex flex-col gap-3 lg:gap-4 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden">
           <CallsKpiRow data={filteredData} />
           <CallsFilterBar
             callerFilter={callerFilter} setCallerFilter={setCallerFilter}

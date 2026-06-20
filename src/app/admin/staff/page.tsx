@@ -408,7 +408,7 @@ export default function StaffPage() {
   const [period, setPeriod] = useState<PeriodType>("last7d");
 
   return (
-    <div className="flex min-h-screen" style={{ background: T.bgPage }}>
+    <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar period={period} setPeriod={setPeriod} />

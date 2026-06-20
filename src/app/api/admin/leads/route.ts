@@ -30,7 +30,17 @@ interface CrmLeadRow {
   // pipeline-stage terms, not CRM display terms)
   rawStatus: string;
   ageLabel: string;
+  // Sales Kanban stage — resolved (legacy null rows → "new_lead").
+  pipelineStage: PipelineStage;
 }
+
+type PipelineStage =
+  | "new_lead" | "contacted" | "call_back"
+  | "contract_sent" | "handover_scheduled" | "collected";
+
+const VALID_PIPELINE_STAGES: readonly PipelineStage[] = [
+  "new_lead", "contacted", "call_back", "contract_sent", "handover_scheduled", "collected",
+];
 
 const CRM_DISPLAY_STATUS: Record<string, CrmLeadRow["status"]> = {
   new:          "new",
@@ -76,6 +86,7 @@ function toCrmRow(lead: any): CrmLeadRow {
     askingPriceGbp: askingPounds,
     rawStatus: lead.status,
     ageLabel: ageLabelFor(lead.importedAt),
+    pipelineStage: (lead.pipelineStage ?? "new_lead") as PipelineStage,
   };
 }
 
@@ -94,9 +105,15 @@ export async function GET(request: NextRequest) {
   const guard = await requireStaff(request);
   if (!guard.ok) return guard.response;
   try {
+    // Sales reps only ever see their own pipeline: leads an admin assigned to
+    // them, or leads they added themselves (the +Add Lead flow auto-assigns to
+    // the creating rep). Admins/managers see the whole board.
+    const where = guard.user.role === "sales" ? { assignedTo: guard.user.id } : {};
+
     const leads = await prisma.lead.findMany({
+      where,
       orderBy: { importedAt: "desc" },
-      take: 50,
+      take: guard.user.role === "sales" ? 200 : 50,
       include: {
         assignedRep: {
           include: { staffProfile: { select: { firstName: true, lastName: true } } },
@@ -134,6 +151,10 @@ export async function POST(request: NextRequest) {
 
     const askingPence = toInt(askingPriceGbp);
 
+    // A rep adding a lead owns it immediately — auto-assign so it lands in
+    // their Kanban. Admins can leave it unassigned to route later.
+    const isSales = guard.user.role === "sales";
+
     const lead = await prisma.lead.create({
       data: {
         autotraderListingId: autotraderListingId || null,
@@ -151,7 +172,9 @@ export async function POST(request: NextRequest) {
         locationPostcode: locationPostcode || null,
         listingUrl: listingUrl || null,
         listingDescription: notes || null,
-        status: "new",
+        status: isSales ? "assigned" : "new",
+        pipelineStage: "new_lead",
+        assignedTo: isSales ? guard.user.id : null,
       },
     });
 

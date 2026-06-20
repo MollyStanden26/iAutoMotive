@@ -438,7 +438,7 @@ export default function DealsPage() {
   const [newDealOpen, setNewDealOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen" style={{ background: T.bgPage }}>
+    <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar selectedCount={selectedDeals.length} onNewDeal={() => setNewDealOpen(true)} />

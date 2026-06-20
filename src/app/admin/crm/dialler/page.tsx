@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Phone, PhoneOff, PhoneOutgoing, SkipForward, Mic, MicOff,
   Pause, Play, Grid3x3, Circle, ChevronRight, ChevronDown,
-  ArrowLeft, Zap, CheckCircle2, Clock, XCircle, Voicemail,
+  ArrowLeft, Zap, CheckCircle2, XCircle, Voicemail,
   HelpCircle, Star, PhoneForwarded, FileText, StickyNote,
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { CrmTopbar } from "@/components/admin/crm-topbar";
 import {
   DIALLER_QUEUE,
   DIALLER_SESSION,
@@ -73,84 +73,6 @@ const OUTCOME_CONFIG: { key: CallOutcome; label: string; color: string; bg: stri
 const DTMF_KEYS = ["1","2","3","4","5","6","7","8","9","*","0","#"];
 
 /* ================================================================== */
-/*  CRM TOPBAR (dialler variant)                                       */
-/* ================================================================== */
-const crmTabs = [
-  { label: "Pipeline",    href: "/admin/crm" },
-  { label: "Dialler",     href: "/admin/crm/dialler" },
-  { label: "Calls",       href: "/admin/crm/calls" },
-  { label: "Scripts",     href: "/admin/crm/scripts" },
-  { label: "Performance", href: "/admin/crm/performance" },
-];
-
-function DiallerTopbar() {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  return (
-    <div
-      className="flex items-center gap-3 px-[22px]"
-      style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}
-    >
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 mr-3">
-        <span className="cursor-pointer font-body text-[13px]" style={{ color: T.textDim }} onClick={() => router.push("/admin")}>
-          Admin
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="cursor-pointer font-body text-[13px]" style={{ color: T.textDim }} onClick={() => router.push("/admin/crm")}>
-          CRM
-        </span>
-        <span style={{ color: T.textDim }} className="text-[13px]">/</span>
-        <span className="font-heading font-[800] text-[17px]" style={{ color: T.textPrimary }}>Dialler</span>
-      </div>
-
-      {/* Live badge */}
-      <span
-        className="flex items-center gap-1.5 rounded-full px-2.5 py-1 font-body text-[11px] font-bold"
-        style={{ background: T.bgHover, color: T.teal200 }}
-      >
-        <span className="w-[6px] h-[6px] rounded-full animate-pulse" style={{ background: T.green }} />
-        Live
-      </span>
-
-      {/* Tab nav */}
-      <div className="flex-1 flex justify-center">
-        <div className="flex rounded-[10px] p-[3px]" style={{ background: T.bgRow }}>
-          {crmTabs.map(tab => {
-            const active = pathname === tab.href || (tab.href !== "/admin/crm" && pathname.startsWith(tab.href));
-            return (
-              <button
-                key={tab.label}
-                onClick={() => router.push(tab.href)}
-                className="px-3 py-1.5 rounded-[8px] font-body text-[12px] font-semibold transition-colors duration-150"
-                style={{
-                  background: active ? T.bgCard : "transparent",
-                  color: active ? T.textPrimary : T.textMuted,
-                  border: "none", cursor: "pointer",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Back link */}
-      <Link
-        href="/admin/crm"
-        className="flex items-center gap-1.5 font-body text-[12px] font-semibold no-underline"
-        style={{ color: T.textMuted }}
-      >
-        <ArrowLeft size={14} />
-        Back to CRM
-      </Link>
-    </div>
-  );
-}
-
-/* ================================================================== */
 /*  SESSION HEADER                                                     */
 /* ================================================================== */
 function SessionHeader({
@@ -164,40 +86,39 @@ function SessionHeader({
 }) {
   return (
     <div
-      className="flex items-center px-[22px]"
+      className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-3 py-2 sm:px-4 lg:px-[22px] lg:py-0 lg:min-h-[52px]"
       style={{
-        height: 52, background: T.bgCard, borderBottom: `1px solid ${T.border}`, flexShrink: 0,
-        display: "flex", justifyContent: "space-between",
+        background: T.bgCard, borderBottom: `1px solid ${T.border}`, flexShrink: 0,
       }}
     >
       {/* Left: Session info */}
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <span
-          className="w-[8px] h-[8px] rounded-full animate-pulse"
+          className="w-[8px] h-[8px] rounded-full animate-pulse shrink-0"
           style={{ background: sessionPaused ? T.amber : T.green }}
         />
-        <span className="font-body text-[12px] font-semibold" style={{ color: sessionPaused ? T.amber : T.green }}>
+        <span className="font-body text-[11px] sm:text-[12px] font-semibold shrink-0" style={{ color: sessionPaused ? T.amber : T.green }}>
           {sessionPaused ? "Paused" : "Session active"}
         </span>
-        <span className="font-heading text-[14px] font-bold" style={{ color: T.textPrimary }}>
+        <span className="font-heading text-[13px] sm:text-[14px] font-bold truncate" style={{ color: T.textPrimary }}>
           {DIALLER_SESSION.repName}
         </span>
-        <span className="font-mono text-[12px]" style={{ color: T.textMuted }}>
+        <span className="hidden sm:inline font-mono text-[12px]" style={{ color: T.textMuted }}>
           {DIALLER_SESSION.repPhone}
         </span>
       </div>
 
       {/* Center: Timer */}
-      <div className="font-mono text-[16px] font-bold" style={{ color: T.teal200 }}>
+      <div className="order-last w-full text-center font-mono text-[14px] sm:text-[16px] font-bold lg:order-none lg:w-auto" style={{ color: T.teal200 }}>
         {formatTime(sessionElapsed)}
       </div>
 
       {/* Right: Stats + controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
         {/* Stat pills */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="font-body text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: T.bgRow, color: T.textSecondary }}>
-            {stats.dialled}/14 dialled
+            {stats.dialled}/{DIALLER_QUEUE.length} dialled
           </span>
           <span className="font-body text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: T.bgRow, color: T.green }}>
             {stats.contacted} contacted
@@ -210,7 +131,7 @@ function SessionHeader({
         {/* Pause / Resume */}
         <button
           onClick={onPause}
-          className="flex items-center gap-1.5 font-body text-[11px] font-bold rounded-full px-3 py-1.5 transition-colors"
+          className="flex items-center gap-1.5 font-body text-[11px] font-bold rounded-full px-2.5 py-1.5 sm:px-3 transition-colors"
           style={{
             background: sessionPaused ? T.greenBg : T.bgRow,
             color: sessionPaused ? T.green : T.textSecondary,
@@ -225,7 +146,7 @@ function SessionHeader({
         {/* End session */}
         <button
           onClick={onEnd}
-          className="flex items-center gap-1.5 font-body text-[11px] font-bold rounded-full px-3 py-1.5"
+          className="flex items-center gap-1.5 font-body text-[11px] font-bold rounded-full px-2.5 py-1.5 sm:px-3"
           style={{ background: T.redBg, color: T.red, border: `1px solid ${T.red}33`, cursor: "pointer" }}
         >
           End Session
@@ -243,7 +164,7 @@ function LeadInfoPanel({ lead, phase }: { lead: DiallerLead; phase: CallPhase })
 
   if (compact) {
     return (
-      <div style={{ padding: "16px 18px" }}>
+      <div className="p-4 lg:p-[18px]">
         <div className="font-heading text-[15px] font-bold" style={{ color: T.textPrimary }}>
           {lead.sellerName}
         </div>
@@ -268,8 +189,8 @@ function LeadInfoPanel({ lead, phase }: { lead: DiallerLead; phase: CallPhase })
   }
 
   return (
-    <div style={{ padding: "20px 18px" }}>
-      <div className="font-heading text-[20px] font-bold" style={{ color: T.textPrimary }}>
+    <div className="p-4 sm:p-5 lg:p-[18px] lg:pt-5">
+      <div className="font-heading text-[18px] sm:text-[20px] font-bold" style={{ color: T.textPrimary }}>
         {lead.sellerName}
       </div>
       <div className="font-body text-[13px] mt-1" style={{ color: T.textSecondary }}>
@@ -354,7 +275,7 @@ function ScriptPanel({
   }
 
   return (
-    <div className="flex flex-col" style={{ height: "100%" }}>
+    <div className="flex flex-col h-full min-h-[260px] lg:min-h-0">
       {/* Tabs */}
       <div className="flex gap-1 p-2" style={{ borderBottom: `1px solid ${T.border}` }}>
         {(["script", "notes"] as const).map(tab => (
@@ -377,6 +298,14 @@ function ScriptPanel({
       {/* Content */}
       <div className="flex-1 overflow-y-auto" style={{ padding: "8px 0" }}>
         {rightTab === "script" ? (
+          scriptSections.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center" style={{ padding: "32px 16px", gap: 6 }}>
+              <FileText size={22} style={{ color: T.textMuted }} />
+              <span className="font-body text-[12px]" style={{ color: T.textMuted }}>
+                No script sections yet
+              </span>
+            </div>
+          ) : (
           <div>
             {scriptSections.map((section, idx) => {
               const isOpen = openScriptIdx === idx;
@@ -410,6 +339,7 @@ function ScriptPanel({
               );
             })}
           </div>
+          )
         ) : (
           <div style={{ padding: "8px 12px", height: "100%" }}>
             <textarea
@@ -465,13 +395,12 @@ function CallControlArea({
   /* ---- PRE-CALL ---- */
   if (phase === "pre-call") {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ height: "100%", gap: 16 }}>
+      <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-4 p-4">
         <button
           onClick={onCall}
-          className="flex items-center gap-3 font-heading text-[16px] font-bold transition-transform hover:scale-[1.03]"
+          className="flex items-center gap-3 font-heading text-[15px] sm:text-[16px] font-bold transition-transform hover:scale-[1.03] rounded-full px-10 py-3.5 sm:px-12"
           style={{
             background: T.green, color: "#fff",
-            borderRadius: 100, padding: "14px 48px",
             border: "none", cursor: "pointer",
             boxShadow: `0 0 24px ${T.green}33`,
           }}
@@ -494,7 +423,7 @@ function CallControlArea({
   /* ---- RINGING ---- */
   if (phase === "ringing") {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ height: "100%", gap: 16 }}>
+      <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-4 p-4">
         <div style={{ animation: "pulse-ring 1.5s ease-in-out infinite" }}>
           <PhoneOutgoing size={40} style={{ color: T.green }} />
         </div>
@@ -535,7 +464,7 @@ function CallControlArea({
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center relative" style={{ height: "100%", gap: 12 }}>
+      <div className="flex flex-col items-center justify-center relative h-full gap-3 p-4">
         {/* Connected status */}
         <div className="flex items-center gap-2">
           <span className="w-[8px] h-[8px] rounded-full" style={{ background: T.green }} />
@@ -543,25 +472,24 @@ function CallControlArea({
         </div>
 
         {/* Timer */}
-        <div className="font-mono text-[36px] font-bold" style={{ color: T.teal200 }}>
+        <div className="font-mono text-[28px] sm:text-[36px] font-bold" style={{ color: T.teal200 }}>
           {formatTime(callElapsed)}
         </div>
 
         {/* Keypad overlay */}
         {showKeypad && (
           <div
+            className="grid grid-cols-3 gap-1.5 sm:gap-1.5 my-1 rounded-[14px] p-2.5 sm:p-3"
             style={{
-              display: "grid", gridTemplateColumns: "repeat(3, 56px)", gap: 6,
-              padding: 12, background: T.bgCard, borderRadius: 14,
-              border: `1px solid ${T.border}`, marginTop: 4, marginBottom: 4,
+              background: T.bgCard,
+              border: `1px solid ${T.border}`,
             }}
           >
             {DTMF_KEYS.map(key => (
               <button
                 key={key}
-                className="font-mono text-[16px] font-bold flex items-center justify-center"
+                className="font-mono text-[15px] sm:text-[16px] font-bold flex items-center justify-center h-10 w-12 sm:h-11 sm:w-14 rounded-[8px]"
                 style={{
-                  width: 56, height: 44, borderRadius: 8,
                   background: T.bgRow, color: T.textPrimary,
                   border: `1px solid ${T.border}`, cursor: "pointer",
                 }}
@@ -573,21 +501,19 @@ function CallControlArea({
         )}
 
         {/* Control buttons */}
-        <div className="flex items-center gap-3" style={{ marginTop: showKeypad ? 4 : 16 }}>
+        <div className={`flex flex-wrap items-center justify-center gap-2 sm:gap-3 ${showKeypad ? "mt-1" : "mt-3 sm:mt-4"}`}>
           {controlBtns.map(btn => {
             const Icon = btn.active && btn.iconOff ? btn.icon : (btn.iconOff || btn.icon);
             return (
               <div key={btn.label} className="flex flex-col items-center gap-1.5">
                 <button
                   onClick={btn.toggle}
-                  className="flex items-center justify-center transition-colors"
+                  className="flex items-center justify-center transition-colors h-12 w-12 sm:h-14 sm:w-14 rounded-full relative"
                   style={{
-                    width: 56, height: 56, borderRadius: 999,
                     background: btn.isEnd ? T.red : btn.active ? btn.activeBg : T.bgRow,
                     color: btn.isEnd ? "#fff" : btn.active ? btn.activeColor : T.textSecondary,
                     border: btn.active && !btn.isEnd ? `1px solid ${btn.activeColor}44` : `1px solid ${T.border}`,
                     cursor: "pointer",
-                    position: "relative",
                   }}
                 >
                   <Icon size={20} />
@@ -607,13 +533,11 @@ function CallControlArea({
           value={callNotes}
           onChange={e => setCallNotes(e.target.value)}
           placeholder="In-call notes..."
-          className="font-body text-[12px]"
+          className="font-body text-[12px] w-full max-w-[400px] h-[60px] mt-2 rounded-[8px]"
           style={{
-            width: "80%", maxWidth: 400, height: 60,
             background: T.bgRow, color: T.textPrimary,
-            border: `1px solid ${T.border}`, borderRadius: 8,
+            border: `1px solid ${T.border}`,
             padding: "8px 12px", resize: "none", outline: "none",
-            marginTop: 8,
           }}
         />
       </div>
@@ -623,19 +547,14 @@ function CallControlArea({
   /* ---- DISPOSITION ---- */
   if (phase === "disposition") {
     return (
-      <div className="flex flex-col items-center" style={{ height: "100%", padding: "24px 20px", overflowY: "auto" }}>
+      <div className="flex flex-col items-center h-full overflow-y-auto p-4 sm:p-5 lg:py-6 lg:px-5">
         {/* Header */}
-        <div className="font-body text-[14px] font-semibold mb-4" style={{ color: T.textSecondary }}>
+        <div className="font-body text-[13px] sm:text-[14px] font-semibold mb-4 text-center" style={{ color: T.textSecondary }}>
           Call ended &middot; Duration {formatTime(lastCallDuration)}
         </div>
 
         {/* Outcome grid */}
-        <div
-          style={{
-            display: "grid", gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 8, width: "100%", maxWidth: 320,
-          }}
-        >
+        <div className="grid grid-cols-2 gap-2 w-full max-w-[320px]">
           {OUTCOME_CONFIG.map(o => {
             const Icon = o.icon;
             const selected = selectedOutcome === o.key;
@@ -643,17 +562,16 @@ function CallControlArea({
               <button
                 key={o.key}
                 onClick={() => setSelectedOutcome(o.key)}
-                className="flex items-center gap-2 font-body text-[12px] font-semibold transition-all"
+                className="flex items-center gap-2 font-body text-[12px] font-semibold transition-all h-11 rounded-[10px] px-3 sm:px-3.5 min-w-0"
                 style={{
-                  height: 44, borderRadius: 10, padding: "0 14px",
                   background: o.bg, color: o.color,
                   border: selected ? `2px solid ${o.color}` : `1px solid ${o.color}22`,
                   cursor: "pointer",
                   boxShadow: selected ? `0 0 12px ${o.color}22` : "none",
                 }}
               >
-                <Icon size={14} />
-                {o.label}
+                <Icon size={14} className="shrink-0" />
+                <span className="truncate">{o.label}</span>
               </button>
             );
           })}
@@ -661,15 +579,15 @@ function CallControlArea({
 
         {/* Callback date/time */}
         {selectedOutcome === "callback" && (
-          <div className="flex gap-2 mt-4 w-full" style={{ maxWidth: 320 }}>
+          <div className="flex flex-wrap gap-2 mt-4 w-full max-w-[320px]">
             <input
               type="date"
               value={callbackDate}
               onChange={e => setCallbackDate(e.target.value)}
-              className="font-body text-[12px] flex-1"
+              className="font-body text-[12px] flex-1 min-w-0 rounded-[8px]"
               style={{
                 background: T.bgRow, color: T.textPrimary,
-                border: `1px solid ${T.border}`, borderRadius: 8,
+                border: `1px solid ${T.border}`,
                 padding: "8px 10px", outline: "none",
                 colorScheme: "dark",
               }}
@@ -678,10 +596,10 @@ function CallControlArea({
               type="time"
               value={callbackTime}
               onChange={e => setCallbackTime(e.target.value)}
-              className="font-body text-[12px]"
+              className="font-body text-[12px] w-[110px] rounded-[8px]"
               style={{
-                width: 120, background: T.bgRow, color: T.textPrimary,
-                border: `1px solid ${T.border}`, borderRadius: 8,
+                background: T.bgRow, color: T.textPrimary,
+                border: `1px solid ${T.border}`,
                 padding: "8px 10px", outline: "none",
                 colorScheme: "dark",
               }}
@@ -694,17 +612,16 @@ function CallControlArea({
           value={callNotes}
           onChange={e => setCallNotes(e.target.value)}
           placeholder="Disposition notes..."
-          className="font-body text-[12px] mt-4"
+          className="font-body text-[12px] mt-4 w-full max-w-[320px] h-20 rounded-[8px]"
           style={{
-            width: "100%", maxWidth: 320, height: 80,
             background: T.bgRow, color: T.textPrimary,
-            border: `1px solid ${T.border}`, borderRadius: 8,
+            border: `1px solid ${T.border}`,
             padding: "10px 12px", resize: "vertical", outline: "none",
           }}
         />
 
         {/* Actions */}
-        <div className="flex gap-3 mt-4">
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-4 w-full max-w-[320px]">
           <button
             onClick={onSaveNext}
             disabled={!selectedOutcome}
@@ -751,22 +668,22 @@ function QueueBar({ currentIdx, stats }: { currentIdx: number; stats: { dialled:
 
   return (
     <div
-      className="flex items-center px-[22px]"
+      className="flex items-center gap-3 px-3 py-2 sm:px-4 lg:px-[22px] lg:py-0 lg:min-h-[48px]"
       style={{
-        height: 48, background: T.bgCard, borderTop: `1px solid ${T.border}`, flexShrink: 0,
-        display: "flex", justifyContent: "space-between",
+        background: T.bgCard, borderTop: `1px solid ${T.border}`, flexShrink: 0,
+        justifyContent: "space-between",
       }}
     >
       {/* Position */}
       <span
-        className="font-body text-[12px] font-bold px-2.5 py-1 rounded-full"
+        className="font-body text-[11px] sm:text-[12px] font-bold px-2.5 py-1 rounded-full shrink-0"
         style={{ background: T.teal, color: "#fff" }}
       >
         {currentIdx + 1} of {DIALLER_QUEUE.length}
       </span>
 
       {/* Next preview */}
-      <span className="font-body text-[12px]" style={{ color: T.textSecondary }}>
+      <span className="hidden md:block font-body text-[12px] truncate min-w-0" style={{ color: T.textSecondary }}>
         {nextLead ? (
           <>
             Next: {nextLead.sellerName} &middot; {nextLead.vehicleYear} {nextLead.vehicleMake} {nextLead.vehicleModel} &middot; Score {nextLead.scoutScore}
@@ -777,7 +694,7 @@ function QueueBar({ currentIdx, stats }: { currentIdx: number; stats: { dialled:
       </span>
 
       {/* Mini stats */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <span className="font-body text-[11px]" style={{ color: T.textMuted }}>
           {stats.dialled} dialled
         </span>
@@ -786,6 +703,40 @@ function QueueBar({ currentIdx, stats }: { currentIdx: number; stats: { dialled:
           {stats.contacted} contacted
         </span>
       </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  QUEUE EMPTY                                                        */
+/* ================================================================== */
+function QueueEmptyPanel({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 sm:p-10">
+      <div
+        className="flex items-center justify-center rounded-full"
+        style={{ width: 64, height: 64, background: T.bgCard, border: `1px solid ${T.border}` }}
+      >
+        <PhoneOff size={28} style={{ color: T.textMuted }} />
+      </div>
+      <div className="font-heading text-[18px] sm:text-[20px] font-bold" style={{ color: T.textPrimary }}>
+        Queue empty
+      </div>
+      <div className="font-body text-[13px] text-center w-full max-w-[360px]" style={{ color: T.textMuted }}>
+        No leads in the dialler queue yet. Assign leads from the CRM to start a calling session.
+      </div>
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 font-heading text-[13px] font-bold mt-2"
+        style={{
+          background: "transparent", color: T.textSecondary,
+          borderRadius: 100, padding: "12px 28px",
+          border: `1px solid ${T.border}`, cursor: "pointer",
+        }}
+      >
+        <ArrowLeft size={14} />
+        Back to CRM
+      </button>
     </div>
   );
 }
@@ -811,10 +762,10 @@ function SessionCompletePanel({
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center" style={{ flex: 1, gap: 24, padding: 40 }}>
+    <div className="flex flex-1 flex-col items-center justify-center gap-5 sm:gap-6 p-6 sm:p-10">
       <div className="flex items-center gap-2">
         <CheckCircle2 size={28} style={{ color: T.green }} />
-        <span className="font-heading text-[24px] font-bold" style={{ color: T.textPrimary }}>
+        <span className="font-heading text-[20px] sm:text-[24px] font-bold" style={{ color: T.textPrimary }}>
           Session Complete
         </span>
       </div>
@@ -823,12 +774,7 @@ function SessionCompletePanel({
       </div>
 
       {/* Stats grid */}
-      <div
-        style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 12, width: "100%", maxWidth: 560,
-        }}
-      >
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full max-w-[560px]">
         {statCards.map(s => (
           <div
             key={s.label}
@@ -838,7 +784,7 @@ function SessionCompletePanel({
               border: `1px solid ${T.border}`,
             }}
           >
-            <div className="font-heading text-[28px] font-bold" style={{ color: s.color }}>
+            <div className="font-heading text-2xl sm:text-[28px] font-bold" style={{ color: s.color }}>
               {s.value}
             </div>
             <div className="font-body text-[11px] mt-1" style={{ color: T.textMuted }}>
@@ -849,7 +795,7 @@ function SessionCompletePanel({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 mt-4">
+      <div className="flex flex-wrap items-center justify-center gap-3 mt-2 sm:mt-4">
         <button
           onClick={onBack}
           className="flex items-center gap-2 font-heading text-[13px] font-bold"
@@ -906,6 +852,7 @@ export default function CrmDiallerPage() {
 
   const ringingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentLead = DIALLER_QUEUE[currentIdx];
+  const queueEmpty = DIALLER_QUEUE.length === 0;
 
   /* ---- Session timer ---- */
   useEffect(() => {
@@ -938,6 +885,12 @@ export default function CrmDiallerPage() {
   }, []);
 
   const handleCall = useCallback(() => {
+    // Place the real call through the softphone (mounted by the CRM layout).
+    // When voice isn't configured / the rep is offline, iaDial stages the
+    // number in the softphone instead, and the session flow below still runs.
+    const dial = (window as unknown as { iaDial?: (n: string) => void }).iaDial;
+    if (dial && currentLead?.sellerPhone) dial(currentLead.sellerPhone);
+
     setPhase("ringing");
     setCallElapsed(0);
     setSessionStats(s => ({ ...s, dialled: s.dialled + 1 }));
@@ -947,7 +900,7 @@ export default function CrmDiallerPage() {
       setCallElapsed(0);
       setSessionStats(s => ({ ...s, contacted: s.contacted + 1 }));
     }, delay);
-  }, []);
+  }, [currentLead]);
 
   const handleEndCall = useCallback(() => {
     if (ringingTimeoutRef.current) clearTimeout(ringingTimeoutRef.current);
@@ -1026,17 +979,29 @@ export default function CrmDiallerPage() {
         }
       `}</style>
 
-      <div className="flex" style={{ minHeight: "100vh", background: T.bgPage }}>
+      <div className="flex flex-col lg:flex-row" style={{ minHeight: "100vh", background: T.bgPage }}>
         {/* Sidebar */}
         <IconSidebar />
 
         {/* Main content */}
         <div className="flex flex-col flex-1" style={{ minHeight: "100vh" }}>
           {/* Topbar */}
-          <DiallerTopbar />
+          <CrmTopbar
+            title="Dialler"
+            actions={
+              <button
+                onClick={() => router.push("/admin/crm")}
+                className="flex items-center gap-1.5 font-body text-[12px] font-semibold"
+                style={{ background: "transparent", border: "none", cursor: "pointer", color: T.textMuted }}
+              >
+                <ArrowLeft size={14} />
+                Back to CRM
+              </button>
+            }
+          />
 
           {/* Session header */}
-          {phase !== "session-complete" && (
+          {queueEmpty ? null : phase !== "session-complete" && (
             <SessionHeader
               sessionElapsed={sessionElapsed}
               sessionPaused={sessionPaused}
@@ -1047,7 +1012,9 @@ export default function CrmDiallerPage() {
           )}
 
           {/* Main area */}
-          {phase === "session-complete" ? (
+          {queueEmpty ? (
+            <QueueEmptyPanel onBack={() => router.push("/admin/crm")} />
+          ) : phase === "session-complete" ? (
             <SessionCompletePanel
               stats={sessionStats}
               sessionElapsed={sessionElapsed}
@@ -1056,20 +1023,21 @@ export default function CrmDiallerPage() {
             />
           ) : (
             <>
-              {/* 3-column layout */}
-              <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+              {/* Layout: stacks on mobile/tablet, full 3-column row at lg+ */}
+              <div className="flex flex-1 min-h-0 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
                 {/* Left: Lead info */}
                 <div
+                  className="w-full lg:w-[300px] lg:shrink-0 lg:overflow-y-auto border-b lg:border-b-0 lg:border-r"
                   style={{
-                    width: 320, minWidth: 320, borderRight: `1px solid ${T.border}`,
-                    background: T.bgCard, overflowY: "auto",
+                    borderColor: T.border,
+                    background: T.bgCard,
                   }}
                 >
                   {currentLead && <LeadInfoPanel lead={currentLead} phase={phase} />}
                 </div>
 
                 {/* Center: Call controls */}
-                <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+                <div className="relative min-h-[340px] flex-1 lg:overflow-hidden">
                   {currentLead && (
                     <CallControlArea
                       phase={phase}
@@ -1093,11 +1061,12 @@ export default function CrmDiallerPage() {
                   )}
                 </div>
 
-                {/* Right: Script / Notes */}
+                {/* Right: Script / Notes — drops below the call area on small/medium screens */}
                 <div
+                  className="w-full lg:w-[300px] lg:shrink-0 lg:overflow-y-auto border-t lg:border-t-0 lg:border-l"
                   style={{
-                    width: 300, minWidth: 300, borderLeft: `1px solid ${T.border}`,
-                    background: T.bgCard, overflowY: "auto",
+                    borderColor: T.border,
+                    background: T.bgCard,
                   }}
                 >
                   <ScriptPanel

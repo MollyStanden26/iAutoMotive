@@ -791,12 +791,12 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div className="flex" style={{ background: T.bgPage, height: "100vh", overflow: "hidden" }}>
+    <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden" style={{ background: T.bgPage }}>
       <IconSidebar />
-      <div className="flex-1 flex flex-col min-w-0" style={{ height: "100vh" }}>
+      <div className="flex-1 flex flex-col min-w-0 lg:h-screen">
         <Topbar />
-        {/* Inner grid: settings nav + content */}
-        <div className="flex-1 min-h-0" style={{ display: "grid", gridTemplateColumns: "200px 1fr" }}>
+        {/* Inner grid: settings nav + content — stacks on mobile */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[200px_1fr]">
           <SettingsNav active={activeSection} onNav={handleNav} />
           <div
             ref={contentRef}

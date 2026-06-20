@@ -25,7 +25,10 @@ export const RBAC_MATRIX: Record<NonNullable<AppRole>, readonly (Permission | "*
   "super-admin":  ["*"],
   "site-manager": ["command-centre", "inventory", "photo-editor", "support", "settings"],
   finance:        ["command-centre", "analytics", "deals", "payouts", "finance-reports", "settings"],
-  sales:          ["command-centre", "crm", "sellers-management", "deals", "support", "settings"],
+  // Sales reps get a focused workspace: their CRM, the Deals they're working,
+  // and Settings. Command centre / sellers-management / support are hidden
+  // until each is tailored to the sales job scope.
+  sales:          ["crm", "deals", "settings"],
   "recon-tech":   ["inventory", "photo-editor", "settings"],
   compliance:     ["command-centre", "deals", "compliance", "settings"],
   "read-only":    ["command-centre", "sellers-management", "inventory", "deals", "compliance", "settings"],

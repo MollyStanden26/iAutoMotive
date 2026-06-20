@@ -89,24 +89,7 @@ export const crmDashboardData = {
     interventionFlag: '—',
   },
 
-  scriptSections: [
-    {
-      label: 'Opening',
-      text: "Hi, is that [seller name]? Calling from iAutoMotive about your [vehicle] on AutoTrader. We're a consignment platform — we sell it at full retail and you keep the proceeds. No commission fee. Do you have 2 minutes?",
-    },
-    {
-      label: 'Value proposition',
-      text: "We're currently offering around [offer price] as a listing price — based on live AutoTrader data. There's no commission fee, so you'd receive [net estimate] in your account, without doing any viewings.",
-    },
-    {
-      label: 'Objection — "I\'d rather sell privately"',
-      text: "Totally understand. We handle everything — collection, prep, every buyer enquiry. Most sellers get paid within 5–6 weeks with zero involvement after drop-off.",
-    },
-    {
-      label: 'Close',
-      text: "If that sounds good, I can get a formal offer over to you today — just need 5 minutes to confirm the details. Would [time] work for a quick callback?",
-    },
-  ] as ScriptSection[],
+  scriptSections: [] as ScriptSection[],
 
   avgCallDuration: '—',
   aiOutreachToday: 0,
