@@ -4,11 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
 import { AddStaffDrawer, type StaffEdit } from "@/components/admin/add-staff-drawer";
-import {
-  STAFF_KPIS, ROLE_COUNTS, LEADERBOARD, LIVE_NOW,
-  COACHING_FLAGS, ACCESS_ROWS, staffPeriodLabel,
-} from "@/lib/admin/staff-mock-data";
-import type { PeriodType, RoleType, Permission } from "@/lib/admin/staff-mock-data";
 
 /* ================================================================== */
 /*  DESIGN TOKENS                                                      */
@@ -22,57 +17,64 @@ const T = {
   amber: "#FCD34D", amberBg: "#2B1A00",
   red: "#F87171", redBg: "#2B0F0F",
   indigo: "#0A1A2E", indigoBorder: "#1E3A5F",
-  underBg: "#0F0C00", underBorder: "#1A1200", underHover: "#1A1000",
 };
+
+const ROLE_LABEL: Record<string, string> = {
+  "super-admin": "Super admin", "site-manager": "Site manager", finance: "Finance",
+  sales: "Sales", "recon-tech": "Recon tech", compliance: "Compliance", "read-only": "Read only",
+};
+
+interface StaffRow {
+  id: string; name: string; firstName: string; lastName: string; email: string; role: string;
+  lot: string | null; lotId: string | null; isActive: boolean; isRemote: boolean;
+  lastLoginAt: string | null; hireDate: string | null;
+  dailyCallTarget: number | null; weeklyConversionTarget: number | null;
+}
+
+function relTime(iso: string | null): string {
+  if (!iso) return "Never";
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
 
 /* ================================================================== */
 /*  TOPBAR                                                             */
 /* ================================================================== */
-function Topbar({ period, setPeriod, onAddStaff }: { period: PeriodType; setPeriod: (p: PeriodType) => void; onAddStaff: () => void }) {
+function Topbar({ onAddStaff }: { onAddStaff: () => void }) {
   const router = useRouter();
-  const periods: { label: string; value: PeriodType }[] = [
-    { label: "Today", value: "today" }, { label: "Last 7d", value: "last7d" },
-    { label: "MTD", value: "mtd" }, { label: "QTD", value: "qtd" },
-  ];
   return (
     <div className="flex items-center justify-between px-5 flex-shrink-0" style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}` }}>
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="cursor-pointer" style={{ fontFamily: "var(--font-body)", fontSize: 13, color: T.textDim }} onClick={() => router.push("/admin")}>Admin</span>
-          <span style={{ color: T.textDim, fontSize: 13 }}>/</span>
-          <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 17, color: T.textPrimary }}>Staff</span>
-        </div>
-        <div className="flex items-center gap-1 ml-2">
-          {periods.map(p => (
-            <button key={p.value} onClick={() => setPeriod(p.value)} className="rounded-[6px] px-[10px] py-[4px] transition-colors" style={{
-              background: period === p.value ? "#0A1A2E" : "#111D30",
-              border: `1px solid ${period === p.value ? "#172D4D" : T.border}`,
-              color: period === p.value ? T.teal200 : T.textMuted,
-              fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11,
-            }}>{p.label}</button>
-          ))}
-        </div>
-      </div>
       <div className="flex items-center gap-2">
-        <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("export roster")}>Export roster</button>
-        <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("audit log")}>Audit log</button>
-        <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: "1px solid #1E3A34", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={onAddStaff}>+ Add staff</button>
+        <span className="cursor-pointer" style={{ fontFamily: "var(--font-body)", fontSize: 13, color: T.textDim }} onClick={() => router.push("/admin")}>Admin</span>
+        <span style={{ color: T.textDim, fontSize: 13 }}>/</span>
+        <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 17, color: T.textPrimary }}>Staff</span>
       </div>
+      <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: "1px solid #1E3A34", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={onAddStaff}>+ Add staff</button>
     </div>
   );
 }
 
 /* ================================================================== */
-/*  KPI STRIP                                                          */
+/*  KPI STRIP — real counts from the live staff list                  */
 /* ================================================================== */
-function KpiStrip() {
-  const K = STAFF_KPIS;
+function StaffKpiStrip({ staff, lotCount }: { staff: StaffRow[]; lotCount: number }) {
+  const total = staff.length;
+  const active = staff.filter(s => s.isActive).length;
+  const inactive = total - active;
+  const sales = staff.filter(s => s.role === "sales").length;
+  const remote = staff.filter(s => s.isRemote).length;
   const cards = [
-    { label: "TOTAL STAFF", value: K.totalStaff.toString(), valueColor: T.textPrimary, delta: "Across 3 lots", deltaColor: T.textMuted },
-    { label: "ACTIVE NOW", value: K.activeNow.toString(), valueColor: T.teal200, delta: `${K.activePct}% of team online`, deltaColor: T.green },
-    { label: "ON TARGET", value: K.onTarget.toString(), valueColor: T.green, delta: `${K.onTargetPct}% this week`, deltaColor: T.green },
-    { label: "UNDERPERFORMING", value: K.underperforming.toString(), valueColor: T.red, delta: "Action needed", deltaColor: T.red },
-    { label: "AVG SLA COMPLIANCE", value: `${K.avgSlaCompliance}%`, valueColor: T.green, delta: "Last 7 days", deltaColor: T.textMuted },
+    { label: "TOTAL STAFF", value: total.toString(), valueColor: T.textPrimary, delta: `Across ${lotCount} lot${lotCount === 1 ? "" : "s"}`, deltaColor: T.textMuted },
+    { label: "ACTIVE", value: active.toString(), valueColor: T.teal200, delta: inactive > 0 ? `${inactive} inactive` : "All active", deltaColor: inactive > 0 ? T.amber : T.green },
+    { label: "SALES REPS", value: sales.toString(), valueColor: T.green, delta: `of ${total} staff`, deltaColor: T.textMuted },
+    { label: "REMOTE", value: remote.toString(), valueColor: T.textPrimary, delta: `${total - remote} on-site`, deltaColor: T.textMuted },
+    { label: "LOTS", value: lotCount.toString(), valueColor: T.textPrimary, delta: "Operating", deltaColor: T.textMuted },
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
@@ -88,137 +90,41 @@ function KpiStrip() {
 }
 
 /* ================================================================== */
-/*  HELPERS                                                            */
+/*  ROLE BREAKDOWN — real counts by role                              */
 /* ================================================================== */
-function roleBadge(role: RoleType) {
-  const map: Record<RoleType, { bg: string; color: string }> = {
-    "Sales":       { bg: "#0A1D1A", color: T.teal200 },
-    "Lot Manager": { bg: T.indigo,  color: T.textMuted },
-    "Finance":     { bg: "#1A0520", color: "#C080F0" },
-    "Recon Tech":  { bg: T.amberBg, color: T.amber },
-    "Super Admin": { bg: "#0A2A26", color: T.teal200 },
-    "Read Only":   { bg: T.bgRow,   color: T.textMuted },
-  };
-  const s = map[role];
-  const label = role === "Lot Manager" ? "Lot Mgr" : role;
-  return <span className="inline-flex items-center rounded-full px-[7px] py-[2px]" style={{ background: s.bg, color: s.color, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9 }}>{label}</span>;
-}
-
-function metricColor(value: number | null, type: "deals" | "resp" | "sla" | "score"): string {
-  if (value === null) return T.textMuted;
-  if (type === "deals") { if (value >= 6) return T.green; if (value >= 4) return T.teal200; if (value <= 3) return T.red; return T.textMuted; }
-  if (type === "resp") { if (value >= 85) return T.green; if (value >= 75) return T.teal200; if (value < 65) return T.red; return T.textMuted; }
-  if (type === "sla") { if (value >= 88) return T.green; if (value >= 80) return T.teal200; if (value >= 70) return T.amber; if (value < 70) return T.red; return T.textMuted; }
-  if (type === "score") { if (value >= 80) return T.green; if (value >= 65) return T.teal200; if (value >= 60) return T.amber; return T.red; }
-  return T.textMuted;
-}
-
-function permColor(perm: Permission): string {
-  if (perm === "Full") return T.green;
-  if (perm === "Read/write" || perm === "Stage only") return T.teal200;
-  if (perm === "View") return T.textMuted;
-  return T.textDim;
-}
-
-/* ================================================================== */
-/*  LEADERBOARD                                                        */
-/* ================================================================== */
-function StaffLeaderboard({ period }: { period: PeriodType }) {
-  // TODO: wire to period-specific API endpoint when backend is ready
-  const router = useRouter();
+function RoleBreakdown({ staff }: { staff: StaffRow[] }) {
+  const counts = new Map<string, number>();
+  staff.forEach(s => counts.set(s.role, (counts.get(s.role) ?? 0) + 1));
+  const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const total = staff.length || 1;
   return (
     <div className="rounded-[10px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
       <div className="flex items-center px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Performance leaderboard — {staffPeriodLabel(period)}</span>
-        <span className="ml-auto rounded-full px-[7px] py-[2px]" style={{ background: T.redBg, color: T.red, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>4 under target</span>
+        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Role breakdown</span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full" style={{ minWidth: 560, tableLayout: "fixed" }}>
-          <colgroup>
-            <col style={{ width: 28 }} /><col style={{ width: 140 }} /><col style={{ width: 80 }} />
-            <col style={{ width: 54 }} /><col style={{ width: 60 }} /><col style={{ width: 68 }} />
-            <col style={{ width: 64 }} /><col style={{ width: 60 }} />
-          </colgroup>
-          <thead>
-            <tr>
-              {["#", "Name", "Role", "Deals", "Resp %", "Avg GPU", "SLA", "Score"].map(h => (
-                <th key={h} className="px-[8px] py-[6px] text-left" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgSidebar, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {LEADERBOARD.map((e, idx) => {
-              const isU = e.isUnderperformer;
-              const rowBg = isU ? T.underBg : "transparent";
-              const rowBorder = isU ? T.underBorder : (idx < LEADERBOARD.length - 1 ? T.border2 : "transparent");
-              return (
-                <tr key={e.id} className="cursor-pointer transition-colors duration-150"
-                  onMouseEnter={ev => ev.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = isU ? T.underHover : T.bgHover))}
-                  onMouseLeave={ev => ev.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = rowBg))}
-                  onClick={() => router.push(`/admin/staff/${e.id}`)}
-                >
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-heading)", fontWeight: isU ? 800 : 600, fontSize: 11, color: isU ? T.amber : T.textDim }}>{e.rank}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontWeight: isU ? 700 : 600, fontSize: 11, color: isU ? T.amber : T.textPrimary }}>{e.name}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}` }}>{roleBadge(e.role)}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: e.deals === null ? T.textMuted : metricColor(e.deals, "deals") }}>{e.deals === null ? "—" : e.deals}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: metricColor(e.responseRate, "resp") }}>{e.responseRate !== null ? `${e.responseRate}%` : "—"}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: e.avgGpu === null ? T.textMuted : metricColor(e.score, "score") }}>{e.avgGpu === null ? "—" : `£${e.avgGpu.toLocaleString()}`}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: metricColor(e.slaCompliance, "sla") }}>{e.slaCompliance}%</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: isU ? 13 : 11, color: metricColor(e.score, "score") }}>{e.score}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <div className="px-[14px] py-[7px]" style={{ borderTop: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textDim }}>Showing 9 of 24 staff · sorted by performance score · rows with amber names are below weekly target threshold</span>
+      <div style={{ padding: "4px 0" }}>
+        {rows.length === 0 && <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No staff yet.</div>}
+        {rows.map(([role, count], idx) => (
+          <div key={role} className="flex items-center gap-[8px] px-[14px] py-[6px]" style={{ borderBottom: idx < rows.length - 1 ? "1px solid #0C1428" : "none" }}>
+            <span className="rounded-full text-center flex-shrink-0" style={{ width: 96, padding: "2px 7px", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9, background: T.bgRow, color: T.teal200 }}>{ROLE_LABEL[role] ?? role}</span>
+            <div className="flex-1 h-[4px] rounded-full overflow-hidden" style={{ background: T.bgRow }}>
+              <div className="h-full rounded-full" style={{ width: `${(count / total) * 100}%`, background: T.teal }} />
+            </div>
+            <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 12, color: T.textPrimary, minWidth: 20, textAlign: "right" }}>{count}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 /* ================================================================== */
-/*  STAFF ROSTER                                                       */
+/*  STAFF ROSTER — real staff + management actions                    */
 /* ================================================================== */
-interface StaffRow {
-  id: string; name: string; firstName: string; lastName: string; email: string; role: string;
-  lot: string | null; lotId: string | null; isActive: boolean; isRemote: boolean;
-  lastLoginAt: string | null; hireDate: string | null;
-  dailyCallTarget: number | null; weeklyConversionTarget: number | null;
-}
-
-const ROLE_LABEL: Record<string, string> = {
-  "super-admin": "Super admin", "site-manager": "Site mgr", finance: "Finance",
-  sales: "Sales", "recon-tech": "Recon", compliance: "Compliance", "read-only": "Read only",
-};
-
-function relTime(iso: string | null): string {
-  if (!iso) return "Never";
-  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return "Just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function StaffRoster({ refreshKey, onEdit, onChanged }: { refreshKey: number; onEdit: (s: StaffEdit) => void; onChanged: () => void }) {
-  const [staff, setStaff] = useState<StaffRow[]>([]);
+function StaffRoster({ staff, onEdit, onChanged }: { staff: StaffRow[]; onEdit: (s: StaffEdit) => void; onChanged: () => void }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [reset, setReset] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/admin/staff", { cache: "no-store" })
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then(d => { if (!cancelled) setStaff(d.staff ?? []); })
-      .catch(e => { if (!cancelled) console.error("[StaffRoster] fetch failed:", e); });
-    return () => { cancelled = true; };
-  }, [refreshKey]);
 
   const resetPw = async (s: StaffRow) => {
     setBusyId(s.id);
@@ -321,198 +227,48 @@ function StaffRoster({ refreshKey, onEdit, onChanged }: { refreshKey: number; on
 }
 
 /* ================================================================== */
-/*  LIVE NOW PANEL                                                     */
-/* ================================================================== */
-function LiveNowPanel() {
-  const avatarBg: Record<string, string> = { Sales: "#0A2A26", "Lot Manager": T.indigo, Finance: "#1A0520" };
-  const avatarColor: Record<string, string> = { Sales: T.teal200, "Lot Manager": T.textMuted, Finance: "#C080F0" };
-  const dotColor: Record<string, string> = { active: T.green, "on-call": T.green, idle: T.amber };
-  const statusLabel: Record<string, { text: string; color: string }> = { active: { text: "Active", color: T.green }, "on-call": { text: "On call", color: T.teal200 }, idle: { text: "Idle", color: T.amber } };
-
-  return (
-    <div className="rounded-[10px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Live now</span>
-        <span className="ml-2 rounded-full px-[7px] py-[2px]" style={{ background: T.greenBg, color: T.green, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>11 online</span>
-      </div>
-      <div>
-        {LIVE_NOW.map((entry, idx) => {
-          const isU = entry.isUnderperformer;
-          const abg = isU ? "#1A0A00" : (avatarBg[entry.role] || T.bgRow);
-          const acol = isU ? T.amber : (avatarColor[entry.role] || T.textMuted);
-          const st = statusLabel[entry.liveStatus];
-          return (
-            <div key={entry.staffId} className="flex items-center gap-[8px] px-[14px] py-[8px]" style={{ borderBottom: idx < LIVE_NOW.length - 1 ? "1px solid #0C1428" : "none" }}>
-              <div className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: dotColor[entry.liveStatus] }} />
-              <div className="flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: abg, color: acol, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9 }}>{entry.initials}</div>
-              <div className="flex-1 min-w-0">
-                <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: isU ? T.amber : T.textPrimary }}>{entry.name}</div>
-                <div style={{ fontFamily: "var(--font-body)", fontSize: 10, color: isU ? "#3A2500" : T.textMuted, marginTop: 1 }}>{entry.role} · {entry.lot}{entry.activity ? ` — ${entry.activity}` : ""}</div>
-              </div>
-              <span style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 10, color: st.color }}>{st.text}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="px-[14px] py-[8px]" style={{ borderTop: "1px solid #0C1428" }}>
-        <span style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textDim }}>+6 more online · 13 offline</span>
-      </div>
-    </div>
-  );
-}
-
-/* ================================================================== */
-/*  COACHING FLAGS PANEL                                               */
-/* ================================================================== */
-function CoachingFlagsPanel() {
-  const router = useRouter();
-  return (
-    <div className="rounded-[10px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Coaching flags</span>
-        <span className="ml-2 rounded-full px-[7px] py-[2px]" style={{ background: T.amberBg, color: T.amber, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>4 flagged</span>
-      </div>
-      <div>
-        {COACHING_FLAGS.map((flag, idx) => (
-          <div key={flag.staffId} className="flex items-start gap-[8px] px-[14px] py-[8px]" style={{ borderBottom: idx < COACHING_FLAGS.length - 1 ? "1px solid #0C1428" : "none" }}>
-            <div className="flex items-center justify-center flex-shrink-0 rounded-[5px]" style={{ width: 24, height: 24, background: flag.severity === "critical" ? T.redBg : T.amberBg, color: flag.severity === "critical" ? T.red : T.amber, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11 }}>{flag.severity === "critical" ? "!" : "i"}</div>
-            <div className="flex-1 min-w-0">
-              <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: flag.severity === "critical" ? T.amber : T.textSecondary }}>{flag.name}</div>
-              <div style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textMuted, marginTop: 2, lineHeight: 1.4 }}>{flag.flagText}</div>
-              <div className="cursor-pointer" style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 10, color: T.teal200, marginTop: 3 }} onClick={() => router.push(flag.actionTarget)}>{flag.actionLabel} →</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ================================================================== */
-/*  ROLE BREAKDOWN PANEL                                               */
-/* ================================================================== */
-function RoleBreakdownPanel() {
-  return (
-    <div className="rounded-[10px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Role breakdown</span>
-      </div>
-      <div>
-        {ROLE_COUNTS.map((r, idx) => (
-          <div key={r.role} className="flex items-center gap-[8px] px-[14px] py-[6px]" style={{ borderBottom: idx < ROLE_COUNTS.length - 1 ? "1px solid #0C1428" : "none" }}>
-            <span className="rounded-full text-center flex-shrink-0" style={{ width: 110, padding: "2px 7px", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9, ...roleBadgeStyle(r.role) }}>{r.role}</span>
-            <div className="flex-1 h-[4px] rounded-full overflow-hidden" style={{ background: T.bgRow }}>
-              <div className="h-full rounded-full" style={{ width: `${r.barPct}%`, background: r.barColor }} />
-            </div>
-            <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 12, color: r.textColor, minWidth: 20, textAlign: "right" }}>{r.count}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function roleBadgeStyle(role: RoleType): { background: string; color: string } {
-  const map: Record<RoleType, { background: string; color: string }> = {
-    "Sales":       { background: "#0A1D1A", color: T.teal200 },
-    "Lot Manager": { background: T.indigo,  color: T.textMuted },
-    "Finance":     { background: "#1A0520", color: "#C080F0" },
-    "Recon Tech":  { background: T.amberBg, color: T.amber },
-    "Super Admin": { background: "#0A2A26", color: T.teal200 },
-    "Read Only":   { background: T.bgRow,   color: T.textMuted },
-  };
-  return map[role];
-}
-
-/* ================================================================== */
-/*  ACCESS MANAGEMENT PANEL                                            */
-/* ================================================================== */
-function AccessManagementPanel() {
-  return (
-    <div className="rounded-[10px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
-      <div className="flex items-center px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Role & access management</span>
-        <span className="ml-auto mr-2" style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textMuted }}>24 staff · 3 lots · 5 role types</span>
-        <button className="rounded-[7px] px-[10px] py-[3px]" style={{ background: "#0A2A26", color: T.teal200, border: "1px solid #1E3A34", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }} onClick={() => console.log("invite staff")}>+ Invite staff</button>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full" style={{ minWidth: 700, tableLayout: "fixed" }}>
-          <colgroup>
-            <col style={{ width: 130 }} /><col style={{ width: 90 }} /><col style={{ width: 140 }} />
-            <col style={{ width: 80 }} /><col style={{ width: 70 }} /><col style={{ width: 70 }} />
-            <col style={{ width: 70 }} /><col style={{ width: 70 }} /><col style={{ width: 80 }} />
-          </colgroup>
-          <thead>
-            <tr>
-              {["Name", "Role", "Lot access", "Inventory", "Deals", "Finance", "Payouts", "Admin", "Actions"].map(h => (
-                <th key={h} className="px-[8px] py-[6px] text-left" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgSidebar, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {ACCESS_ROWS.map((row, idx) => (
-              <tr key={row.staffId}
-                onMouseEnter={e => e.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = T.bgHover))}
-                onMouseLeave={e => e.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = "transparent"))}
-              >
-                <td className="px-[8px] py-[6px] align-middle" style={{ borderBottom: idx < ACCESS_ROWS.length - 1 ? `1px solid ${T.border2}` : "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: T.textPrimary }}>{row.name}</td>
-                <td className="px-[8px] py-[6px] align-middle" style={{ borderBottom: idx < ACCESS_ROWS.length - 1 ? `1px solid ${T.border2}` : "none" }}>{roleBadge(row.role)}</td>
-                <td className="px-[8px] py-[6px] align-middle" style={{ borderBottom: idx < ACCESS_ROWS.length - 1 ? `1px solid ${T.border2}` : "none", fontFamily: "var(--font-body)", fontSize: 11, color: T.textMuted }}>{row.lots}</td>
-                {(["inventory", "deals", "finance", "payouts", "admin"] as const).map(key => (
-                  <td key={key} className="px-[8px] py-[6px] align-middle text-center" style={{ borderBottom: idx < ACCESS_ROWS.length - 1 ? `1px solid ${T.border2}` : "none", fontFamily: "var(--font-body)", fontWeight: row[key] === "Full" || row[key] === "Read/write" ? 700 : 400, fontSize: 11, color: permColor(row[key]) }}>{row[key]}</td>
-                ))}
-                <td className="px-[8px] py-[6px] align-middle" style={{ borderBottom: idx < ACCESS_ROWS.length - 1 ? `1px solid ${T.border2}` : "none" }}>
-                  <button className="rounded-[6px] px-[9px] py-[3px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textMuted }} onClick={() => console.log("edit staff access", row.staffId)}>Edit</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="px-[14px] py-[7px]" style={{ borderTop: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textDim }}>Showing 5 of 24 · Permissions are role-based · Click Edit to modify individual access or lot assignment</span>
-      </div>
-    </div>
-  );
-}
-
-/* ================================================================== */
 /*  PAGE                                                               */
 /* ================================================================== */
 export default function StaffPage() {
-  const [period, setPeriod] = useState<PeriodType>("last7d");
+  const [staff, setStaff] = useState<StaffRow[]>([]);
+  const [lotCount, setLotCount] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [addStaffOpen, setAddStaffOpen] = useState(false);
   const [editStaff, setEditStaff] = useState<StaffEdit | null>(null);
-  const [staffRefreshKey, setStaffRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/staff", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(d => { if (!cancelled) setStaff(d.staff ?? []); })
+      .catch(e => { if (!cancelled) console.error("[StaffPage] staff fetch failed:", e); });
+    fetch("/api/admin/lots", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : { lots: [] }))
+      .then(d => { if (!cancelled) setLotCount((d.lots ?? []).length); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [refreshKey]);
+
+  const refresh = () => setRefreshKey(k => k + 1);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <Topbar period={period} setPeriod={setPeriod} onAddStaff={() => setAddStaffOpen(true)} />
+        <Topbar onAddStaff={() => setAddStaffOpen(true)} />
         <div className="flex-1 flex flex-col gap-[10px] overflow-x-hidden" style={{ padding: "14px 20px" }}>
-          <KpiStrip />
-          {/* Main grid: left (leaderboard + roster) + right (live + coaching + roles) */}
+          <StaffKpiStrip staff={staff} lotCount={lotCount} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 10 }}>
-            <div className="flex flex-col gap-[10px]">
-              <StaffLeaderboard period={period} />
-              <StaffRoster refreshKey={staffRefreshKey} onEdit={s => setEditStaff(s)} onChanged={() => setStaffRefreshKey(k => k + 1)} />
-            </div>
-            <div className="flex flex-col gap-[10px]">
-              <LiveNowPanel />
-              <CoachingFlagsPanel />
-              <RoleBreakdownPanel />
-            </div>
+            <StaffRoster staff={staff} onEdit={s => setEditStaff(s)} onChanged={refresh} />
+            <RoleBreakdown staff={staff} />
           </div>
-          {/* Bottom: access management */}
-          <AccessManagementPanel />
         </div>
       </div>
       <AddStaffDrawer
         open={addStaffOpen || !!editStaff}
         staff={editStaff}
         onClose={() => { setAddStaffOpen(false); setEditStaff(null); }}
-        onCreated={() => setStaffRefreshKey(k => k + 1)}
+        onCreated={refresh}
       />
     </div>
   );
