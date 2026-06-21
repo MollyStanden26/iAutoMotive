@@ -95,10 +95,11 @@ function shortDate(iso: string): string {
   return `${d.getDate()} ${months[d.getMonth()]} · ${time}`;
 }
 
-export function LeadDetailDrawer({ lead, onClose, onUpdated }: {
+export function LeadDetailDrawer({ lead, onClose, onUpdated, onActivityLogged }: {
   lead: LeadDetail | null;
   onClose: () => void;
   onUpdated: (updated: LeadDetail) => void;
+  onActivityLogged?: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -167,6 +168,7 @@ export function LeadDetailDrawer({ lead, onClose, onUpdated }: {
       if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error || `Failed (${res.status})`); }
       setLogForm(EMPTY_LOG); setLogOpen(false);
       await reloadTimeline();
+      onActivityLogged?.();
     } catch (e) { setError(e instanceof Error ? e.message : "Log failed"); }
     finally { setLogging(false); }
   };

@@ -305,6 +305,7 @@ export function LeadPipeline({ refreshKey, onLeadsChanged }: { refreshKey: numbe
       lead={detailLead}
       onClose={() => setDetailLead(null)}
       onUpdated={handleLeadUpdated}
+      onActivityLogged={() => onLeadsChanged?.()}
     />
     </>
   );
