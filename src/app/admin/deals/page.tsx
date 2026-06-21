@@ -9,6 +9,7 @@ import {
 import { IconSidebar } from "@/components/admin/icon-sidebar";
 import { AddDealDrawer } from "@/components/admin/add-deal-drawer";
 import { DealDetailDrawer } from "@/components/crm/deal-detail-drawer";
+import { useCurrentUser } from "@/lib/auth/use-current-user";
 import {
   DEALS_KPIS, PIPELINE_STAGES,
   AT_RISK_DEALS, FUNDING_ROWS, DOC_STATUS_ROWS, COMPLIANCE_ROWS,
@@ -35,6 +36,10 @@ const T = {
 /* ================================================================== */
 function Topbar({ selectedCount, onNewDeal }: { selectedCount: number; onNewDeal: () => void }) {
   const router = useRouter();
+  const { user } = useCurrentUser();
+  // Sales reps don't export/report on the desk or hand-create deals — deals are
+  // created automatically when their leads are collected.
+  const isSales = user?.role === "sales";
   return (
     <div className="flex items-center justify-between px-5 flex-shrink-0" style={{ height: 58, background: T.bgSidebar, borderBottom: `1px solid ${T.border}` }}>
       <div className="flex items-center gap-2">
@@ -42,11 +47,13 @@ function Topbar({ selectedCount, onNewDeal }: { selectedCount: number; onNewDeal
         <span style={{ color: T.textDim, fontSize: 13 }}>/</span>
         <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 17, color: T.textPrimary }}>Deals</span>
       </div>
-      <div className="flex items-center gap-2">
-        <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("export deals CSV", selectedCount > 0 ? selectedCount : "all")}>Export CSV</button>
-        <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => router.push("/admin/analytics?tab=revenue")}>Revenue report</button>
-        <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: `1px solid ${T.indigo}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={onNewDeal}>+ New deal</button>
-      </div>
+      {!isSales && (
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("export deals CSV", selectedCount > 0 ? selectedCount : "all")}>Export CSV</button>
+          <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => router.push("/admin/analytics?tab=revenue")}>Revenue report</button>
+          <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: `1px solid ${T.indigo}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={onNewDeal}>+ New deal</button>
+        </div>
+      )}
     </div>
   );
 }
