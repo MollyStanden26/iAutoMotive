@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { AddStaffDrawer } from "@/components/admin/add-staff-drawer";
 import {
   STAFF_KPIS, ROLE_COUNTS, LEADERBOARD, LIVE_NOW,
   COACHING_FLAGS, ACCESS_ROWS, staffPeriodLabel,
@@ -27,7 +28,7 @@ const T = {
 /* ================================================================== */
 /*  TOPBAR                                                             */
 /* ================================================================== */
-function Topbar({ period, setPeriod }: { period: PeriodType; setPeriod: (p: PeriodType) => void }) {
+function Topbar({ period, setPeriod, onAddStaff }: { period: PeriodType; setPeriod: (p: PeriodType) => void; onAddStaff: () => void }) {
   const router = useRouter();
   const periods: { label: string; value: PeriodType }[] = [
     { label: "Today", value: "today" }, { label: "Last 7d", value: "last7d" },
@@ -55,7 +56,7 @@ function Topbar({ period, setPeriod }: { period: PeriodType; setPeriod: (p: Peri
       <div className="flex items-center gap-2">
         <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("export roster")}>Export roster</button>
         <button className="px-3 py-[6px] rounded-[8px] hover:opacity-80" style={{ background: T.bgRow, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary }} onClick={() => console.log("audit log")}>Audit log</button>
-        <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: "1px solid #1E3A34", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={() => console.log("add staff")}>+ Add staff</button>
+        <button className="px-[14px] py-[6px] rounded-[8px] hover:opacity-80" style={{ background: "#0A2A26", color: T.teal200, border: "1px solid #1E3A34", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12 }} onClick={onAddStaff}>+ Add staff</button>
       </div>
     </div>
   );
@@ -406,12 +407,13 @@ function AccessManagementPanel() {
 /* ================================================================== */
 export default function StaffPage() {
   const [period, setPeriod] = useState<PeriodType>("last7d");
+  const [addStaffOpen, setAddStaffOpen] = useState(false);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <Topbar period={period} setPeriod={setPeriod} />
+        <Topbar period={period} setPeriod={setPeriod} onAddStaff={() => setAddStaffOpen(true)} />
         <div className="flex-1 flex flex-col gap-[10px] overflow-x-hidden" style={{ padding: "14px 20px" }}>
           <KpiStrip />
           {/* Main grid: left (leaderboard + roster) + right (live + coaching + roles) */}
@@ -430,6 +432,7 @@ export default function StaffPage() {
           <AccessManagementPanel />
         </div>
       </div>
+      <AddStaffDrawer open={addStaffOpen} onClose={() => setAddStaffOpen(false)} />
     </div>
   );
 }
