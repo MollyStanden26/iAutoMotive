@@ -15,11 +15,6 @@ import { scriptSections } from "@/lib/admin/dialler-mock-data";
 import type { DiallerLead } from "@/lib/admin/dialler-mock-data";
 
 /* ── Pipeline → dialler queue mapping ── */
-// Order leads so the freshest/actionable ones are dialled first; "collected"
-// (closed) leads are excluded from the calling queue.
-const STAGE_ORDER: Record<string, number> = {
-  new_lead: 0, call_back: 1, contacted: 2, contract_sent: 3, handover_scheduled: 4, collected: 5,
-};
 const STAGE_OUTCOME_LABEL: Record<string, string> = {
   new_lead: "New", call_back: "Callback", contacted: "Contacted",
   contract_sent: "Contract sent", handover_scheduled: "Handover", collected: "Collected",
@@ -866,6 +861,9 @@ export default function CrmDiallerPage() {
 
   /* ---- State ---- */
   const [queue, setQueue] = useState<DiallerLead[]>([]);
+  const [queueType, setQueueType] = useState<"new" | "callbacks">("new");
+  const [newLeads, setNewLeads] = useState<DiallerLead[]>([]);
+  const [callbackLeads, setCallbackLeads] = useState<DiallerLead[]>([]);
   const [phase, setPhase] = useState<CallPhase>("pre-call");
   const [currentIdx, setCurrentIdx] = useState(0);
   const [sessionPaused, setSessionPaused] = useState(false);
@@ -888,18 +886,23 @@ export default function CrmDiallerPage() {
   const currentLead = queue[currentIdx];
   const queueEmpty = queue.length === 0;
 
-  /* ---- Load the rep's leads into the calling queue ---- */
+  /* ---- Load the rep's two queues: new leads + callbacks ---- */
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/leads", { cache: "no-store" })
-      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then((data: { leads?: ApiLeadRow[] }) => {
+    const initialType: "new" | "callbacks" =
+      new URLSearchParams(window.location.search).get("queue") === "callbacks" ? "callbacks" : "new";
+    Promise.all([
+      fetch("/api/admin/leads", { cache: "no-store" }).then(r => (r.ok ? r.json() : { leads: [] })),
+      fetch("/api/admin/crm/callbacks", { cache: "no-store" }).then(r => (r.ok ? r.json() : { callbacks: [] })),
+    ])
+      .then(([leadsData, cbData]: [{ leads?: ApiLeadRow[] }, { callbacks?: ApiLeadRow[] }]) => {
         if (cancelled) return;
-        const mapped = (data.leads ?? [])
-          .filter(l => l.pipelineStage !== "collected") // closed deals aren't dialled
-          .sort((a, b) => (STAGE_ORDER[a.pipelineStage] ?? 9) - (STAGE_ORDER[b.pipelineStage] ?? 9))
-          .map(toDiallerLead);
-        setQueue(mapped);
+        const newQ = (leadsData.leads ?? []).filter(l => l.pipelineStage === "new_lead").map(toDiallerLead);
+        const cbQ = (cbData.callbacks ?? []).map(toDiallerLead);
+        setNewLeads(newQ);
+        setCallbackLeads(cbQ);
+        setQueueType(initialType);
+        setQueue(initialType === "callbacks" ? cbQ : newQ);
       })
       .catch(err => { if (!cancelled) console.error("[Dialler] queue fetch failed:", err); });
     return () => { cancelled = true; };
@@ -934,6 +937,18 @@ export default function CrmDiallerPage() {
     setRightTab("script");
     if (ringingTimeoutRef.current) clearTimeout(ringingTimeoutRef.current);
   }, []);
+
+  /* ---- Switch between the New-leads and Callbacks queues ---- */
+  const switchQueue = useCallback((t: "new" | "callbacks") => {
+    setQueueType(prev => {
+      if (prev === t) return prev;
+      setQueue(t === "callbacks" ? callbackLeads : newLeads);
+      setCurrentIdx(0);
+      setPhase("pre-call");
+      resetCallState();
+      return t;
+    });
+  }, [callbackLeads, newLeads, resetCallState]);
 
   const handleCall = useCallback(() => {
     // Place the real call through the softphone (mounted by the CRM layout).
@@ -1050,6 +1065,38 @@ export default function CrmDiallerPage() {
               </button>
             }
           />
+
+          {/* Queue switcher: New leads vs Callbacks */}
+          <div
+            className="flex items-center gap-2 px-3 sm:px-4 lg:px-[22px] py-2"
+            style={{ background: T.bgCard, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}
+          >
+            <span className="font-body text-[10px] uppercase tracking-wider font-bold" style={{ color: T.textDim }}>Queue</span>
+            {([
+              { key: "new" as const, label: "New leads", count: newLeads.length },
+              { key: "callbacks" as const, label: "Callbacks", count: callbackLeads.length },
+            ]).map(q => {
+              const active = queueType === q.key;
+              return (
+                <button
+                  key={q.key}
+                  onClick={() => switchQueue(q.key)}
+                  className="flex items-center gap-1.5 font-body text-[12px] font-bold rounded-full px-3 py-1 transition-colors"
+                  style={{
+                    background: active ? "#0A2A26" : T.bgRow,
+                    color: active ? T.teal200 : T.textSecondary,
+                    border: `1px solid ${active ? T.teal : T.border}`,
+                    cursor: "pointer",
+                  }}
+                >
+                  {q.label}
+                  <span className="rounded-full px-1.5" style={{ background: active ? T.teal : T.border, color: active ? "#04130F" : T.textMuted, fontSize: 10 }}>
+                    {q.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
           {/* Session header */}
           {queueEmpty ? null : phase !== "session-complete" && (

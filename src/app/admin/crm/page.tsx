@@ -9,6 +9,7 @@ import { CrmTopbar } from "@/components/admin/crm-topbar";
 import { AddLeadDrawer } from "@/components/admin/add-lead-drawer";
 import { ScraperDrawer } from "@/components/admin/scraper-drawer";
 import { LeadPipeline } from "@/components/crm/lead-pipeline";
+import { CallbacksDrawer } from "@/components/crm/callbacks-drawer";
 import { useCurrentUser } from "@/lib/auth/use-current-user";
 
 /* ================================================================== */
@@ -61,7 +62,7 @@ interface CrmStats {
   dialsToday: number; contacted: number; offersSent: number; signedToday: number; callbacksOverdue: number;
 }
 
-function CrmKpiRow({ stats }: { stats: CrmStats | null }) {
+function CrmKpiRow({ stats, onCallbacksClick }: { stats: CrmStats | null; onCallbacksClick?: () => void }) {
   const n = (v: number | undefined) => v ?? 0;
   const kpis = [
     { label: "Dials today",       value: n(stats?.dialsToday),       delta: n(stats?.dialsToday) > 0 ? "today" : "No data yet",          deltaType: "neutral" as const },
@@ -72,11 +73,15 @@ function CrmKpiRow({ stats }: { stats: CrmStats | null }) {
   ];
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      {kpis.map(kpi => (
+      {kpis.map(kpi => {
+        const clickable = kpi.label === "Callbacks overdue" && !!onCallbacksClick && kpi.value > 0;
+        return (
         <div
           key={kpi.label}
+          onClick={clickable ? onCallbacksClick : undefined}
+          role={clickable ? "button" : undefined}
           className="rounded-[14px] px-3 py-3 sm:px-[15px] sm:py-[13px] transition-colors duration-200"
-          style={{ background: T.bgCard, border: `1px solid ${T.border}` }}
+          style={{ background: T.bgCard, border: `1px solid ${T.border}`, cursor: clickable ? "pointer" : "default" }}
         >
           <div
             className="font-body font-bold text-[10px] uppercase tracking-widest mb-[7px] truncate"
@@ -97,7 +102,8 @@ function CrmKpiRow({ stats }: { stats: CrmStats | null }) {
             {kpi.delta}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -546,6 +552,7 @@ export default function CrmPage() {
   const [leadsRefreshKey, setLeadsRefreshKey] = useState(0);
   const [stats, setStats] = useState<CrmStats | null>(null);
   const [statsRefreshKey, setStatsRefreshKey] = useState(0);
+  const [callbacksOpen, setCallbacksOpen] = useState(false);
 
   // KPI counts — refetched whenever a lead moves stage or a lead is added.
   useEffect(() => {
@@ -569,12 +576,14 @@ export default function CrmPage() {
         title="Overview"
         badges={
           overdueCount > 0 ? (
-            <span
-              className="rounded-pill px-2.5 py-1 font-body text-[11px] font-bold"
-              style={{ background: T.redBg, color: T.red }}
+            <button
+              onClick={() => setCallbacksOpen(true)}
+              className="rounded-pill px-2.5 py-1 font-body text-[11px] font-bold transition-opacity hover:opacity-80"
+              style={{ background: T.redBg, color: T.red, cursor: "pointer", border: `1px solid ${T.red}33` }}
+              title="View callbacks"
             >
               {overdueCount === 1 ? "1 callback overdue" : `${overdueCount} callbacks overdue`}
-            </span>
+            </button>
           ) : undefined
         }
         actions={
@@ -609,7 +618,7 @@ export default function CrmPage() {
       />
       <div className="flex-1 flex flex-col gap-3 lg:gap-4 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden">
         {/* KPI Strip */}
-        <CrmKpiRow stats={stats} />
+        <CrmKpiRow stats={stats} onCallbacksClick={() => setCallbacksOpen(true)} />
 
         {/* Pipeline — the rep's deal board (full width) */}
         <LeadPipeline refreshKey={leadsRefreshKey} onLeadsChanged={() => setStatsRefreshKey(k => k + 1)} />
@@ -640,6 +649,7 @@ export default function CrmPage() {
         onClose={() => setScraperOpen(false)}
         onCreated={() => { setLeadsRefreshKey(k => k + 1); setStatsRefreshKey(k => k + 1); }}
       />
+      <CallbacksDrawer open={callbacksOpen} onClose={() => setCallbacksOpen(false)} />
     </div>
   );
 }
