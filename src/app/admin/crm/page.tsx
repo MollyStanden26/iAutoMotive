@@ -57,10 +57,22 @@ const deltaColors: Record<string, string> = {
   neutral: T.textMuted,
 };
 
-function CrmKpiRow() {
+interface CrmStats {
+  dialsToday: number; contacted: number; offersSent: number; signedToday: number; callbacksOverdue: number;
+}
+
+function CrmKpiRow({ stats }: { stats: CrmStats | null }) {
+  const n = (v: number | undefined) => v ?? 0;
+  const kpis = [
+    { label: "Dials today",       value: n(stats?.dialsToday),       delta: n(stats?.dialsToday) > 0 ? "today" : "No data yet",          deltaType: "neutral" as const },
+    { label: "Contacted",         value: n(stats?.contacted),        delta: n(stats?.contacted) > 0 ? "in pipeline" : "No data yet",     deltaType: "neutral" as const },
+    { label: "Offers sent",       value: n(stats?.offersSent),       delta: n(stats?.offersSent) > 0 ? "awaiting signature" : "No data yet", deltaType: "neutral" as const },
+    { label: "Signed today",      value: n(stats?.signedToday),      delta: n(stats?.signedToday) > 0 ? "today" : "No data yet",         deltaType: (n(stats?.signedToday) > 0 ? "up" : "neutral") as "up" | "neutral" },
+    { label: "Callbacks overdue", value: n(stats?.callbacksOverdue), delta: n(stats?.callbacksOverdue) > 0 ? "action needed" : "None overdue", deltaType: (n(stats?.callbacksOverdue) > 0 ? "warn" : "neutral") as "warn" | "neutral" },
+  ];
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      {D.kpis.map(kpi => (
+      {kpis.map(kpi => (
         <div
           key={kpi.label}
           className="rounded-[14px] px-3 py-3 sm:px-[15px] sm:py-[13px] transition-colors duration-200"
@@ -532,10 +544,22 @@ export default function CrmPage() {
   const [addLeadOpen, setAddLeadOpen] = useState(false);
   const [scraperOpen, setScraperOpen] = useState(false);
   const [leadsRefreshKey, setLeadsRefreshKey] = useState(0);
+  const [stats, setStats] = useState<CrmStats | null>(null);
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
+
+  // KPI counts — refetched whenever a lead moves stage or a lead is added.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/crm/stats", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(d => { if (!cancelled) setStats(d.stats ?? null); })
+      .catch(err => { if (!cancelled) console.error("[CrmPage] stats fetch failed:", err); });
+    return () => { cancelled = true; };
+  }, [statsRefreshKey]);
 
   // Sales reps don't source leads — hide the AutoTrader scrape entry point.
   const isSales = user?.role === "sales";
-  const overdueCount = D.callbacks.filter(c => c.status === "overdue").length;
+  const overdueCount = stats?.callbacksOverdue ?? 0;
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
@@ -585,10 +609,10 @@ export default function CrmPage() {
       />
       <div className="flex-1 flex flex-col gap-3 lg:gap-4 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden">
         {/* KPI Strip */}
-        <CrmKpiRow />
+        <CrmKpiRow stats={stats} />
 
         {/* Pipeline — the rep's deal board (full width) */}
-        <LeadPipeline refreshKey={leadsRefreshKey} />
+        <LeadPipeline refreshKey={leadsRefreshKey} onLeadsChanged={() => setStatsRefreshKey(k => k + 1)} />
 
         {/* Calls-focused row: dialler snapshot + callbacks + script */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
@@ -609,12 +633,12 @@ export default function CrmPage() {
       <AddLeadDrawer
         open={addLeadOpen}
         onClose={() => setAddLeadOpen(false)}
-        onCreated={() => setLeadsRefreshKey(k => k + 1)}
+        onCreated={() => { setLeadsRefreshKey(k => k + 1); setStatsRefreshKey(k => k + 1); }}
       />
       <ScraperDrawer
         open={scraperOpen}
         onClose={() => setScraperOpen(false)}
-        onCreated={() => setLeadsRefreshKey(k => k + 1)}
+        onCreated={() => { setLeadsRefreshKey(k => k + 1); setStatsRefreshKey(k => k + 1); }}
       />
     </div>
   );

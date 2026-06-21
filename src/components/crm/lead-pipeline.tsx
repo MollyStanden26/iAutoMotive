@@ -42,7 +42,7 @@ const STAGES: { key: PipelineStage; label: string; accent: string }[] = [
   { key: "collected",          label: "Collected",          accent: T.green },
 ];
 
-export function LeadPipeline({ refreshKey }: { refreshKey: number }) {
+export function LeadPipeline({ refreshKey, onLeadsChanged }: { refreshKey: number; onLeadsChanged?: () => void }) {
   const [leads, setLeads] = useState<LeadCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -63,7 +63,8 @@ export function LeadPipeline({ refreshKey }: { refreshKey: number }) {
     const card: LeadCard = { ...u, vehicle };
     setLeads(prev => prev.map(l => (l.id === u.id ? card : l)));
     setDetailLead(card);
-  }, []);
+    onLeadsChanged?.();
+  }, [onLeadsChanged]);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,11 +90,12 @@ export function LeadPipeline({ refreshKey }: { refreshKey: number }) {
         body: JSON.stringify({ pipelineStage: toStage }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      onLeadsChanged?.();
     } catch (err) {
       console.error("[LeadPipeline] move failed, reverting:", err);
       setLeads(prev => prev.map(l => l.id === id ? { ...l, pipelineStage: prevStage } : l));
     }
-  }, [leads]);
+  }, [leads, onLeadsChanged]);
 
   const call = useCallback((phone: string | null) => {
     if (!phone) return;
