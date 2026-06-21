@@ -26,6 +26,8 @@ export interface Deal {
   fundingStatus: FundingStatus;
   fundingKey: FundingKey;
   openedLabel: string;
+  /** True once a signed contract PDF has been uploaded for the deal. */
+  hasContract?: boolean;
 }
 
 export interface PipelineStage {

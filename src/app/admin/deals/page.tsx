@@ -180,7 +180,7 @@ function DealsTable({
   let filtered = deals;
   if (activeFilter === "risk") filtered = filtered.filter(d => d.healthScore < 50);
   else if (activeFilter === "fund") filtered = filtered.filter(d => ["pending", "wait", "declined"].includes(d.fundingKey));
-  else if (activeFilter === "docs") filtered = filtered.filter(d => ["docs", "sign"].includes(d.stageKey));
+  else if (activeFilter === "docs") filtered = filtered.filter(d => !d.hasContract && d.stageKey !== "closed");
   else if (activeFilter === "today") filtered = filtered.filter(d => d.stageKey === "del");
 
   if (searchQuery.trim()) {

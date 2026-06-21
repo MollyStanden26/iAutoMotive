@@ -45,6 +45,18 @@ export async function GET(request: NextRequest) {
       include: { vehicle: { select: { year: true, make: true, model: true } } },
     });
 
+    // Which of these deals already have a signed contract uploaded.
+    const contractDocs = await prisma.document.findMany({
+      where: {
+        entityType: "deal",
+        entityId: { in: deals.map(d => d.id) },
+        documentType: "consignment_agreement",
+        isCurrent: true,
+      },
+      select: { entityId: true },
+    });
+    const withContract = new Set(contractDocs.map(c => c.entityId));
+
     const rows = deals.map(d => {
       const stage = STAGE_MAP[d.status] ?? STAGE_MAP.reserved;
       const salePence = d.salePriceGbp ?? d.askingPriceGbp ?? 0;
@@ -62,6 +74,7 @@ export async function GET(request: NextRequest) {
         fundingStatus: "Pending",
         fundingKey: "pending",
         openedLabel: ageLabel(d.createdAt),
+        hasContract: withContract.has(d.id),
       };
     });
 
