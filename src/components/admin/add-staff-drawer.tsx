@@ -9,10 +9,18 @@ const T = {
   red: "#F87171",
 };
 
+export interface StaffEdit {
+  id: string; firstName: string; lastName: string; email: string; role: string;
+  lotId: string | null; dailyCallTarget: number | null; weeklyConversionTarget: number | null;
+  isRemote: boolean; hireDate: string | null;
+}
+
 interface AddStaffDrawerProps {
   open: boolean;
   onClose: () => void;
   onCreated?: () => void;
+  /** When set, the drawer edits this existing staff member instead of creating one. */
+  staff?: StaffEdit | null;
 }
 
 interface StaffForm {
@@ -37,7 +45,8 @@ const ROLE_OPTIONS = [
 
 interface CreatedStaff { name: string; email: string; tempPassword: string; role: string; }
 
-export function AddStaffDrawer({ open, onClose, onCreated }: AddStaffDrawerProps) {
+export function AddStaffDrawer({ open, onClose, onCreated, staff }: AddStaffDrawerProps) {
+  const isEdit = !!staff;
   const [form, setForm] = useState<StaffForm>(EMPTY);
   const [lots, setLots] = useState<{ id: string; name: string; city: string | null }[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -52,6 +61,15 @@ export function AddStaffDrawer({ open, onClose, onCreated }: AddStaffDrawerProps
 
   useEffect(() => {
     if (!open) return;
+    setForm(staff
+      ? {
+          firstName: staff.firstName, lastName: staff.lastName, email: staff.email, role: staff.role,
+          lotId: staff.lotId ?? "",
+          dailyCallTarget: staff.dailyCallTarget != null ? String(staff.dailyCallTarget) : "",
+          weeklyConversionTarget: staff.weeklyConversionTarget != null ? String(staff.weeklyConversionTarget) : "",
+          isRemote: staff.isRemote, hireDate: staff.hireDate ? staff.hireDate.slice(0, 10) : "",
+        }
+      : EMPTY);
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
     window.addEventListener("keydown", onKey);
     requestAnimationFrame(() => setMounted(true));
@@ -74,6 +92,22 @@ export function AddStaffDrawer({ open, onClose, onCreated }: AddStaffDrawerProps
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) { setError("A valid email is required."); return; }
     setSubmitting(true); setError(null);
     try {
+      if (isEdit && staff) {
+        // Edit mode — PATCH; email isn't changed here.
+        const res = await fetch(`/api/admin/staff/${staff.id}`, {
+          method: "PATCH", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: form.firstName, lastName: form.lastName, role: form.role,
+            lotId: form.lotId, isRemote: form.isRemote, hireDate: form.hireDate || null,
+            dailyCallTarget: isSales ? form.dailyCallTarget : "",
+            weeklyConversionTarget: isSales ? form.weeklyConversionTarget : "",
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Save failed (${res.status})`);
+        onCreated?.(); close();
+        return;
+      }
       const res = await fetch("/api/admin/staff", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -88,7 +122,7 @@ export function AddStaffDrawer({ open, onClose, onCreated }: AddStaffDrawerProps
       if (!res.ok) throw new Error(data.error || `Create failed (${res.status})`);
       setCreated({ name: data.user.name, email: data.user.email, tempPassword: data.tempPassword, role: data.user.role });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Create failed");
+      setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSubmitting(false);
     }
@@ -107,9 +141,9 @@ export function AddStaffDrawer({ open, onClose, onCreated }: AddStaffDrawerProps
         style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 480, maxWidth: "100vw", background: T.bgPanel, borderLeft: `1px solid ${T.border}`, zIndex: 61, display: "flex", flexDirection: "column", transform: mounted ? "translateX(0)" : "translateX(100%)", transition: "transform 280ms cubic-bezier(.25,.46,.45,.94)", boxShadow: "-20px 0 40px rgba(0,0,0,0.4)" }}>
         <header className="flex items-center justify-between px-5" style={{ height: 58, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div>
-            <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 17, color: T.textPrimary }}>{created ? "Staff member created" : "Add staff"}</div>
+            <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 17, color: T.textPrimary }}>{created ? "Staff member created" : isEdit ? "Edit staff member" : "Add staff"}</div>
             <div style={{ fontFamily: "var(--font-body)", fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-              {created ? "Share their sign-in details securely" : "Create a portal login for a new team member"}
+              {created ? "Share their sign-in details securely" : isEdit ? "Update this team member's details" : "Create a portal login for a new team member"}
             </div>
           </div>
           <button onClick={close} aria-label="Close" className="rounded-[8px] hover:opacity-80"
@@ -158,7 +192,11 @@ export function AddStaffDrawer({ open, onClose, onCreated }: AddStaffDrawerProps
                   <Field label="First name" required><Input value={form.firstName} onChange={v => update("firstName", v)} /></Field>
                   <Field label="Last name" required><Input value={form.lastName} onChange={v => update("lastName", v)} /></Field>
                 </Row>
-                <Field label="Email (sign-in)" required><Input value={form.email} onChange={v => update("email", v)} type="email" placeholder="name@iautomotive.co.uk" /></Field>
+                <Field label="Email (sign-in)" required>
+                  {isEdit
+                    ? <div style={{ height: 36, padding: "0 11px", display: "flex", alignItems: "center", background: T.bgSection, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontFamily: "var(--font-body)", fontSize: 13 }}>{form.email}</div>
+                    : <Input value={form.email} onChange={v => update("email", v)} type="email" placeholder="name@iautomotive.co.uk" />}
+                </Field>
                 <Field label="Role"><Select value={form.role} onChange={v => update("role", v)} options={ROLE_OPTIONS} /></Field>
               </Section>
 
@@ -202,7 +240,7 @@ export function AddStaffDrawer({ open, onClose, onCreated }: AddStaffDrawerProps
                   style={{ background: T.bgSection, border: `1px solid ${T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13, color: T.textSecondary, opacity: submitting ? 0.5 : 1 }}>Cancel</button>
                 <button type="submit" disabled={submitting} className="px-4 py-[7px] rounded-[8px] hover:opacity-90"
                   style={{ background: T.tealBg, border: `1px solid ${T.teal}`, color: T.teal200, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, opacity: submitting ? 0.6 : 1, cursor: submitting ? "wait" : "pointer" }}>
-                  {submitting ? "Creating…" : "Create staff member"}
+                  {submitting ? "Saving…" : isEdit ? "Save changes" : "Create staff member"}
                 </button>
               </div>
             </footer>

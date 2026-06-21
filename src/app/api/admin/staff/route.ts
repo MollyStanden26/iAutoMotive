@@ -2,10 +2,60 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/require-role";
-import { appRoleToDbRole } from "@/lib/auth/role-mapping";
+import { appRoleToDbRole, dbRoleToAppRole } from "@/lib/auth/role-mapping";
 import type { UserRole } from "@/types/user";
+import type { UserRole as PrismaUserRole } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+
+/** DB-enum staff roles (excludes seller/buyer/dealer). */
+const STAFF_DB_ROLES: PrismaUserRole[] = [
+  "super_admin", "site_manager", "finance", "sales", "recon_tech", "compliance", "read_only",
+];
+
+/**
+ * GET /api/admin/staff — the real staff roster (managers only).
+ */
+export async function GET(request: NextRequest) {
+  const guard = await requireRole(request, ["super-admin", "site-manager"]);
+  if (!guard.ok) return guard.response;
+  try {
+    const users = await prisma.user.findMany({
+      where: { role: { in: STAFF_DB_ROLES } },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, email: true, role: true, isActive: true, lastLoginAt: true,
+        staffProfile: {
+          select: {
+            firstName: true, lastName: true, hireDate: true, isRemote: true,
+            dailyCallTarget: true, weeklyConversionTarget: true,
+            lotId: true, lot: { select: { name: true } },
+          },
+        },
+      },
+    });
+    const staff = users.map(u => ({
+      id: u.id,
+      name: [u.staffProfile?.firstName, u.staffProfile?.lastName].filter(Boolean).join(" ") || u.email.split("@")[0],
+      firstName: u.staffProfile?.firstName ?? "",
+      lastName: u.staffProfile?.lastName ?? "",
+      email: u.email,
+      role: dbRoleToAppRole(u.role),
+      lot: u.staffProfile?.lot?.name ?? null,
+      lotId: u.staffProfile?.lotId ?? null,
+      isActive: u.isActive,
+      isRemote: u.staffProfile?.isRemote ?? false,
+      lastLoginAt: u.lastLoginAt ? u.lastLoginAt.toISOString() : null,
+      hireDate: u.staffProfile?.hireDate ? u.staffProfile.hireDate.toISOString() : null,
+      dailyCallTarget: u.staffProfile?.dailyCallTarget ?? null,
+      weeklyConversionTarget: u.staffProfile?.weeklyConversionTarget ?? null,
+    }));
+    return NextResponse.json({ staff });
+  } catch (error) {
+    console.error("[GET /api/admin/staff]", error);
+    return NextResponse.json({ error: "Failed to load staff" }, { status: 500 });
+  }
+}
 
 /**
  * POST /api/admin/staff — create a new staff member with a portal login.

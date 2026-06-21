@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
-import { AddStaffDrawer } from "@/components/admin/add-staff-drawer";
+import { AddStaffDrawer, type StaffEdit } from "@/components/admin/add-staff-drawer";
 import {
   STAFF_KPIS, ROLE_COUNTS, LEADERBOARD, LIVE_NOW,
   COACHING_FLAGS, ACCESS_ROWS, staffPeriodLabel,
@@ -181,67 +181,141 @@ function StaffLeaderboard({ period }: { period: PeriodType }) {
 /* ================================================================== */
 /*  STAFF ROSTER                                                       */
 /* ================================================================== */
-function StaffRoster({ period }: { period: PeriodType }) {
-  // TODO: wire to period-specific API endpoint when backend is ready
-  const router = useRouter();
-  const roster = LEADERBOARD.slice(0, 8); // Show first 8
+interface StaffRow {
+  id: string; name: string; firstName: string; lastName: string; email: string; role: string;
+  lot: string | null; lotId: string | null; isActive: boolean; isRemote: boolean;
+  lastLoginAt: string | null; hireDate: string | null;
+  dailyCallTarget: number | null; weeklyConversionTarget: number | null;
+}
 
-  function loginColor(n: number): string { if (n >= 7) return T.green; if (n >= 5) return T.teal200; if (n >= 3) return T.textMuted; return T.red; }
-  function lastActiveColor(l: string): string { if (l === "Now") return T.green; if (l.includes("h ago")) return T.amber; return T.textMuted; }
+const ROLE_LABEL: Record<string, string> = {
+  "super-admin": "Super admin", "site-manager": "Site mgr", finance: "Finance",
+  sales: "Sales", "recon-tech": "Recon", compliance: "Compliance", "read-only": "Read only",
+};
 
-  const statusBadge = (s: string, isU: boolean) => {
-    if (isU) return <span className="rounded-full px-[7px] py-[2px]" style={{ background: T.amberBg, color: T.amber, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9 }}>Below target</span>;
-    if (s === "active") return <span className="rounded-full px-[7px] py-[2px]" style={{ background: T.greenBg, color: T.green, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9 }}>Active</span>;
-    if (s === "offline") return <span className="rounded-full px-[7px] py-[2px]" style={{ background: T.indigo, color: T.textMuted, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9 }}>Offline</span>;
-    return <span className="rounded-full px-[7px] py-[2px]" style={{ background: T.bgRow, color: T.textMuted, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9 }}>On leave</span>;
+function relTime(iso: string | null): string {
+  if (!iso) return "Never";
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function StaffRoster({ refreshKey, onEdit, onChanged }: { refreshKey: number; onEdit: (s: StaffEdit) => void; onChanged: () => void }) {
+  const [staff, setStaff] = useState<StaffRow[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [reset, setReset] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/staff", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(d => { if (!cancelled) setStaff(d.staff ?? []); })
+      .catch(e => { if (!cancelled) console.error("[StaffRoster] fetch failed:", e); });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
+
+  const resetPw = async (s: StaffRow) => {
+    setBusyId(s.id);
+    try {
+      const res = await fetch(`/api/admin/staff/${s.id}/reset-password`, { method: "POST" });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) setReset({ name: s.name, email: s.email, tempPassword: d.tempPassword });
+    } finally { setBusyId(null); }
   };
+
+  const toggleActive = async (s: StaffRow) => {
+    setBusyId(s.id);
+    try {
+      const res = await fetch(`/api/admin/staff/${s.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !s.isActive }) });
+      if (res.ok) onChanged();
+    } finally { setBusyId(null); }
+  };
+
+  const toEdit = (s: StaffRow): StaffEdit => ({
+    id: s.id, firstName: s.firstName, lastName: s.lastName, email: s.email, role: s.role,
+    lotId: s.lotId, dailyCallTarget: s.dailyCallTarget, weeklyConversionTarget: s.weeklyConversionTarget,
+    isRemote: s.isRemote, hireDate: s.hireDate,
+  });
+
+  const ActBtn = ({ label, onClick, color, disabled }: { label: string; onClick: () => void; color: string; disabled?: boolean }) => (
+    <button onClick={onClick} disabled={disabled}
+      style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 10, color, background: "transparent", border: "none", cursor: disabled ? "wait" : "pointer", padding: "2px 4px", opacity: disabled ? 0.5 : 1 }}>
+      {label}
+    </button>
+  );
 
   return (
     <div className="rounded-[10px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
       <div className="flex items-center px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Staff roster — all 24 members</span>
+        <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>Staff roster — {staff.length} member{staff.length === 1 ? "" : "s"}</span>
         <span className="ml-auto" style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: T.textMuted }}>All lots · All roles</span>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full" style={{ minWidth: 520, tableLayout: "fixed" }}>
-          <colgroup>
-            <col style={{ width: 130 }} /><col style={{ width: 80 }} /><col style={{ width: 90 }} />
-            <col style={{ width: 60 }} /><col style={{ width: 60 }} /><col style={{ width: 54 }} /><col style={{ width: 80 }} />
-          </colgroup>
+        <table className="w-full" style={{ minWidth: 560 }}>
           <thead>
             <tr>
-              {["Name", "Role", "Lot(s)", "Logins", "Last", "SLA", "Status"].map(h => (
-                <th key={h} className="px-[8px] py-[6px] text-left" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgSidebar, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</th>
+              {["Name", "Role", "Lot", "Last login", "Status", ""].map((h, i) => (
+                <th key={i} className="px-[10px] py-[6px] text-left" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgSidebar, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {roster.map((e, idx) => {
-              const isU = e.isUnderperformer;
-              const rowBg = isU ? T.underBg : "transparent";
-              const rowBorder = isU ? T.underBorder : (idx < roster.length - 1 ? T.border2 : "transparent");
+            {staff.length === 0 && (
+              <tr><td colSpan={6} className="px-[10px] py-6 text-center" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No staff yet. Use “+ Add staff” to create the first account.</td></tr>
+            )}
+            {staff.map((s, idx) => {
+              const last = idx === staff.length - 1;
+              const border = last ? "transparent" : T.border2;
+              const dim = !s.isActive;
               return (
-                <tr key={e.id} className="cursor-pointer transition-colors duration-150"
-                  onMouseEnter={ev => ev.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = isU ? T.underHover : T.bgHover))}
-                  onMouseLeave={ev => ev.currentTarget.querySelectorAll("td").forEach(td => ((td as HTMLElement).style.background = rowBg))}
-                  onClick={() => router.push(`/admin/staff/${e.id}`)}
-                >
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontWeight: isU ? 700 : 600, fontSize: 11, color: isU ? T.amber : T.textPrimary }}>{e.name}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}` }}>{roleBadge(e.role)}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontSize: 11, color: T.textMuted }}>{e.lots.join(", ")}</td>
-                  <td className="px-[8px] py-[6px] align-middle text-center" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: loginColor(e.logins7d) }}>{e.logins7d}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontSize: 11, color: lastActiveColor(e.lastActive) }}>{e.lastActive}</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}`, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: metricColor(e.slaCompliance, "sla") }}>{e.slaCompliance}%</td>
-                  <td className="px-[8px] py-[6px] align-middle" style={{ background: rowBg, borderBottom: `1px solid ${rowBorder}` }}>{statusBadge(e.status, isU)}</td>
+                <tr key={s.id}>
+                  <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: `1px solid ${border}` }}>
+                    <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: dim ? T.textMuted : T.textPrimary }}>{s.name}</div>
+                    <div style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textDim }}>{s.email}</div>
+                  </td>
+                  <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: `1px solid ${border}`, fontFamily: "var(--font-body)", fontSize: 11, color: T.textSecondary }}>{ROLE_LABEL[s.role] ?? s.role}{s.isRemote ? " · Remote" : ""}</td>
+                  <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: `1px solid ${border}`, fontFamily: "var(--font-body)", fontSize: 11, color: T.textMuted }}>{s.lot ?? "—"}</td>
+                  <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: `1px solid ${border}`, fontFamily: "var(--font-body)", fontSize: 11, color: s.lastLoginAt ? T.textSecondary : T.textDim }}>{relTime(s.lastLoginAt)}</td>
+                  <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: `1px solid ${border}` }}>
+                    <span className="rounded-full px-[7px] py-[2px]" style={{ background: s.isActive ? T.greenBg : T.redBg, color: s.isActive ? T.green : T.red, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 9 }}>{s.isActive ? "Active" : "Inactive"}</span>
+                  </td>
+                  <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: `1px solid ${border}`, whiteSpace: "nowrap" }}>
+                    <ActBtn label="Edit" color={T.teal200} onClick={() => onEdit(toEdit(s))} disabled={busyId === s.id} />
+                    <ActBtn label="Reset PW" color={T.textSecondary} onClick={() => resetPw(s)} disabled={busyId === s.id} />
+                    <ActBtn label={s.isActive ? "Deactivate" : "Activate"} color={s.isActive ? T.red : T.green} onClick={() => toggleActive(s)} disabled={busyId === s.id} />
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      <div className="px-[14px] py-[7px]" style={{ borderTop: `1px solid ${T.border}` }}>
-        <span style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textDim }}>Showing 8 of 24 · Click row to view full profile · Filter by lot or role using controls above</span>
-      </div>
+
+      {reset && (
+        <div className="flex items-center justify-center" style={{ position: "fixed", inset: 0, background: "rgba(7,13,24,0.65)", zIndex: 70 }} onClick={() => setReset(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ width: 380, maxWidth: "90vw", background: T.bgCard, border: `1px solid ${T.border}`, borderRadius: 12, padding: 18 }}>
+            <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 15, color: T.textPrimary, marginBottom: 4 }}>New password for {reset.name}</div>
+            <div style={{ fontFamily: "var(--font-body)", fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Shown once. Share securely; ask them to change it after signing in.</div>
+            <div style={{ background: T.bgRow, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px", marginBottom: 14 }}>
+              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>{reset.email}</div>
+              <div className="flex items-center gap-2">
+                <code style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: T.teal200, letterSpacing: "0.5px" }}>{reset.tempPassword}</code>
+                <button onClick={() => { navigator.clipboard?.writeText(reset.tempPassword); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                  style={{ background: "#0A2A26", border: `1px solid ${T.teal}`, color: T.teal200, borderRadius: 7, padding: "3px 10px", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>{copied ? "Copied" : "Copy"}</button>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button onClick={() => setReset(null)} style={{ background: "#0A2A26", border: `1px solid ${T.teal}`, color: T.teal200, borderRadius: 8, padding: "7px 16px", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -408,6 +482,8 @@ function AccessManagementPanel() {
 export default function StaffPage() {
   const [period, setPeriod] = useState<PeriodType>("last7d");
   const [addStaffOpen, setAddStaffOpen] = useState(false);
+  const [editStaff, setEditStaff] = useState<StaffEdit | null>(null);
+  const [staffRefreshKey, setStaffRefreshKey] = useState(0);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen" style={{ background: T.bgPage }}>
@@ -420,7 +496,7 @@ export default function StaffPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 10 }}>
             <div className="flex flex-col gap-[10px]">
               <StaffLeaderboard period={period} />
-              <StaffRoster period={period} />
+              <StaffRoster refreshKey={staffRefreshKey} onEdit={s => setEditStaff(s)} onChanged={() => setStaffRefreshKey(k => k + 1)} />
             </div>
             <div className="flex flex-col gap-[10px]">
               <LiveNowPanel />
@@ -432,7 +508,12 @@ export default function StaffPage() {
           <AccessManagementPanel />
         </div>
       </div>
-      <AddStaffDrawer open={addStaffOpen} onClose={() => setAddStaffOpen(false)} />
+      <AddStaffDrawer
+        open={addStaffOpen || !!editStaff}
+        staff={editStaff}
+        onClose={() => { setAddStaffOpen(false); setEditStaff(null); }}
+        onCreated={() => setStaffRefreshKey(k => k + 1)}
+      />
     </div>
   );
 }
