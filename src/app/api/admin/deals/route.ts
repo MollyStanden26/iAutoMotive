@@ -25,6 +25,11 @@ const STAGE_MAP: Record<string, { stage: string; stageKey: string }> = {
   cancelled:         { stage: "Closed",        stageKey: "closed" },
 };
 
+/** Statuses where the car is still unsold stock (not yet bought/handed over). */
+const INVENTORY_STATUSES = ["reserved", "identity_verified", "documents_sent", "documents_signed"];
+/** A deal is at risk once it's sat in inventory longer than this without a finance buyer. */
+const AT_RISK_DAYS = 30;
+
 function ageLabel(d: Date): string {
   const days = Math.floor((Date.now() - d.getTime()) / 86400000);
   if (days <= 0) return "today";
@@ -45,11 +50,13 @@ export async function GET(request: NextRequest) {
       include: { vehicle: { select: { year: true, make: true, model: true } } },
     });
 
+    const dealIds = deals.map(d => d.id);
+
     // Which of these deals already have a signed contract uploaded.
     const contractDocs = await prisma.document.findMany({
       where: {
         entityType: "deal",
-        entityId: { in: deals.map(d => d.id) },
+        entityId: { in: dealIds },
         documentType: "consignment_agreement",
         isCurrent: true,
       },
@@ -57,9 +64,21 @@ export async function GET(request: NextRequest) {
     });
     const withContract = new Set(contractDocs.map(c => c.entityId));
 
+    // Which deals have been bought on finance (a finance application exists).
+    const finApps = await prisma.financeApplication.findMany({
+      where: { dealId: { in: dealIds } },
+      select: { dealId: true },
+    });
+    const financed = new Set(finApps.map(f => f.dealId));
+
+    const now = Date.now();
     const rows = deals.map(d => {
       const stage = STAGE_MAP[d.status] ?? STAGE_MAP.reserved;
       const salePence = d.salePriceGbp ?? d.askingPriceGbp ?? 0;
+      // At risk: still in inventory > 30 days after collection, not on finance.
+      const daysInInventory = Math.floor((now - d.createdAt.getTime()) / 86400000);
+      const inInventory = INVENTORY_STATUSES.includes(d.status);
+      const atRisk = inInventory && daysInInventory > AT_RISK_DAYS && !financed.has(d.id);
       return {
         id: d.id,
         year: d.vehicle?.year ?? d.vehicleYear ?? 0,
@@ -75,6 +94,9 @@ export async function GET(request: NextRequest) {
         fundingKey: "pending",
         openedLabel: ageLabel(d.createdAt),
         hasContract: withContract.has(d.id),
+        daysInInventory,
+        atRisk,
+        riskReason: atRisk ? `In inventory ${daysInInventory} days · no finance buyer` : null,
       };
     });
 

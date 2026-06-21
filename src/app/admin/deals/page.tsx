@@ -12,7 +12,7 @@ import { DealDetailDrawer } from "@/components/crm/deal-detail-drawer";
 import { useCurrentUser } from "@/lib/auth/use-current-user";
 import {
   DEALS_KPIS, PIPELINE_STAGES,
-  AT_RISK_DEALS, FUNDING_ROWS, DOC_STATUS_ROWS, COMPLIANCE_ROWS,
+  FUNDING_ROWS, DOC_STATUS_ROWS, COMPLIANCE_ROWS,
 } from "@/lib/admin/deals-mock-data";
 import type { Deal, DealFilter, DealStage, FundingStatus } from "@/lib/admin/deals-mock-data";
 import { commissionForDealValue } from "@/lib/admin/commission";
@@ -61,7 +61,7 @@ function Topbar({ selectedCount, onNewDeal }: { selectedCount: number; onNewDeal
 /* ================================================================== */
 /*  KPI STRIP                                                          */
 /* ================================================================== */
-function KpiStrip({ liveCount, pipelineValue, commission }: { liveCount: number; pipelineValue: number; commission: number }) {
+function KpiStrip({ liveCount, pipelineValue, commission, atRisk }: { liveCount: number; pipelineValue: number; commission: number; atRisk: number }) {
   const K = DEALS_KPIS;
   const pipelineLabel = pipelineValue <= 0 ? "—"
     : pipelineValue >= 1000 ? `£${Math.round(pipelineValue / 1000)}k`
@@ -70,7 +70,7 @@ function KpiStrip({ liveCount, pipelineValue, commission }: { liveCount: number;
     { label: "LIVE DEALS", value: liveCount.toString(), valueColor: liveCount > 0 ? T.textPrimary : T.textMuted, delta: liveCount > 0 ? "Active pipeline" : "No data yet", deltaColor: T.textMuted },
     { label: "PIPELINE VALUE", value: pipelineLabel, valueColor: pipelineValue > 0 ? T.teal200 : T.textMuted, delta: "Gross vehicle value", deltaColor: T.textMuted },
     { label: "EST. COMMISSION", value: `£${commission.toLocaleString()}`, valueColor: commission > 0 ? T.green : T.textMuted, delta: "Projected · open deals", deltaColor: T.textMuted },
-    { label: "AT RISK", value: K.atRisk.toString(), valueColor: K.atRisk > 0 ? T.red : T.textMuted, delta: K.atRisk > 0 ? "AI health score <50" : "None flagged", deltaColor: K.atRisk > 0 ? T.red : T.textMuted },
+    { label: "AT RISK", value: atRisk.toString(), valueColor: atRisk > 0 ? T.red : T.textMuted, delta: atRisk > 0 ? "Aging · no finance" : "None flagged", deltaColor: atRisk > 0 ? T.red : T.textMuted },
     { label: "CLOSED TODAY", value: K.closedToday.toString(), valueColor: K.closedToday > 0 ? T.teal200 : T.textMuted, delta: K.closedTodayRevenue > 0 ? `£${(K.closedTodayRevenue / 1000).toFixed(1)}k revenue` : "—", deltaColor: K.closedToday > 0 ? T.green : T.textMuted },
   ];
   return (
@@ -296,34 +296,38 @@ function DealsTable({
 /* ================================================================== */
 /*  AT-RISK PANEL                                                      */
 /* ================================================================== */
-function AtRiskPanel() {
-  const router = useRouter();
+function AtRiskPanel({ deals, onOpenDeal }: { deals: Deal[]; onOpenDeal: (d: Deal) => void }) {
+  const atRisk = deals.filter(d => d.atRisk);
   return (
     <div className="rounded-[10px] overflow-hidden" style={{ background: T.bgCard, border: `1px solid ${T.border}` }}>
       <div className="flex items-center px-[14px] py-[10px]" style={{ borderBottom: `1px solid ${T.border}` }}>
         <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: T.textPrimary }}>At-risk deals</span>
-        <span className="ml-2 rounded-full px-[7px] py-[2px]" style={{ background: T.redBg, color: T.red, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{AT_RISK_DEALS.length} flagged</span>
+        <span className="ml-2 rounded-full px-[7px] py-[2px]" style={{ background: T.redBg, color: T.red, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{atRisk.length} flagged</span>
       </div>
       <div className="px-[14px]">
-        {AT_RISK_DEALS.length === 0 && (
+        {atRisk.length === 0 && (
           <div className="text-center py-6" style={{ fontFamily: "var(--font-body)", fontSize: 12, color: T.textMuted }}>No at-risk deals.</div>
         )}
-        {AT_RISK_DEALS.map((d, idx) => (
-          <div key={d.id} className="flex items-start gap-2 py-[7px] cursor-pointer transition-colors duration-150"
-            style={{ borderBottom: idx < AT_RISK_DEALS.length - 1 ? `1px solid ${T.border}` : "none" }}
-            onClick={() => router.push(`/admin/deals/${d.id}`)}
-            onMouseEnter={e => (e.currentTarget.style.background = "#0C1020")}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-          >
-            <span className="flex-shrink-0 mt-[1px] rounded-full px-[7px] py-[2px]" style={{ background: d.severity === "HIGH" ? T.redBg : T.amberBg, color: d.severity === "HIGH" ? T.red : T.amber, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{d.severity}</span>
-            <div className="flex-1 min-w-0">
-              <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: T.textSecondary }}>{d.title}</div>
-              <div style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textMuted, marginTop: 1 }}>{d.stallReason}</div>
-              <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 10, color: T.teal200, marginTop: 2 }}>{d.recommendedAction}</div>
+        {atRisk.map((d, idx) => {
+          const days = d.daysInInventory ?? 0;
+          const high = days > 60;
+          return (
+            <div key={d.id} className="flex items-start gap-2 py-[7px] cursor-pointer transition-colors duration-150"
+              style={{ borderBottom: idx < atRisk.length - 1 ? `1px solid ${T.border}` : "none" }}
+              onClick={() => onOpenDeal(d)}
+              onMouseEnter={e => (e.currentTarget.style.background = "#0C1020")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              <span className="flex-shrink-0 mt-[1px] rounded-full px-[7px] py-[2px]" style={{ background: high ? T.redBg : T.amberBg, color: high ? T.red : T.amber, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{high ? "HIGH" : "MED"}</span>
+              <div className="flex-1 min-w-0">
+                <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11, color: T.textSecondary }}>{d.year} {d.make} {d.model}</div>
+                <div style={{ fontFamily: "var(--font-body)", fontSize: 10, color: T.textMuted, marginTop: 1 }}>{d.riskReason}</div>
+                <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 10, color: T.teal200, marginTop: 2 }}>Review price · re-market</div>
+              </div>
+              <span className="flex-shrink-0 text-right" style={{ minWidth: 28, fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 11, color: high ? T.red : T.amber }}>{days}d</span>
             </div>
-            <span className="flex-shrink-0 text-right" style={{ minWidth: 28, fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 11, color: d.severity === "HIGH" ? T.red : T.amber }}>{d.healthScore}</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -473,7 +477,7 @@ export default function DealsPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar selectedCount={selectedDeals.length} onNewDeal={() => setNewDealOpen(true)} />
         <div className="flex-1 flex flex-col gap-[10px] overflow-x-hidden" style={{ padding: "14px 20px" }}>
-          <KpiStrip liveCount={deals.length} pipelineValue={pipelineValue} commission={pipelineCommission} />
+          <KpiStrip liveCount={deals.length} pipelineValue={pipelineValue} commission={pipelineCommission} atRisk={deals.filter(d => d.atRisk).length} />
           <PipelineStrip />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 296px", gap: 10 }}>
             <DealsTable
@@ -485,7 +489,7 @@ export default function DealsPage() {
               selectedDeals={selectedDeals} setSelectedDeals={setSelectedDeals}
             />
             <div className="flex flex-col gap-[10px]">
-              <AtRiskPanel />
+              <AtRiskPanel deals={deals} onOpenDeal={setOpenDeal} />
               <FundingTrackerPanel />
               <DocStatusPanel />
               <CompliancePanel />

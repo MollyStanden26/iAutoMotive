@@ -28,6 +28,11 @@ export interface Deal {
   openedLabel: string;
   /** True once a signed contract PDF has been uploaded for the deal. */
   hasContract?: boolean;
+  /** Days the car has sat in inventory since collection. */
+  daysInInventory?: number;
+  /** At risk: in inventory > 30 days after collection and not bought on finance. */
+  atRisk?: boolean;
+  riskReason?: string | null;
 }
 
 export interface PipelineStage {
