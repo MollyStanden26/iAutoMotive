@@ -4,7 +4,8 @@ export const ROLE_HOME_ROUTE: Record<UserRole, string> = {
   "super-admin": "/admin",
   "site-manager": "/admin",
   finance: "/admin",
-  sales: "/admin",
+  // Sales reps live in the CRM, not the command centre.
+  sales: "/admin/crm",
   "recon-tech": "/admin",
   compliance: "/admin",
   "read-only": "/admin",
