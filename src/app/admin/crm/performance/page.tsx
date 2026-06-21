@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
-  TrendingUp, TrendingDown, Trophy, Target, BarChart3,
+  TrendingUp, TrendingDown, Minus, Trophy, Target, BarChart3,
   Users, Phone, AlertTriangle, ChevronDown, ChevronRight,
   Calendar, Award, Flag,
 } from "lucide-react";
@@ -106,29 +106,51 @@ const OUTCOME_COLORS: Record<string, string> = {
 /* ================================================================== */
 /*  KPI ROW                                                            */
 /* ================================================================== */
-function PerformanceKpiRow() {
-  const totalDialsToday = repPerformance.reduce((s, r) => s + r.dialsToday, 0);
-  const avgContactRate = repPerformance.length === 0
-    ? 0
-    : Math.round(repPerformance.reduce((s, r) => s + r.contactRate, 0) / repPerformance.length);
-  const offersWeek = repPerformance.reduce((s, r) => s + r.offersWeek, 0);
-  const signedWeek = repPerformance.reduce((s, r) => s + r.signedWeek, 0);
-  const revenueWeek = repPerformance.reduce((s, r) => s + r.revenueWeek, 0);
+interface PerfStats {
+  dialsToday: number; dialsYesterday: number; contactRate: number;
+  connectedThisWeek: number; callsThisWeek: number;
+  offersOut: number; signedWeek: number; revenueWeekPence: number;
+}
+type DeltaType = "up" | "down" | "neutral";
 
-  const kpis = [
-    { label: "Total Dials Today", value: totalDialsToday.toString(), delta: "+12% vs yesterday", deltaType: "up" as const, icon: Phone },
-    { label: "Team Contact Rate", value: `${avgContactRate}%`, delta: "On target", deltaType: "up" as const, icon: Users },
-    { label: "Offers Sent (Week)", value: offersWeek.toString(), delta: "+4 ahead of target", deltaType: "up" as const, icon: Target },
-    { label: "Deals Signed (Week)", value: signedWeek.toString(), delta: "3 behind target", deltaType: "down" as const, icon: Trophy },
-    { label: "Revenue This Week", value: formatCurrency(revenueWeek), delta: "86% of target", deltaType: "up" as const, icon: BarChart3 },
+function PerformanceKpiRow() {
+  const [s, setS] = useState<PerfStats | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/crm/performance", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(d => { if (!cancelled) setS(d.stats ?? null); })
+      .catch(err => { if (!cancelled) console.error("[PerformanceKpiRow] fetch failed:", err); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const dialsToday = s?.dialsToday ?? 0;
+  const dialsYesterday = s?.dialsYesterday ?? 0;
+  const dialsPct = dialsYesterday > 0 ? Math.round(((dialsToday - dialsYesterday) / dialsYesterday) * 100) : null;
+  const dialsDelta = dialsPct !== null
+    ? { delta: `${dialsPct >= 0 ? "+" : ""}${dialsPct}% vs yesterday`, deltaType: (dialsPct >= 0 ? "up" : "down") as DeltaType }
+    : { delta: dialsToday > 0 ? "none yesterday" : "No dials yet", deltaType: "neutral" as DeltaType };
+
+  const signed = s?.signedWeek ?? 0;
+  const kpis: { label: string; value: string; delta: string; deltaType: DeltaType; icon: typeof Phone }[] = [
+    { label: "Dials Today", value: dialsToday.toString(), ...dialsDelta, icon: Phone },
+    { label: "Contact Rate", value: `${s?.contactRate ?? 0}%`,
+      delta: (s?.callsThisWeek ?? 0) > 0 ? `${s?.connectedThisWeek}/${s?.callsThisWeek} connected this wk` : "No calls this week",
+      deltaType: "neutral", icon: Users },
+    { label: "Offers Out", value: (s?.offersOut ?? 0).toString(),
+      delta: (s?.offersOut ?? 0) > 0 ? "awaiting signature" : "None out", deltaType: "neutral", icon: Target },
+    { label: "Deals Signed (Week)", value: signed.toString(),
+      delta: signed > 0 ? "this week" : "None this week", deltaType: signed > 0 ? "up" : "neutral", icon: Trophy },
+    { label: "Revenue This Week", value: formatCurrency(s?.revenueWeekPence ?? 0),
+      delta: signed > 0 ? `from ${signed} deal${signed > 1 ? "s" : ""}` : "No deals this week", deltaType: "neutral", icon: BarChart3 },
   ];
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {kpis.map(kpi => {
         const Icon = kpi.icon;
-        const deltaColor = kpi.deltaType === "up" ? T.green : T.red;
-        const DeltaIcon = kpi.deltaType === "up" ? TrendingUp : TrendingDown;
+        const deltaColor = kpi.deltaType === "up" ? T.green : kpi.deltaType === "down" ? T.red : T.textMuted;
+        const DeltaIcon = kpi.deltaType === "up" ? TrendingUp : kpi.deltaType === "down" ? TrendingDown : Minus;
         return (
           <div
             key={kpi.label}
