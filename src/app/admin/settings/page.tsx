@@ -4,8 +4,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Layers, Monitor, Link2, Bell, Smile, Trash2,
+  UserRound, MapPin, Target, Headphones,
 } from "lucide-react";
 import { IconSidebar } from "@/components/admin/icon-sidebar";
+import { useCurrentUser, initialsFromName } from "@/lib/auth/use-current-user";
 import {
   DEFAULT_PLATFORM_CONFIG, DEFAULT_LOT_CONFIG, DEFAULT_INTEGRATIONS,
   DEFAULT_NOTIFICATION_RULES, DEFAULT_BRANDING_CONFIG,
@@ -32,26 +34,28 @@ const T = {
 /* ================================================================== */
 /*  TOPBAR                                                             */
 /* ================================================================== */
-function Topbar() {
+function Topbar({ showAuditLog = true, initials = "MA", crumb = "Admin", crumbHref = "/admin" }: { showAuditLog?: boolean; initials?: string; crumb?: string; crumbHref?: string }) {
   const router = useRouter();
   return (
     <div className="flex items-center justify-between flex-shrink-0"
       style={{ height: 58, padding: "0 20px", background: T.bgSidebar, borderBottom: `1px solid ${T.border}` }}>
       <div className="flex items-center gap-2">
         <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: T.textDim, cursor: "pointer" }}
-          onClick={() => router.push("/admin")}>Admin</span>
+          onClick={() => router.push(crumbHref)}>{crumb}</span>
         <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: T.textDim }}>/</span>
         <span style={{ fontFamily: "var(--font-body)", fontWeight: 800, fontSize: 17, color: T.textPrimary }}>Settings</span>
       </div>
       <div className="flex items-center gap-3">
-        <button
-          style={{ background: T.bgRow, border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary, cursor: "pointer" }}
-          onClick={() => console.log("view audit log")}>
-          View audit log
-        </button>
+        {showAuditLog && (
+          <button
+            style={{ background: T.bgRow, border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.textSecondary, cursor: "pointer" }}
+            onClick={() => console.log("view audit log")}>
+            View audit log
+          </button>
+        )}
         <div className="flex items-center justify-center w-9 h-9 rounded-full"
           style={{ background: T.greenBg, border: `1px solid ${T.green}`, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 11, color: T.green }}>
-          MA
+          {initials}
         </div>
       </div>
     </div>
@@ -72,7 +76,7 @@ const NAV_ITEMS = [
   { id: "danger",        label: "Danger zone", icon: Trash2 },
 ];
 
-function SettingsNav({ active, onNav }: { active: string; onNav: (id: string) => void }) {
+function SettingsNav({ active, onNav, items = NAV_ITEMS }: { active: string; onNav: (id: string) => void; items?: typeof NAV_ITEMS }) {
   return (
     <div
       className="flex flex-col gap-[2px] flex-shrink-0"
@@ -81,7 +85,7 @@ function SettingsNav({ active, onNav }: { active: string; onNav: (id: string) =>
         padding: "14px 0", overflowY: "auto",
       }}
     >
-      {NAV_ITEMS.map((item, i) => {
+      {items.map((item, i) => {
         if ("sep" in item && item.sep) {
           return <div key={`sep${i}`} style={{ height: 1, background: T.border, margin: "6px 14px" }} />;
         }
@@ -752,9 +756,118 @@ function SaveToast({ visible }: { visible: boolean }) {
 }
 
 /* ================================================================== */
+/*  REP (SALES) SETTINGS — personal, individual-scope                  */
+/* ================================================================== */
+const REP_NAV = [
+  { id: "my-information", label: "My information", icon: UserRound },
+  { id: "my-lot",         label: "My lot",         icon: MapPin },
+  { id: "my-targets",     label: "My targets",     icon: Target },
+  { id: "my-softphone",   label: "My softphone",   icon: Headphones },
+];
+
+interface RepProfile {
+  firstName: string; lastName: string; email: string; role: string;
+  hireDate: string | null; isRemote: boolean;
+  lot: { name: string; city: string | null; address: string | null; phone: string | null } | null;
+  dailyCallTarget: number | null; weeklyConversionTarget: number | null;
+  softphone: { provisioned: boolean; sipUsername: string | null };
+}
+
+const readonlyVal: React.CSSProperties = { fontFamily: "var(--font-body)", fontSize: 12, color: T.textPrimary };
+
+function RepBadge({ text, tone = "neutral" }: { text: string; tone?: "good" | "neutral" }) {
+  const c = tone === "good" ? { bg: T.greenBg, fg: T.green } : { bg: T.bgRow, fg: T.textSecondary };
+  return <span style={{ background: c.bg, color: c.fg, borderRadius: 999, padding: "3px 9px", fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10 }}>{text}</span>;
+}
+
+function RepSettings() {
+  const [p, setP] = useState<RepProfile | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [active, setActive] = useState("my-information");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/staff/me", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(d => { if (!cancelled && d.profile) { setP(d.profile); setFirstName(d.profile.firstName); setLastName(d.profile.lastName); } })
+      .catch(e => { if (!cancelled) console.error("[RepSettings] fetch failed:", e); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const saveName = async () => {
+    setSaving(true); setErr(null);
+    try {
+      const res = await fetch("/api/staff/me", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ firstName, lastName }) });
+      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error || `Save failed (${res.status})`); }
+      setP(prev => (prev ? { ...prev, firstName, lastName } : prev));
+      setSaved(true); setTimeout(() => setSaved(false), 2000);
+    } catch (e) { setErr(e instanceof Error ? e.message : "Save failed"); }
+    finally { setSaving(false); }
+  };
+
+  const handleNav = (id: string) => { setActive(id); document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
+
+  const navItems = REP_NAV.filter(n => n.id !== "my-lot" || p?.lot);
+  const roleLabel = (p?.role ?? "sales").replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+  return (
+    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[200px_1fr]">
+      <SettingsNav active={active} onNav={handleNav} items={navItems} />
+      <div style={{ overflowY: "auto", padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* My information — your name is editable; the rest is team-managed */}
+        <SectionWrapper id="my-information" iconBg="#0A1D1A" iconColor={T.teal200} Icon={UserRound}
+          title="My information" subtitle="Your profile. Update your display name; the rest is managed by your team."
+          onSave={saving ? undefined : saveName}>
+          <FieldRow label="First name"><input style={inputStyle(220)} value={firstName} onChange={e => setFirstName(e.target.value)} /></FieldRow>
+          <FieldRow label="Last name"><input style={inputStyle(220)} value={lastName} onChange={e => setLastName(e.target.value)} /></FieldRow>
+          <FieldRow label="Email" subLabel="Sign-in identity"><span style={readonlyVal}>{p?.email ?? "—"}</span></FieldRow>
+          <FieldRow label="Role"><RepBadge text={roleLabel} /></FieldRow>
+          {p?.hireDate && <FieldRow label="Joined"><span style={readonlyVal}>{new Date(p.hireDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span></FieldRow>}
+          <FieldRow label="Working style"><RepBadge text={p?.isRemote ? "Remote" : "On-site"} tone={p?.isRemote ? "good" : "neutral"} /></FieldRow>
+          {err && <div style={{ fontFamily: "var(--font-body)", fontSize: 11, color: T.red }}>{err}</div>}
+        </SectionWrapper>
+
+        {/* My lot — read-only context */}
+        {p?.lot && (
+          <SectionWrapper id="my-lot" iconBg={T.indigo} iconColor={T.textMuted} Icon={MapPin}
+            title="My lot" subtitle="The lot you're assigned to. Read-only — contact your manager to change.">
+            <FieldRow label="Lot"><span style={readonlyVal}>{p.lot.name}</span></FieldRow>
+            {p.lot.address && <FieldRow label="Address"><span style={readonlyVal}>{p.lot.address}</span></FieldRow>}
+            {p.lot.city && <FieldRow label="City"><span style={readonlyVal}>{p.lot.city}</span></FieldRow>}
+            {p.lot.phone && <FieldRow label="Phone"><span style={readonlyVal}>{p.lot.phone}</span></FieldRow>}
+          </SectionWrapper>
+        )}
+
+        {/* My targets — manager-owned, read-only */}
+        <SectionWrapper id="my-targets" iconBg={T.indigo} iconColor={T.textMuted} Icon={Target}
+          title="My targets" subtitle="Set by your manager. These feed the team dashboards and leaderboard.">
+          <FieldRow label="Daily call target"><span style={readonlyVal}>{p?.dailyCallTarget != null ? `${p.dailyCallTarget} calls` : "Not set"}</span></FieldRow>
+          <FieldRow label="Weekly conversions"><span style={readonlyVal}>{p?.weeklyConversionTarget != null ? `${p.weeklyConversionTarget} deals` : "Not set"}</span></FieldRow>
+        </SectionWrapper>
+
+        {/* My softphone — provisioned automatically, read-only */}
+        <SectionWrapper id="my-softphone" iconBg={T.indigo} iconColor={T.textMuted} Icon={Headphones}
+          title="My softphone" subtitle="Your inbound calling identity. Provisioned automatically — nothing to configure.">
+          <FieldRow label="Status"><RepBadge text={p?.softphone.provisioned ? "Connected" : "Not provisioned yet"} tone={p?.softphone.provisioned ? "good" : "neutral"} /></FieldRow>
+          {p?.softphone.sipUsername && <FieldRow label="SIP username"><span style={readonlyVal}>{p.softphone.sipUsername}</span></FieldRow>}
+        </SectionWrapper>
+
+        <SaveToast visible={saved} />
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
 /*  MAIN PAGE                                                          */
 /* ================================================================== */
 export default function SettingsPage() {
+  const { user, loading } = useCurrentUser();
+  const isSales = user?.role === "sales";
   const [activeSection, setActiveSection] = useState("platform");
   const [savedSection, setSavedSection] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -790,11 +903,34 @@ export default function SettingsPage() {
     return () => observers.forEach(o => o.disconnect());
   }, []);
 
+  // Resolve the role before rendering so a rep never flashes the admin controls.
+  if (loading) {
+    return (
+      <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden" style={{ background: T.bgPage }}>
+        <IconSidebar />
+        <div className="flex-1" />
+      </div>
+    );
+  }
+
+  // Sales reps get a focused, personal "My settings" view — no org/admin controls.
+  if (isSales) {
+    return (
+      <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden" style={{ background: T.bgPage }}>
+        <IconSidebar />
+        <div className="flex-1 flex flex-col min-w-0 lg:h-screen">
+          <Topbar showAuditLog={false} initials={initialsFromName(user?.name)} crumb="CRM" crumbHref="/admin/crm" />
+          <RepSettings />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden" style={{ background: T.bgPage }}>
       <IconSidebar />
       <div className="flex-1 flex flex-col min-w-0 lg:h-screen">
-        <Topbar />
+        <Topbar initials={initialsFromName(user?.name)} />
         {/* Inner grid: settings nav + content — stacks on mobile */}
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[200px_1fr]">
           <SettingsNav active={activeSection} onNav={handleNav} />
