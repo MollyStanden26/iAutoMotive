@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { requireStaff } from "@/lib/auth/require-role";
+import { requireStaff, requireRole } from "@/lib/auth/require-role";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +35,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       where: { id: params.id },
       include: {
         vehicle: { select: { year: true, make: true, model: true, registration: true, mileageAtIntake: true } },
+        assignedRep: { select: { id: true, email: true, staffProfile: { select: { firstName: true, lastName: true } } } },
         lead: {
           select: {
             vehicleReg: true, vehicleVin: true, vehicleYear: true, vehicleMake: true,
@@ -75,6 +76,11 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
         salePriceGbp: pounds(deal.salePriceGbp ?? deal.askingPriceGbp),
         askingPriceGbp: pounds(deal.askingPriceGbp),
         buyer: deal.buyerId ? "Buyer assigned" : null,
+        // Salesperson (deal owner) — for the admin/manager view.
+        ownerId: deal.assignedTo ?? null,
+        ownerName: deal.assignedRep
+          ? ([deal.assignedRep.staffProfile?.firstName, deal.assignedRep.staffProfile?.lastName].filter(Boolean).join(" ") || deal.assignedRep.email)
+          : null,
         collectedAt: deal.createdAt.toISOString(),
         // Inventory
         inInventory: true,
@@ -108,5 +114,49 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   } catch (error) {
     console.error("[GET /api/admin/deals/[id]]", error);
     return NextResponse.json({ error: "Failed to load deal" }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/admin/deals/[id] — reassign the deal's salesperson (owner).
+ * Manager action (super-admin / site-manager), à la Salesforce "Change Owner".
+ */
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireRole(request, ["super-admin", "site-manager"]);
+  if (!guard.ok) return guard.response;
+
+  let body: { assignedTo?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+  if (body.assignedTo === undefined) {
+    return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+  }
+  const assignedTo = body.assignedTo ? String(body.assignedTo) : null;
+
+  const deal = await prisma.deal.findUnique({ where: { id: params.id }, select: { id: true } });
+  if (!deal) return NextResponse.json({ error: "Deal not found" }, { status: 404 });
+
+  // Validate the new owner is a real staff user (sales-side roles own deals).
+  if (assignedTo) {
+    const rep = await prisma.user.findUnique({ where: { id: assignedTo }, select: { id: true, role: true } });
+    if (!rep) return NextResponse.json({ error: "Salesperson not found" }, { status: 400 });
+  }
+
+  try {
+    await prisma.deal.update({ where: { id: params.id }, data: { assignedTo } });
+    const updated = await prisma.deal.findUnique({
+      where: { id: params.id },
+      select: { assignedTo: true, assignedRep: { select: { email: true, staffProfile: { select: { firstName: true, lastName: true } } } } },
+    });
+    const ownerName = updated?.assignedRep
+      ? ([updated.assignedRep.staffProfile?.firstName, updated.assignedRep.staffProfile?.lastName].filter(Boolean).join(" ") || updated.assignedRep.email)
+      : null;
+    return NextResponse.json({ ok: true, ownerId: updated?.assignedTo ?? null, ownerName });
+  } catch (error) {
+    console.error("[PATCH /api/admin/deals/[id]]", error);
+    return NextResponse.json({ error: "Failed to reassign deal" }, { status: 500 });
   }
 }

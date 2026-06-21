@@ -168,13 +168,14 @@ const filterPills: { label: string; value: DealFilter }[] = [
 ];
 
 function DealsTable({
-  deals, onOpenDeal,
+  deals, onOpenDeal, showOwner, ownerFilter, setOwnerFilter,
   activeFilter, setActiveFilter,
   searchQuery, setSearchQuery,
   sortKey, setSortKey, sortDir, setSortDir,
   selectedDeals, setSelectedDeals,
 }: {
   deals: Deal[]; onOpenDeal: (d: Deal) => void;
+  showOwner: boolean; ownerFilter: string; setOwnerFilter: (v: string) => void;
   activeFilter: DealFilter; setActiveFilter: (f: DealFilter) => void;
   searchQuery: string; setSearchQuery: (s: string) => void;
   sortKey: SortKey; setSortKey: (k: SortKey) => void;
@@ -183,8 +184,14 @@ function DealsTable({
 }) {
   const selectAllRef = useRef<HTMLInputElement>(null);
 
+  // Distinct salespeople in the current deals (for the owner filter).
+  const owners = showOwner
+    ? Array.from(new Map(deals.filter(d => d.ownerId).map(d => [d.ownerId as string, d.ownerName ?? "—"])).entries())
+    : [];
+
   // Filter
   let filtered = deals;
+  if (showOwner && ownerFilter) filtered = filtered.filter(d => d.ownerId === ownerFilter);
   if (activeFilter === "risk") filtered = filtered.filter(d => d.healthScore < 50);
   else if (activeFilter === "fund") filtered = filtered.filter(d => ["pending", "wait", "declined"].includes(d.fundingKey));
   else if (activeFilter === "docs") filtered = filtered.filter(d => !d.hasContract && d.stageKey !== "closed");
@@ -192,7 +199,7 @@ function DealsTable({
 
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
-    filtered = filtered.filter(d => `${d.year} ${d.make} ${d.model} ${d.buyer}`.toLowerCase().includes(q));
+    filtered = filtered.filter(d => `${d.year} ${d.make} ${d.model} ${d.buyer} ${d.ownerName ?? ""}`.toLowerCase().includes(q));
   }
 
   // Sort
@@ -239,11 +246,19 @@ function DealsTable({
         {filterPills.map(p => (
           <button key={p.value} onClick={() => setActiveFilter(p.value)} className="px-[9px] py-1 rounded-[7px] transition-colors" style={{ background: activeFilter === p.value ? T.indigo : T.bgRow, color: activeFilter === p.value ? T.teal200 : T.textMuted, border: `1px solid ${activeFilter === p.value ? T.indigo : T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11 }}>{p.label}</button>
         ))}
+        {showOwner && owners.length > 0 && (
+          <select value={ownerFilter} onChange={e => setOwnerFilter(e.target.value)} className="px-[9px] py-1 rounded-[7px] outline-none ml-auto"
+            style={{ background: ownerFilter ? T.indigo : T.bgRow, color: ownerFilter ? T.teal200 : T.textMuted, border: `1px solid ${ownerFilter ? T.indigo : T.border}`, fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 11 }}>
+            <option value="">All salespeople</option>
+            {owners.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+          </select>
+        )}
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full" style={{ minWidth: 700, tableLayout: "fixed" }}>
+        <table className="w-full" style={{ minWidth: showOwner ? 830 : 700, tableLayout: "fixed" }}>
           <colgroup>
             <col style={{ width: 30 }} /><col style={{ width: 155 }} /><col style={{ width: 110 }} /><col style={{ width: 88 }} /><col style={{ width: 70 }} /><col style={{ width: 72 }} /><col style={{ width: 62 }} /><col style={{ width: 90 }} /><col style={{ width: 72 }} />
+            {showOwner && <col style={{ width: 120 }} />}
           </colgroup>
           <thead>
             <tr>
@@ -262,6 +277,9 @@ function DealsTable({
               <th className="px-[10px] py-[7px] text-left cursor-pointer select-none" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgSidebar, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }} onClick={() => handleSort("opened")}>
                 <span className="inline-flex items-center gap-1">Opened <SortIcon col="opened" /></span>
               </th>
+              {showOwner && (
+                <th className="px-[10px] py-[7px] text-left" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgSidebar, fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 10, color: T.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }}>Salesperson</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -284,6 +302,9 @@ function DealsTable({
                 <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: idx < sorted.length - 1 ? `1px solid ${T.border2}` : "none", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12, color: T.green }}>{formatPrice(deal.gpu)}</td>
                 <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: idx < sorted.length - 1 ? `1px solid ${T.border2}` : "none" }}>{fundingBadge(deal.fundingStatus)}</td>
                 <td className="px-[10px] py-[7px] align-middle" style={{ borderBottom: idx < sorted.length - 1 ? `1px solid ${T.border2}` : "none", fontFamily: "var(--font-body)", fontSize: 11, color: T.textMuted }}>{deal.openedLabel}</td>
+                {showOwner && (
+                  <td className="px-[10px] py-[7px] align-middle truncate" style={{ borderBottom: idx < sorted.length - 1 ? `1px solid ${T.border2}` : "none", fontFamily: "var(--font-body)", fontSize: 11, color: deal.ownerName && deal.ownerName !== "Unassigned" ? T.textSecondary : T.textDim }}>{deal.ownerName ?? "Unassigned"}</td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -447,14 +468,19 @@ function CompliancePanel() {
 /*  PAGE                                                               */
 /* ================================================================== */
 export default function DealsPage() {
+  const { user } = useCurrentUser();
+  const isAdmin = !!user && user.role !== "sales";           // managers see all deals + the owner column
+  const canManage = user?.role === "super-admin" || user?.role === "site-manager"; // may reassign owners
   const [activeFilter, setActiveFilter] = useState<DealFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("health");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [openDeal, setOpenDeal] = useState<Deal | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -463,7 +489,8 @@ export default function DealsPage() {
       .then(d => { if (!cancelled) setDeals(d.deals ?? []); })
       .catch(err => { if (!cancelled) console.error("[DealsPage] fetch failed:", err); });
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshKey]);
+  const refresh = () => setRefreshKey(k => k + 1);
 
   const pipelineValue = deals.reduce((sum, d) => sum + (d.salePrice || 0), 0);
   // Projected commission from open (non-closed) deals, per the contract tiers.
@@ -482,6 +509,7 @@ export default function DealsPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 296px", gap: 10 }}>
             <DealsTable
               deals={deals} onOpenDeal={setOpenDeal}
+              showOwner={isAdmin} ownerFilter={ownerFilter} setOwnerFilter={setOwnerFilter}
               activeFilter={activeFilter} setActiveFilter={setActiveFilter}
               searchQuery={searchQuery} setSearchQuery={setSearchQuery}
               sortKey={sortKey} setSortKey={setSortKey}
@@ -498,7 +526,7 @@ export default function DealsPage() {
         </div>
       </div>
       <AddDealDrawer open={newDealOpen} onClose={() => setNewDealOpen(false)} />
-      <DealDetailDrawer deal={openDeal} onClose={() => setOpenDeal(null)} />
+      <DealDetailDrawer deal={openDeal} onClose={() => setOpenDeal(null)} canManage={canManage} onChanged={refresh} />
     </div>
   );
 }

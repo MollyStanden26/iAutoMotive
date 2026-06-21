@@ -47,7 +47,10 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: { createdAt: "desc" },
       take: 100,
-      include: { vehicle: { select: { year: true, make: true, model: true } } },
+      include: {
+        vehicle: { select: { year: true, make: true, model: true } },
+        assignedRep: { select: { id: true, email: true, staffProfile: { select: { firstName: true, lastName: true } } } },
+      },
     });
 
     const dealIds = deals.map(d => d.id);
@@ -97,6 +100,10 @@ export async function GET(request: NextRequest) {
         daysInInventory,
         atRisk,
         riskReason: atRisk ? `In inventory ${daysInInventory} days · no finance buyer` : null,
+        ownerId: d.assignedTo ?? null,
+        ownerName: d.assignedRep
+          ? ([d.assignedRep.staffProfile?.firstName, d.assignedRep.staffProfile?.lastName].filter(Boolean).join(" ") || d.assignedRep.email)
+          : "Unassigned",
       };
     });
 

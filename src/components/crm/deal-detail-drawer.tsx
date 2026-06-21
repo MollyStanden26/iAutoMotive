@@ -60,14 +60,18 @@ interface DealDetail {
   photos: string[];
   contract: { url: string; name: string; sizeBytes: number | null; uploadedAt: string } | null;
   documentsSignedAt: string | null;
+  ownerId: string | null;
+  ownerName: string | null;
 }
+
+interface RepOption { id: string; name: string }
 
 const gbp = (n: number | null | undefined) => (n == null ? "—" : `£${n.toLocaleString()}`);
 const titleCase = (s: string) => s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 const fmtSize = (b: number | null | undefined) =>
   b == null ? null : b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
 
-export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; onClose: () => void }) {
+export function DealDetailDrawer({ deal, onClose, canManage = false, onChanged }: { deal: DealSummary | null; onClose: () => void; canManage?: boolean; onChanged?: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [detail, setDetail] = useState<DealDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -75,9 +79,12 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [reassigning, setReassigning] = useState(false);
+  const [reps, setReps] = useState<RepOption[]>([]);
+  const [savingOwner, setSavingOwner] = useState(false);
 
   useEffect(() => {
-    if (deal) { setMode("deal"); setUploadError(null); requestAnimationFrame(() => setMounted(true)); }
+    if (deal) { setMode("deal"); setUploadError(null); setReassigning(false); requestAnimationFrame(() => setMounted(true)); }
     else setMounted(false);
   }, [deal]);
 
@@ -85,6 +92,33 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
     if (detail?.doNotCall || !detail?.sellerPhone) return;
     const dial = (window as unknown as { iaDial?: (n: string) => void }).iaDial;
     if (dial) dial(detail.sellerPhone);
+  };
+
+  const openReassign = async () => {
+    setReassigning(true);
+    if (reps.length === 0) {
+      try {
+        const d = await (await fetch("/api/admin/staff", { cache: "no-store" })).json();
+        setReps((d.staff ?? []).filter((s: { role: string }) => s.role === "sales").map((s: { id: string; name: string }) => ({ id: s.id, name: s.name })));
+      } catch { /* ignore */ }
+    }
+  };
+
+  const saveOwner = async (repId: string) => {
+    if (!deal) return;
+    setSavingOwner(true);
+    try {
+      const res = await fetch(`/api/admin/deals/${deal.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedTo: repId || null }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setDetail(d => d ? { ...d, ownerId: data.ownerId ?? null, ownerName: data.ownerName ?? null } : d);
+        setReassigning(false);
+        onChanged?.();
+      }
+    } finally { setSavingOwner(false); }
   };
 
   const uploadContract = async (file: File) => {
@@ -239,6 +273,27 @@ export function DealDetailDrawer({ deal, onClose }: { deal: DealSummary | null; 
             <DetailRow label="Target price" value={gbp(detail?.salePriceGbp ?? deal.salePrice)} />
             <DetailRow label="Was asking" value={gbp(detail?.askingPriceGbp)} />
             <DetailRow label="Buyer" value={detail?.buyer ?? "Awaiting buyer"} />
+            {/* Salesperson (owner) — admin/manager view */}
+            <div className="flex items-baseline gap-3">
+              <span style={{ width: 100, flexShrink: 0, fontSize: 11, color: T.textMuted }}>Salesperson</span>
+              <span className="min-w-0 break-words" style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary }}>
+                {detail?.ownerName ?? "Unassigned"}
+                {canManage && !reassigning && (
+                  <button onClick={openReassign} style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: T.teal200, background: "none", border: "none", cursor: "pointer" }}>Reassign</button>
+                )}
+              </span>
+            </div>
+            {canManage && reassigning && (
+              <div className="flex items-center gap-2" style={{ paddingLeft: 112 }}>
+                <select defaultValue={detail?.ownerId ?? ""} disabled={savingOwner}
+                  onChange={e => saveOwner(e.target.value)}
+                  style={{ height: 32, padding: "0 8px", background: T.bgInput, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 12, outline: "none" }}>
+                  <option value="">Unassigned</option>
+                  {reps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+                <button onClick={() => setReassigning(false)} disabled={savingOwner} style={{ fontSize: 11, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>Cancel</button>
+              </div>
+            )}
           </Section>
 
           {/* Signed contract */}

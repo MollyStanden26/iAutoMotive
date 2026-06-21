@@ -33,6 +33,9 @@ export interface Deal {
   /** At risk: in inventory > 30 days after collection and not bought on finance. */
   atRisk?: boolean;
   riskReason?: string | null;
+  /** Salesperson (deal owner) — surfaced in the admin/manager view. */
+  ownerId?: string | null;
+  ownerName?: string;
 }
 
 export interface PipelineStage {
