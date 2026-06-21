@@ -1,7 +1,9 @@
 // Third-party integration configuration
 // Stripe Connect — buyer collection + seller payouts
 // DocuSign — e-signatures
-// Telnyx — CRM voice (WebRTC softphone) + SMS. See src/lib/telnyx/*.
+// Aircall — CRM voice (click-to-dial + call logging). See src/lib/voice/aircall.ts
+//   and src/app/api/voice/aircall/*. Audio runs in the rep's Aircall app.
+//   (Legacy Telnyx WebRTC code remains under src/lib/telnyx/* but is unused.)
 // SendGrid — email
 // Anthropic Claude API — all AI agents
 // Cazana / Glass's Guide / Cap HPI — valuations

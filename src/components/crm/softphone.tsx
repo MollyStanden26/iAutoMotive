@@ -1,21 +1,17 @@
 "use client";
 
 /**
- * Softphone — the rep's WebRTC dialler. A fixed, collapsible panel for the
- * /admin CRM shell. Drives useTelnyxDevice for outbound dial + inbound answer
- * with in-call controls (mute, hold, keypad, hangup).
+ * Softphone — the rep's click-to-dial panel for the /admin CRM shell.
  *
- * Self-contained on purpose: it gives reps working calling without depending on
- * the larger power-dialler queue UI, and exposes window.iaDial(number) so other
- * CRM screens (lead rows, call history) can trigger a call by clicking.
+ * Aircall is the call provider. The call audio happens in the rep's Aircall app
+ * (desktop / web / mobile); this panel just *triggers* outbound calls
+ * (POST /api/voice/aircall/dial) and exposes window.iaDial(number) so lead rows,
+ * call history and the power dialler can start a call by clicking. Inbound calls
+ * ring the Aircall app directly and are logged back via the Aircall webhook.
  */
 
-import { useCallback, useEffect, useState } from "react";
-import {
-  Phone, PhoneOff, PhoneIncoming, PhoneOutgoing, Mic, MicOff,
-  Pause, Play, Grid3x3, X, Wifi, WifiOff, Loader2,
-} from "lucide-react";
-import { useTelnyxDevice } from "@/lib/telnyx/use-telnyx-device";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Phone, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 const T = {
   bgCard: "#0D1525", bgSidebar: "#070D18", bgRow: "#111D30",
@@ -27,58 +23,58 @@ const T = {
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
 
-/** Colour for the small connection-status dot on the collapsed bubble. */
-function bubbleStatusColor(status: string): string {
-  if (status === "ready") return T.green;
-  if (status === "connecting") return T.amber;
-  if (status === "error") return T.red;
-  return T.textMuted; // idle / unconfigured
-}
-
-function useCallTimer(answeredAt: number | null): string {
-  const [, tick] = useState(0);
-  useEffect(() => {
-    if (!answeredAt) return;
-    const id = setInterval(() => tick(n => n + 1), 1000);
-    return () => clearInterval(id);
-  }, [answeredAt]);
-  if (!answeredAt) return "";
-  const s = Math.max(0, Math.floor((Date.now() - answeredAt) / 1000));
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-}
+type DialState =
+  | { phase: "idle" }
+  | { phase: "dialing"; to: string }
+  | { phase: "ringing"; to: string; agent?: string }
+  | { phase: "error"; message: string };
 
 export function Softphone() {
-  const dev = useTelnyxDevice();
   // Starts collapsed as a phone bubble; expands to the full panel on click.
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [keypad, setKeypad] = useState(false);
-  const timer = useCallTimer(dev.call?.answeredAt ?? null);
+  const [state, setState] = useState<DialState>({ phase: "idle" });
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Expose a global click-to-call so lead rows / call history can dial. Opening
-  // the panel here means a click-to-call also surfaces the live call UI.
+  const dial = useCallback(async (number: string) => {
+    const to = number.trim();
+    if (!to) return;
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    setState({ phase: "dialing", to });
+    try {
+      const res = await fetch("/api/voice/aircall/dial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to }),
+      });
+      const data = await res.json().catch(() => ({} as Record<string, string>));
+      if (!res.ok) {
+        setState({ phase: "error", message: data.error ?? "Couldn’t start the call" });
+        return;
+      }
+      setState({ phase: "ringing", to: data.to ?? to, agent: data.agent });
+      // Audio lives in the Aircall app — clear the status banner after a beat.
+      resetTimer.current = setTimeout(() => setState({ phase: "idle" }), 8000);
+    } catch {
+      setState({ phase: "error", message: "Network error — couldn’t reach Aircall" });
+    }
+  }, []);
+
+  // Global click-to-call bridge used across the CRM (lead rows, dialler, drawers).
   useEffect(() => {
-    (window as any).iaDial = (number: string) => {
+    (window as unknown as { iaDial?: (n: string) => void }).iaDial = (number: string) => {
       setOpen(true);
-      if (dev.status === "ready") dev.dial(number);
-      else setInput(number);
+      void dial(number);
     };
-    return () => { delete (window as any).iaDial; };
-  }, [dev]);
+    return () => { delete (window as unknown as { iaDial?: (n: string) => void }).iaDial; };
+  }, [dial]);
 
-  // Auto-expand on an incoming call so it can always be answered, even if the
-  // rep had collapsed the softphone to the bubble.
-  const callPhase = dev.call?.phase;
-  useEffect(() => {
-    if (callPhase === "incoming") setOpen(true);
-  }, [callPhase]);
+  useEffect(() => () => { if (resetTimer.current) clearTimeout(resetTimer.current); }, []);
 
-  const onDial = useCallback(() => {
-    const n = input.trim();
-    if (n) dev.dial(n);
-  }, [input, dev]);
+  const onDial = useCallback(() => { void dial(input); }, [input, dial]);
 
-  const inCall = dev.call && dev.call.phase !== "idle";
+  const busy = state.phase === "dialing";
+  const active = state.phase === "dialing" || state.phase === "ringing";
 
   return (
     <div
@@ -90,11 +86,11 @@ export function Softphone() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          aria-label={inCall ? `On call ${timer}` : "Open softphone"}
+          aria-label="Open dialler"
           className="relative flex items-center justify-center ml-auto"
           style={{
             width: 56, height: 56, borderRadius: "50%",
-            background: inCall ? T.green : T.teal,
+            background: active ? T.green : T.teal,
             border: "none", cursor: "pointer",
             boxShadow: "0 8px 24px rgba(0,0,0,.45)",
             transition: "transform 150ms ease",
@@ -102,21 +98,11 @@ export function Softphone() {
           onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.06)")}
           onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
         >
-          {/* Live-call pulse ring */}
-          {inCall && (
+          {active && (
             <span className="absolute inset-0 rounded-full animate-ping"
               style={{ background: T.green, opacity: 0.35 }} />
           )}
-          <Phone size={22} color={inCall ? "#04150C" : "#FFFFFF"} className="relative" />
-          {/* Connection status dot */}
-          <span
-            className="absolute"
-            style={{
-              top: 2, right: 2, width: 13, height: 13, borderRadius: 999,
-              border: "2px solid #0B111E",
-              background: bubbleStatusColor(dev.status),
-            }}
-          />
+          <Phone size={22} color={active ? "#04150C" : "#FFFFFF"} className="relative" />
         </button>
       )}
 
@@ -127,102 +113,41 @@ export function Softphone() {
           <div className="flex items-center justify-between gap-2"
             style={{ padding: "10px 14px", background: T.bgSidebar, borderBottom: `1px solid ${T.border}` }}>
             <div className="flex items-center gap-2 min-w-0">
-              <span className="shrink-0"><StatusDot status={dev.status} /></span>
-              <span className="shrink-0" style={{ fontSize: 12, fontWeight: 700, color: T.textPrimary }}>Softphone</span>
-              {dev.callerNumber && (
-                <span className="truncate" style={{ fontSize: 10, color: T.textMuted }}>· {dev.callerNumber}</span>
-              )}
+              <Phone size={13} color={T.teal200} className="shrink-0" />
+              <span className="shrink-0" style={{ fontSize: 12, fontWeight: 700, color: T.textPrimary }}>Aircall dialler</span>
             </div>
             <X size={15} className="shrink-0" style={{ color: T.textMuted, cursor: "pointer" }} onClick={() => setOpen(false)} />
           </div>
 
           <div style={{ padding: 14 }}>
-            {/* Offline / status states */}
-            {dev.status === "idle" && (
-              <OfflineState label="You're offline" cta="Go online" onClick={dev.connect} />
-            )}
-            {dev.status === "connecting" && (
-              <div className="flex items-center gap-2" style={{ color: T.textSecondary, fontSize: 12, padding: "8px 0" }}>
-                <Loader2 size={14} className="animate-spin" /> Connecting…
-              </div>
-            )}
-            {dev.status === "unconfigured" && (
-              <p style={{ fontSize: 11, color: T.amber, lineHeight: 1.5 }}>
-                Voice isn’t configured yet. Add the Telnyx keys in Settings → Integrations,
-                then assign this rep a number.
-              </p>
-            )}
-            {dev.status === "error" && (
-              <OfflineState label={dev.error ?? "Connection error"} cta="Retry" onClick={dev.connect} danger />
-            )}
+            {/* Status banner */}
+            <StatusBanner state={state} />
 
-            {/* Ready + idle: dialer */}
-            {dev.status === "ready" && !inCall && (
-              <>
-                <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
-                  <input value={input} onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && onDial()}
-                    placeholder="+44…"
-                    className="min-w-0"
-                    style={{ flex: 1, background: T.bgRow, border: `1px solid ${T.border}`, borderRadius: 10,
-                      padding: "8px 12px", color: T.textPrimary, fontSize: 14, outline: "none" }} />
-                  <button onClick={onDial} aria-label="Call"
-                    className="shrink-0"
-                    style={{ background: T.green, border: "none", borderRadius: 10, width: 40, height: 38,
-                      display: "grid", placeItems: "center", cursor: "pointer" }}>
-                    <Phone size={16} color="#04150C" />
-                  </button>
-                </div>
-                <Keypad onKey={k => setInput(v => v + k)} />
-              </>
-            )}
+            {/* Dialer */}
+            <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
+              <input value={input} onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && onDial()}
+                placeholder="+44…"
+                className="min-w-0"
+                style={{ flex: 1, background: T.bgRow, border: `1px solid ${T.border}`, borderRadius: 10,
+                  padding: "8px 12px", color: T.textPrimary, fontSize: 14, outline: "none" }} />
+              <button onClick={onDial} aria-label="Call" disabled={busy || !input.trim()}
+                className="shrink-0"
+                style={{ background: busy || !input.trim() ? T.bgRow : T.green,
+                  border: `1px solid ${busy || !input.trim() ? T.border : T.green}`,
+                  borderRadius: 10, width: 40, height: 38,
+                  display: "grid", placeItems: "center",
+                  cursor: busy || !input.trim() ? "default" : "pointer" }}>
+                {busy ? <Loader2 size={16} color={T.textMuted} className="animate-spin" />
+                  : <Phone size={16} color={input.trim() ? "#04150C" : T.textMuted} />}
+              </button>
+            </div>
+            <Keypad onKey={k => setInput(v => v + k)} />
 
-            {/* Incoming */}
-            {dev.call?.phase === "incoming" && (
-              <div style={{ textAlign: "center" }}>
-                <PhoneIncoming size={22} style={{ color: T.teal200, margin: "4px auto 8px" }} />
-                <div style={{ fontSize: 14, fontWeight: 700, color: T.textPrimary }}>{dev.call.remoteNumber}</div>
-                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Incoming call</div>
-                <div className="flex gap-2">
-                  <ActionBtn label="Decline" color={T.red} bg={T.redBg} icon={<PhoneOff size={16} />} onClick={dev.hangup} />
-                  <ActionBtn label="Answer" color="#04150C" bg={T.green} icon={<Phone size={16} />} onClick={dev.answer} />
-                </div>
-              </div>
-            )}
-
-            {/* In-call (dialing / active / held) */}
-            {inCall && dev.call?.phase !== "incoming" && (
-              <div>
-                <div className="flex items-center justify-between gap-2" style={{ marginBottom: 12 }}>
-                  <div className="flex items-center gap-2 min-w-0">
-                    {dev.call?.direction === "inbound"
-                      ? <PhoneIncoming size={15} color={T.teal200} className="shrink-0" />
-                      : <PhoneOutgoing size={15} color={T.teal200} className="shrink-0" />}
-                    <span className="truncate" style={{ fontSize: 14, fontWeight: 700, color: T.textPrimary }}>{dev.call?.remoteNumber}</span>
-                  </div>
-                  <span className="shrink-0" style={{ fontSize: 12, color: T.textMuted }}>
-                    {dev.call?.phase === "dialing" ? "Dialing…" : dev.call?.phase === "held" ? "On hold" : timer || "00:00"}
-                  </span>
-                </div>
-
-                {keypad && <div style={{ marginBottom: 12 }}><Keypad onKey={dev.sendDigit} /></div>}
-
-                <div className="flex items-center justify-between gap-2">
-                  <CtlBtn active={dev.call?.muted} onClick={dev.toggleMute}
-                    icon={dev.call?.muted ? <MicOff size={16} /> : <Mic size={16} />} label="Mute" />
-                  <CtlBtn active={dev.call?.phase === "held"} onClick={dev.toggleHold}
-                    icon={dev.call?.phase === "held" ? <Play size={16} /> : <Pause size={16} />} label="Hold" />
-                  <CtlBtn active={keypad} onClick={() => setKeypad(v => !v)}
-                    icon={<Grid3x3 size={16} />} label="Keys" />
-                  <button onClick={dev.hangup} aria-label="Hang up"
-                    className="shrink-0"
-                    style={{ background: T.red, border: "none", borderRadius: 12, width: 48, height: 40,
-                      display: "grid", placeItems: "center", cursor: "pointer" }}>
-                    <PhoneOff size={18} color="#1A0606" />
-                  </button>
-                </div>
-              </div>
-            )}
+            <p style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5, marginTop: 10 }}>
+              Calls connect through your <strong style={{ color: T.textSecondary }}>Aircall app</strong> —
+              keep it open and set yourself available to take the audio.
+            </p>
           </div>
         </div>
       )}
@@ -230,21 +155,22 @@ export function Softphone() {
   );
 }
 
-function StatusDot({ status }: { status: string }) {
-  const color = status === "ready" ? T.green : status === "connecting" ? T.amber
-    : status === "error" ? T.red : T.textMuted;
-  const Icon = status === "ready" ? Wifi : status === "connecting" ? Loader2 : WifiOff;
-  return <Icon size={13} color={color} className={status === "connecting" ? "animate-spin" : ""} />;
-}
+function StatusBanner({ state }: { state: DialState }) {
+  if (state.phase === "idle") return null;
 
-function OfflineState({ label, cta, onClick, danger }:
-  { label: string; cta: string; onClick: () => void; danger?: boolean }) {
+  const map = {
+    dialing: { bg: T.greenBg, color: T.green, icon: <Loader2 size={14} className="animate-spin" />, text: `Calling ${state.phase === "dialing" ? state.to : ""}…` },
+    ringing: { bg: T.greenBg, color: T.green, icon: <CheckCircle2 size={14} />, text: state.phase === "ringing" ? `Ringing ${state.to} — answer on your Aircall app` : "" },
+    error: { bg: T.redBg, color: T.red, icon: <AlertCircle size={14} />, text: state.phase === "error" ? state.message : "" },
+  } as const;
+  const s = map[state.phase];
+
   return (
-    <div style={{ textAlign: "center", padding: "6px 0" }}>
-      <p style={{ fontSize: 12, color: danger ? T.red : T.textSecondary, marginBottom: 10 }}>{label}</p>
-      <button onClick={onClick}
-        style={{ background: T.teal, border: "none", borderRadius: 100, padding: "8px 18px",
-          color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{cta}</button>
+    <div className="flex items-start gap-2" style={{
+      background: s.bg, borderRadius: 10, padding: "8px 10px", marginBottom: 10,
+    }}>
+      <span className="shrink-0" style={{ color: s.color, marginTop: 1 }}>{s.icon}</span>
+      <span style={{ fontSize: 11, color: s.color, lineHeight: 1.45 }}>{s.text}</span>
     </div>
   );
 }
@@ -260,28 +186,5 @@ function Keypad({ onKey }: { onKey: (k: string) => void }) {
         </button>
       ))}
     </div>
-  );
-}
-
-function ActionBtn({ label, color, bg, icon, onClick }:
-  { label: string; color: string; bg: string; icon: React.ReactNode; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className="flex items-center justify-center gap-2 min-w-0"
-      style={{ flex: 1, background: bg, border: "none", borderRadius: 12, padding: "10px 0",
-        color, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-      {icon}{label}
-    </button>
-  );
-}
-
-function CtlBtn({ active, onClick, icon, label }:
-  { active?: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button onClick={onClick} className="flex flex-col items-center gap-1 min-w-0"
-      style={{ flex: 1, background: active ? T.teal : T.bgRow, border: `1px solid ${active ? T.teal : T.border}`,
-        borderRadius: 12, padding: "8px 0", color: active ? "#fff" : T.textSecondary, cursor: "pointer" }}>
-      {icon}
-      <span style={{ fontSize: 9, fontWeight: 600 }}>{label}</span>
-    </button>
   );
 }
